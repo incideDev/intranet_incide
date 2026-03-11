@@ -2,73 +2,119 @@
 # Production-safe .gitignore — PHP intranet platform
 # ---------------------------------------------------------------------------
 
-# environment (secrets, local config)
+# ---------------------------------------------------------------------------
+# Environment / secrets
+# ---------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
+
 config/.env
+config/.env.*
 config/.env.local
-config/.env.*.local
+
 platform/app/Config/.env
 platform/app/Config/.env.local
 
-# dependencies
+# ---------------------------------------------------------------------------
+# Dependencies
+# ---------------------------------------------------------------------------
 /vendor/
 node_modules/
 
-# Python venv (cron/import scripts)
+# ---------------------------------------------------------------------------
+# Python (cron / import tools)
+# ---------------------------------------------------------------------------
 .venv/
 venv/
 env/
+__pycache__/
+*.pyc
+*.pyo
 
-# logs
+# ---------------------------------------------------------------------------
+# Logs
+# ---------------------------------------------------------------------------
 logs/
 *.log
 
-# cache / temp
+# ---------------------------------------------------------------------------
+# Cache / temp
+# ---------------------------------------------------------------------------
 tmp/
 cache/
 *.cache
+
 uploads/tmp_cache/
 uploads/temp/
 uploads/tmp_commesse/
 
-# build artifacts
+# ---------------------------------------------------------------------------
+# Uploads (user generated content)
+# ---------------------------------------------------------------------------
+uploads/*
+!uploads/.gitkeep
+
+# ---------------------------------------------------------------------------
+# Office temp files
+# ---------------------------------------------------------------------------
+~$*.docx
+~$*.doc
+~$*.xls
+~$*.xlsx
+
+# ---------------------------------------------------------------------------
+# Backup / legacy files
+# ---------------------------------------------------------------------------
+*_OLD.js
+*_OLD.php
+*.php_backup
+*.bak
+*.tmp
+
+# ---------------------------------------------------------------------------
+# Build artifacts
+# ---------------------------------------------------------------------------
 dist/
 build/
 *.min.js.map
 *.min.css.map
 
-# IDE and local tools
+# ---------------------------------------------------------------------------
+# IDE / AI tools
+# ---------------------------------------------------------------------------
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
+
 .agent/
 .claude/
+
 *.local.json
 settings.local.json
 
-# OS / editor junk
+# ---------------------------------------------------------------------------
+# OS junk
+# ---------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
 desktop.ini
+
 *.swp
 *.swo
 *~
 
-# uploads (user-generated content)
-uploads/*
-!uploads/.gitkeep
+# ---------------------------------------------------------------------------
+# Optional private assets (uncomment if repository becomes public)
+# ---------------------------------------------------------------------------
+# assets/images/profile_pictures/
+# assets/signatures/
+# IntLibs/phpWord/templates/*.docx
 
-# optional runtime artifacts
-*.tmp
-*.bak
-*.sql
-*.sqlite
-*.sqlite3
-
-# optional: local overrides (uncomment if you really create them)
+# ---------------------------------------------------------------------------
+# Optional local config overrides
+# ---------------------------------------------------------------------------
 # config.local.php
 # config.dev.php
-# core/Host_db_server.local.php
+# core/host_db_server.local.php
