@@ -1,0 +1,1167 @@
+/* ============================================
+   CSS TABLES SKIN
+   File dedicato per tutti gli stili di SKIN (aspetto visivo) delle tabelle
+   ============================================
+
+   TABLE OF CONTENTS:
+   ==================
+   1. Table base generica (.table)
+   2. Table wrapper e container (.table-wrapper, .table-container, .table-responsive)
+   3. Table header generico (.table-header)
+   4. Table compact (.table-compact)
+   5. Table page-specific riusabili (gare-table, results-table, see-citations-table)
+   6. Table protocollo (#tabella-destinatari)
+   7. Celle speciali (.cell-wrap, .sticky)
+   8. Table Modern (.table--modern) - Stile moderno con scope limitato
+
+   NOTA: Questo file contiene SOLO la SKIN (aspetto visivo) delle tabelle.
+   NON contiene:
+   - Controlli DataTables (.dataTables_*)
+   - Filtri (.table-filterable, .table-filter, .table-search)
+   - Input/select/textarea dentro tabelle
+
+   ============================================ */
+
+/* ============================================
+   1. TABLE BASE GENERICA
+   ============================================ */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-size: 12px;
+    color: #333;
+    table-layout: auto;
+}
+
+.table {
+    table-layout: auto;
+    width: 100%;
+}
+
+/* Intestazione */
+.table thead {
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #ccc;
+}
+
+.table thead th {
+    position: relative;
+    padding: 10px 12px;
+    text-align: left;
+    white-space: normal;
+    letter-spacing: 0.4px;
+    min-width: 80px;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* Celle corpo tabella */
+.table td {
+    padding: 0px 0px;
+    border-bottom: 1px solid #eee;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    font-size: 12px;
+    /* border-right: 1.5px solid #e0e0e0; */
+    vertical-align: middle;
+    line-height: 1.4;
+}
+
+/* Celle colonna azioni: padding ridotto per altezza minore */
+.table td.azioni-colonna {
+    padding: 4px 2px;
+    vertical-align: middle;
+}
+
+/* Header celle con filtri: posizione relativa per posizionamento icone */
+.table thead th {
+    position: relative;
+}
+
+/* Input filtri nelle tabelle */
+.table-col-search {
+    width: 100%;
+}
+
+/* Icone filtro nascoste per colonna azioni */
+.filter-icon.hidden {
+    display: none !important;
+}
+
+/* Icone filtro: stile cursore */
+.filter-icon {
+    cursor: pointer;
+}
+
+/* Header tabelle resizable */
+.resizable-header {
+    position: relative;
+}
+
+/* Celle header filtro */
+.filter-header-cell {
+    position: relative;
+}
+
+/* Distribuzione intelligente delle colonne - larghezze minime basate sul contenuto */
+/* Con table-layout: auto, il browser distribuisce automaticamente lo spazio in base al contenuto */
+.table thead th:first-child,
+.table td:first-child {
+    min-width: 100px;
+}
+
+.table thead th:nth-child(2),
+.table td:nth-child(2) {
+    min-width: 120px;
+    text-align: center;
+}
+
+/* Le colonne si adattano automaticamente al contenuto con table-layout: auto */
+
+/* Riga alternata */
+.table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* Hover su riga */
+.table tbody tr:hover,
+.table tbody tr:hover>td,
+.table-filterable tbody tr:hover,
+.table-filterable tbody tr:hover>td {
+    background-color: #ececec !important;
+    transition: background-color 0.1s ease-in-out;
+}
+
+/* Prima colonna sticky (opzionale) */
+.table td.sticky,
+.table th.sticky {
+    position: sticky;
+    left: 0;
+    background-color: #f5f5f5;
+    z-index: 1;
+}
+
+/* Classe per celle con testo che va a capo (usare solo dove necessario) */
+.cell-wrap,
+.table td.cell-wrap,
+.table th.cell-wrap {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-height: none !important;
+}
+
+/* ============================================
+   2. TABLE WRAPPER E CONTAINER
+   ============================================ */
+
+/* Wrapper per scroll orizzontale */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Table wrapper - compatto */
+.table-wrapper {
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.table-container {
+    position: relative;
+    /* Necessario per il posizionamento */
+    overflow: visible;
+    /* Permette al dropdown di essere visibile */
+}
+
+/* Se il table-container ha overflow-x, la paginazione deve essere fuori */
+.table-container[style*="overflow-x"]+.table-pagination,
+.table-container .table-wrapper+.table-pagination {
+    margin-top: 0;
+    padding-top: 15px;
+    width: 100%;
+    position: relative;
+    overflow-x: visible;
+}
+
+/* ============================================
+   3. TABLE HEADER GENERICO
+   ============================================ */
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    /* Allinea il titolo al centro e l'icona a destra */
+    align-items: center;
+}
+
+.table-header th:last-child {
+    margin: 0 auto;
+    /* Centra il titolo nella parte disponibile */
+}
+
+/* ============================================
+   4. TABLE COMPACT
+   ============================================ */
+
+/* Table compact - compatto e raffinato */
+.chiusura-form .table-compact {
+    font-size: 0.85em;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.chiusura-form .table-compact thead {
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+}
+
+.chiusura-form .table-compact th {
+    padding: 8px 10px;
+    font-size: 0.875em;
+    font-weight: 600;
+    color: #334155;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    font-size: 0.8em;
+}
+
+.chiusura-form .table-compact td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.chiusura-form .table-compact tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ============================================
+   5. TABLE PAGE-SPECIFIC RIUSABILI
+   ============================================ */
+
+/* Gare Table */
+.gare-table-wrapper {
+    /* background: #fff; */
+    border-radius: 8px;
+    /* box-shadow: 0 2px 8px rgba(0,0,0,0.08); */
+    padding-top: 20px;
+    /* padding: 20px; */
+    margin: 0 auto;
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    max-width: 100%;
+    /* La scrollbar è attaccata alla tabella */
+    position: relative;
+}
+
+/* Assicura che la paginazione sia sempre sotto la scrollbar */
+.gare-table-wrapper+.table-pagination {
+    margin-top: 0;
+    padding-top: 15px;
+    /* La paginazione è fuori dal wrapper scrollabile */
+    width: 100%;
+    position: relative;
+    overflow-x: visible;
+}
+
+.gare-table-wrapper h1 {
+    font-size: 20px;
+    margin-bottom: 16px;
+}
+
+.gare-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.gare-table thead tr {
+    background: #f5f6f8;
+}
+
+.gare-table th,
+.gare-table td {
+    border-bottom: 1px solid #e1e5eb;
+    text-align: left;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.gare-table th.gara-number,
+.gare-table td.gara-number {
+    width: 90px;
+    min-width: 80px;
+    max-width: 110px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.gare-table th.gara-amount,
+.gare-table td.gara-amount {
+    white-space: nowrap;
+    min-width: 140px;
+    font-weight: 600;
+}
+
+.gare-table td.gara-amount {
+    text-align: right;
+}
+
+.gare-table th.gara-amount {
+    text-align: left;
+}
+
+.gare-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.gare-table tbody tr:hover {
+    background-color: #f1f5fb;
+}
+
+.gare-table td.progress-cell,
+.gare-table th.progress-cell {
+    width: auto;
+}
+
+.gare-table td.progress-cell {
+    /* display: flex; */
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+/* Results Table */
+.results-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.results-table thead th {
+    background: linear-gradient(120deg, #eef3ff 0%, #d9e5ff 100%);
+    color: #1e3a8a;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid #c6d6f6;
+}
+
+.results-table thead th:first-child {
+    border-top-left-radius: 16px;
+}
+
+.results-table tbody tr.extraction-row td {
+    background: #ffffff;
+    border: none;
+    transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.results-table tbody tr.extraction-row:nth-of-type(odd) td {
+    background: #f8faff;
+}
+
+.results-table tbody tr.extraction-row:hover td {
+    background: #eef4ff;
+    box-shadow: inset 4px 0 0 #2f77f1;
+}
+
+.results-table tbody tr.extraction-row:not(:first-child) td {
+    box-shadow: inset 0 1px 0 0 #e3eaf8;
+}
+
+.results-table tbody tr.extraction-row .type-cell {
+    width: 240px;
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+.results-table tbody tr.extraction-row .type-cell .type-label {
+    display: block;
+    padding: 8px 12px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.results-table tbody tr.extraction-row .type-cell .type-code {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    letter-spacing: 0.01em;
+}
+
+.results-table tbody tr.extraction-row .value-cell {
+    color: #111827;
+    line-height: 1.5;
+}
+
+.results-table tbody tr.extraction-row .details-cell {
+    text-align: center;
+    width: 120px;
+}
+
+.results-table tbody tr.details-row td {
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.results-table tbody tr.details-row td.details-spacer {
+    width: 240px;
+    background: transparent;
+}
+
+.results-table tbody tr.details-row td.details-content {
+    background: linear-gradient(135deg, #ecf2ff 0%, #f8fbff 100%);
+    padding: 0 !important;
+    border-left: 3px solid #2f77f1;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* SOLO per tabelle dentro details-content quando sono aperte - forza a restringersi */
+.results-table tbody tr.details-row td.details-content .table-wrapper,
+.results-table tbody tr.details-row td.details-content .extraction-table-wrapper,
+.results-table tbody tr.details-row td.details-content .table-compact-wrapper,
+.results-table tbody tr.details-row td.details-content .details-inner .table-wrapper,
+.results-table tbody tr.details-row td.details-content .details-inner .extraction-table-wrapper,
+.results-table tbody tr.details-row td.details-content .details-inner .table-compact-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+.results-table tbody tr.details-row td.details-content table,
+.results-table tbody tr.details-row td.details-content .details-inner table,
+.results-table tbody tr.details-row td.details-content .table,
+.results-table tbody tr.details-row td.details-content .details-inner .table,
+.results-table tbody tr.details-row td.details-content .table-filterable,
+.results-table tbody tr.details-row td.details-content .details-inner .table-filterable {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    box-sizing: border-box !important;
+}
+
+.results-table tbody tr.details-row td.details-content .table th,
+.results-table tbody tr.details-row td.details-content .table td,
+.results-table tbody tr.details-row td.details-content .details-inner .table th,
+.results-table tbody tr.details-row td.details-content .details-inner .table td,
+.results-table tbody tr.details-row td.details-content .table-filterable th,
+.results-table tbody tr.details-row td.details-content .table-filterable td,
+.results-table tbody tr.details-row td.details-content .details-inner .table-filterable th,
+.results-table tbody tr.details-row td.details-content .details-inner .table-filterable td {
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.results-table tbody tr.details-row td.details-content .table-filterable th:first-child,
+.results-table tbody tr.details-row td.details-content .table-filterable td:first-child,
+.results-table tbody tr.details-row td.details-content .table-filterable th,
+.results-table tbody tr.details-row td.details-content .table-filterable td {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.results-table tbody tr.details-row td.details-content .table-wrapper,
+.results-table tbody tr.details-row td.details-content .extraction-table-wrapper,
+.results-table tbody tr.details-row td.details-content .table-compact-wrapper,
+.results-table tbody tr.details-row td.details-content .details-inner .table-wrapper,
+.results-table tbody tr.details-row td.details-content .details-inner .extraction-table-wrapper,
+.results-table tbody tr.details-row td.details-content .details-inner .table-compact-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+.results-table tbody tr.details-row td.details-content table,
+.results-table tbody tr.details-row td.details-content .details-inner table,
+.results-table tbody tr.details-row td.details-content .table,
+.results-table tbody tr.details-row td.details-content .details-inner .table,
+.results-table tbody tr.details-row td.details-content .table-filterable,
+.results-table tbody tr.details-row td.details-content .details-inner .table-filterable {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    box-sizing: border-box !important;
+}
+
+.results-table tbody tr.details-row td.details-content .table th,
+.results-table tbody tr.details-row td.details-content .table td,
+.results-table tbody tr.details-row td.details-content .details-inner .table th,
+.results-table tbody tr.details-row td.details-content .details-inner .table td,
+.results-table tbody tr.details-row td.details-content .table-filterable th,
+.results-table tbody tr.details-row td.details-content .table-filterable td,
+.results-table tbody tr.details-row td.details-content .details-inner .table-filterable th,
+.results-table tbody tr.details-row td.details-content .details-inner .table-filterable td {
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.results-table tbody tr.details-row td.details-content .table-filterable th:first-child,
+.results-table tbody tr.details-row td.details-content .table-filterable td:first-child,
+.results-table tbody tr.details-row td.details-content .table-filterable th,
+.results-table tbody tr.details-row td.details-content .table-filterable td {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* See Citations Table */
+.see-citations-table-wrapper .see-citations-table {
+    width: 100%;
+}
+
+.see-citations-table td,
+.see-citations-table th {
+    font-size: 12px;
+    vertical-align: top;
+}
+
+/* ============================================
+   6. TABLE PROTOCOLLO
+   ============================================ */
+
+/*===Stile custom tabella protocollo ===*/
+
+#tabella-destinatari {
+    border-collapse: separate !important;
+    /* border-spacing: 0 7px; */
+    /* Distanza verticale tra righe */
+    margin-bottom: 0;
+}
+
+#tabella-destinatari th {
+    font-weight: bold;
+    background: #f7f7f7;
+    text-align: left;
+    border-bottom: 1.5px solid #e3e3e3;
+    padding: 4px 7px 4px 7px;
+}
+
+#tabella-destinatari td {
+    background: #fff;
+}
+
+/* ============================================
+   7. PAGINAZIONE
+   ============================================ */
+
+.pagination-rows-label {
+    font-size: 13px;
+    white-space: nowrap;
+    margin: 0;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+    line-height: 1.5;
+}
+
+/* ============================================
+   8. TABLE MODERN - STILE MODERNO RIUSABILE
+   ============================================
+
+   IMPORTANTE: Tutte le classi di design/look sono SCOPATE
+   sotto .table--modern per evitare regressioni su tabelle legacy.
+
+   Le tabelle legacy (senza .table--modern) non vengono alterate.
+
+   Per usare il look moderno: <table class="table table--modern">
+
+   ============================================ */
+
+/* === MODIFIER: .table--modern === */
+.table.table--modern {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.table.table--modern thead {
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table.table--modern thead th {
+    padding: 12px 14px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: none;
+}
+
+.table.table--modern tbody td {
+    padding: 10px 14px;
+    font-size: 0.9em;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.table.table--modern tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table.table--modern tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+
+.table.table--modern tbody tr:hover,
+.table.table--modern tbody tr:hover > td {
+    background-color: #e8f4fd !important;
+}
+
+/* === MODIFIER: .table--compact (standalone, non richiede .chiusura-form) === */
+.table.table--compact thead th {
+    padding: 8px 10px;
+    font-size: 0.75em;
+}
+
+.table.table--compact tbody td {
+    padding: 6px 10px;
+    font-size: 0.85em;
+}
+
+/* ============================================
+   8.1 COLONNE SEMANTICHE - SOLO .table--modern
+   ============================================
+   Queste classi si applicano SOLO dentro .table--modern
+   per non impattare tabelle legacy che potrebbero usare
+   accidentalmente classi con nomi simili.
+   ============================================ */
+
+/* Colonna azioni (icone, bottoni) - SCOPED */
+.table--modern .col-actions {
+    width: 60px;
+    min-width: 60px;
+    max-width: 80px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.table--modern .col-actions--wide {
+    width: 100px;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+/* Colonna codice (ID, codici brevi) - SCOPED */
+.table--modern .col-code {
+    width: 120px;
+    min-width: 100px;
+    max-width: 160px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #1e40af;
+}
+
+/* Colonna stato (badge/pill) - SCOPED */
+.table--modern .col-status {
+    width: 100px;
+    min-width: 80px;
+    max-width: 140px;
+    text-align: center;
+}
+
+/* Colonna data - SCOPED */
+.table--modern .col-date {
+    width: 100px;
+    min-width: 90px;
+    max-width: 120px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Colonna importo/valore - SCOPED */
+.table--modern .col-amount {
+    width: 120px;
+    min-width: 100px;
+    max-width: 160px;
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Colonna persona (avatar + nome) - SCOPED */
+.table--modern .col-person {
+    min-width: 140px;
+}
+
+/* Colonna descrizione (flessibile, prende spazio rimanente) - SCOPED */
+.table--modern .col-description {
+    min-width: 200px;
+}
+
+/* Colonna Business Unit - SCOPED */
+.table--modern .col-bu {
+    width: 100px;
+    min-width: 80px;
+    max-width: 140px;
+    text-align: center;
+}
+
+/* ============================================
+   8.2 CELLE STACK - SOLO .table--modern
+   ============================================ */
+
+.table--modern .cell-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.3;
+}
+
+.table--modern .cell-stack .cell-primary {
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.table--modern .cell-stack .cell-secondary {
+    font-size: 0.85em;
+    color: #6b7280;
+}
+
+/* ============================================
+   8.3 BOTTONI AZIONE - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.table--modern .table-action-btn:hover {
+    transform: scale(1.08);
+}
+
+.table--modern .table-action-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Varianti bottoni - SCOPED */
+.table--modern .table-action-btn--open {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.table--modern .table-action-btn--open:hover {
+    background: #d1fae5;
+}
+
+.table--modern .table-action-btn--start {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+.table--modern .table-action-btn--start:hover {
+    background: #dbeafe;
+}
+
+.table--modern .table-action-btn--edit {
+    background: #fefce8;
+    color: #ca8a04;
+    border-color: #fef08a;
+}
+
+.table--modern .table-action-btn--edit:hover {
+    background: #fef9c3;
+}
+
+.table--modern .table-action-btn--delete {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.table--modern .table-action-btn--delete:hover {
+    background: #fee2e2;
+}
+
+.table--modern .table-action-btn--view {
+    background: #f5f3ff;
+    color: #7c3aed;
+    border-color: #ddd6fe;
+}
+
+.table--modern .table-action-btn--view:hover {
+    background: #ede9fe;
+}
+
+/* ============================================
+   8.4 AVATAR - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.table--modern .table-avatar--sm {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7em;
+}
+
+.table--modern .table-avatar--lg {
+    width: 40px;
+    height: 40px;
+    font-size: 0.85em;
+}
+
+/* Avatar come immagine (img.table-avatar) */
+.table--modern img.table-avatar {
+    display: block;
+    object-fit: cover;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+}
+
+/* ============================================
+   8.5 PERSONA CON AVATAR - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.table--modern .table-person__name {
+    font-weight: 500;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table--modern .table-person__role {
+    font-size: 0.85em;
+    color: #6b7280;
+}
+
+/* ============================================
+   8.6 PILL/BADGE - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.table--modern .table-pill--default {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.table--modern .table-pill--success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.table--modern .table-pill--warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.table--modern .table-pill--danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.table--modern .table-pill--info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.table--modern .table-pill--purple {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+/* ============================================
+   8.7 BADGE NUMERICO - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    background: #3b82f6;
+    color: #fff;
+}
+
+.table--modern .table-badge--gray {
+    background: #6b7280;
+}
+
+.table--modern .table-badge--green {
+    background: #10b981;
+}
+
+.table--modern .table-badge--red {
+    background: #ef4444;
+}
+
+/* ============================================
+   8.8 LINK IN TABELLA - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+
+.table--modern .table-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* ============================================
+   8.9 RIGA CLICCABILE - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-row-clickable {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.table--modern .table-row-clickable:hover {
+    background-color: #f0f9ff !important;
+}
+
+/* ============================================
+   8.10 EMPTY/LOADING STATE - SOLO .table--modern
+   ============================================ */
+
+.table--modern .table-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+    font-size: 0.95em;
+}
+
+.table--modern .table-empty svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.table--modern .table-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+}
+
+.table--modern .table-loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: table-spin 0.8s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes table-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   9. TABLE TOP FILTERS - BARRA FILTRI SMART
+   ============================================
+   Stili generici e riutilizzabili per barre filtro
+   posizionate sopra le tabelle .table--modern.
+   ============================================ */
+
+.table-top-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.table-top-filters__group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.table-top-filters__group--action {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.table-top-filters__label {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.table-top-filters__select,
+.table-top-filters__input {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 0.85em;
+    color: #334155;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.table-top-filters__select:focus,
+.table-top-filters__input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.table-top-filters__select {
+    min-width: 140px;
+    cursor: pointer;
+}
+
+.table-top-filters__input {
+    width: 120px;
+}
+
+.table-top-filters__reset {
+    height: 30px;
+    padding: 0 16px;
+    font-size: 0.8em;
+    font-weight: 500;
+    color: #64748b;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.table-top-filters__reset:hover {
+    color: #dc2626;
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+@media (max-width: 768px) {
+    .table-top-filters {
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    .table-top-filters__group {
+        flex: 1 1 calc(50% - 8px);
+    }
+
+    .table-top-filters__group--action {
+        flex: 1 1 100%;
+        margin-left: 0;
+    }
+
+    .table-top-filters__select,
+    .table-top-filters__input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .table-top-filters__reset {
+        width: 100%;
+    }
+}

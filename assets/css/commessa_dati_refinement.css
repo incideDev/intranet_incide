@@ -1,0 +1,140 @@
+/* ========================================================================= */
+/* REFINEMENT UI DETTAGLIO COMMESSA (DATI GENERALI)                          */
+/* ========================================================================= */
+
+/* 1. Uniformazione Wrapper (Riepilogo, Detail, Box Card) */
+.commessa-summary-box,
+.commessa-detail-card,
+.commessa-box-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    margin-bottom: 24px !important;
+}
+
+/* 2. Header Box */
+.commessa-summary-box h2,
+.commessa-detail-card h2,
+.commessa-box-card h3 {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    margin: 0 !important;
+    padding: 16px 20px !important;
+    font-size: 1.05em !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+}
+
+/* 3. Corpo Box (padding coerente) */
+.commessa-summary-box .commessa-summary-table,
+.commessa-detail-card .commessa-summary-table {
+    margin: 16px 20px !important;
+    width: calc(100% - 40px) !important;
+}
+
+/* Per il box team e scadenze (liste non-tabellari) */
+.commessa-box-card > ul.commessa-team-list,
+.commessa-box-card > ul.deadline-list {
+    padding: 16px 20px !important;
+    margin: 0 !important;
+}
+
+/* 4. Tabelle Dati (Riepilogo e Detail) */
+.commessa-summary-table {
+    border-collapse: collapse !important;
+}
+
+.commessa-summary-table tr {
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.commessa-summary-table tr:last-child {
+    border-bottom: none !important;
+}
+
+.commessa-summary-table tr:hover {
+    background-color: #f8fafc !important;
+}
+
+.commessa-summary-table td {
+    padding: 12px 8px !important;
+    font-size: 0.95em !important;
+    vertical-align: top !important;
+}
+
+.commessa-summary-table .summary-label {
+    width: 35% !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    background: transparent !important;
+    padding-right: 16px !important;
+}
+
+.commessa-summary-table td:not(.summary-label) {
+    color: #0f172a !important;
+    font-weight: 500 !important;
+}
+
+/* 5. Team List Refinement */
+.commessa-team-list .commessa-team-member {
+    padding: 12px 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.commessa-team-list .commessa-team-member:last-child {
+    border-bottom: none !important;
+}
+
+.commessa-team-list .team-name {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    font-size: 0.95em !important;
+}
+
+.commessa-team-list .team-role {
+    color: #64748b !important;
+    font-size: 0.85em !important;
+    margin-top: 4px !important;
+}
+
+/* 6. Scadenze List Refinement */
+.deadline-list .deadline-row {
+    padding: 12px 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.deadline-list .deadline-row:last-child {
+    border-bottom: none !important;
+}
+
+.deadline-task {
+    color: #0f172a !important;
+    font-weight: 500 !important;
+}
+
+.deadline-empty {
+    margin: 16px 20px !important;
+}
+
+/* 7. Badges "Non disponibile" Uniformati */
+.commessa-summary-table .label.label-missing {
+    background-color: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border: 1px solid #e2e8f0 !important;
+    font-weight: 500 !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    font-size: 0.85em !important;
+    display: inline-block !important;
+}
+
+/* Fix Gerarchia e Card layout */
+.commessa-main-flex {
+    gap: 24px !important;
+}

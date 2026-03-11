@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 26.09 22.59">
+  <!-- Generator: Adobe Illustrator 29.1.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 142)  -->
+  <defs>
+    <style>
+      .st0 {
+        stroke: #fff;
+        stroke-width: .5px;
+      }
+
+      .st0, .st1 {
+        fill: none;
+        stroke-miterlimit: 10;
+      }
+
+      .st1 {
+        stroke: #e1e0e0;
+        stroke-width: .25px;
+      }
+
+      .st2 {
+        display: none;
+      }
+    </style>
+  </defs>
+  <g id="Livello_2" class="st2">
+    <rect x="-47.71" y="-22.42" width="344.25" height="319.5"/>
+  </g>
+  <g id="Livello_1">
+    <g>
+      <line class="st0" x1="6.52" y1="11.3" x2="13.04"/>
+      <line class="st0" x1="13.04" x2="19.56" y2="11.3"/>
+    </g>
+    <g>
+      <line class="st0" x1="13.04" y1="22.59" x2="6.52" y2="11.3"/>
+      <line class="st0" x1="19.56" y1="11.3" x2="13.04" y2="22.59"/>
+    </g>
+    <path class="st0" d="M0,11.3"/>
+    <polygon class="st0" points="19.57 0 6.52 0 0 11.3 6.52 22.59 19.57 22.59 26.09 11.3 19.57 0"/>
+    <path class="st0" d="M26.09,11.3"/>
+    <line class="st0" x1="6.52" x2="19.57"/>
+    <line class="st0" x1="19.57" y1="22.59" x2="6.52" y2="22.59"/>
+    <polygon class="st0" points="22.43 -79.16 9.34 -79.16 2.79 -67.82 9.34 -56.48 22.43 -56.48 28.98 -67.82 22.43 -79.16"/>
+    <polygon class="st1" points="57.93 -79.16 44.84 -79.16 38.29 -67.82 44.84 -56.48 57.93 -56.48 64.48 -67.82 57.93 -79.16"/>
+    <line class="st0" x1="19.56" y1="11.3" x2="26.09" y2="11.3"/>
+    <line class="st0" y1="11.3" x2="6.52" y2="11.3"/>
+  </g>
+</svg>

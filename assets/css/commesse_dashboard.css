@@ -1,0 +1,333 @@
+/**
+ * Dashboard Commesse - CSS
+ * Prefisso: .commessa-dashboard-
+ */
+
+/* === SUBTITLE === */
+.commessa-dashboard-subtitle {
+    color: #6c757d;
+    font-size: 0.95em;
+    margin-bottom: 24px;
+    margin-top: -8px;
+}
+
+/* === KPI ROW === */
+.commessa-dashboard-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1200px) {
+    .commessa-dashboard-kpi-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .commessa-dashboard-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .commessa-dashboard-kpi-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* === KPI CARD === */
+.commessa-dashboard-kpi-card {
+    background: white;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.2s;
+}
+
+.commessa-dashboard-kpi-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kpi-icon-open {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #28a745;
+}
+
+.kpi-icon-closed {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #dc3545;
+}
+
+.kpi-icon-total {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    color: #17a2b8;
+}
+
+.kpi-icon-pm {
+    background: linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%);
+    color: #6c757d;
+}
+
+.kpi-icon-sector {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    color: #856404;
+}
+
+.kpi-icon-bu {
+    background: linear-gradient(135deg, #d4c4fb 0%, #c9b8f8 100%);
+    color: #6f42c1;
+}
+
+.kpi-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.kpi-value {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #212529;
+    line-height: 1.2;
+}
+
+.kpi-label {
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* === GRID 2 COLONNE === */
+.commessa-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+    .commessa-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* === BARS CONTAINER (BU) === */
+.commessa-dashboard-bars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.commessa-dashboard-bar-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bar-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bar-label {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #212529;
+}
+
+.bar-count {
+    font-size: 0.85em;
+    font-weight: 700;
+    color: #495057;
+    background: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* === PM LIST === */
+.commessa-dashboard-pm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.commessa-dashboard-pm-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.commessa-dashboard-pm-item:hover {
+    background: #e9ecef;
+}
+
+.pm-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.pm-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.pm-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.pm-name {
+    font-size: 0.95em;
+    font-weight: 500;
+    color: #212529;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pm-count-badge {
+    background: #007bff;
+    color: white;
+    font-size: 0.8em;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+/* === SECTOR PILLS === */
+.commessa-dashboard-sector-card {
+    margin-bottom: 24px;
+}
+
+.commessa-dashboard-sector-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.commessa-dashboard-sector-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 24px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.commessa-dashboard-sector-pill:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.sector-count {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #007bff;
+    line-height: 1;
+}
+
+.sector-label {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: #495057;
+    text-align: center;
+    line-height: 1.2;
+    inline-size: min-content;
+}
+
+/* === TABLE === */
+.commessa-dashboard-table {
+    width: 100%;
+}
+
+.commessa-dashboard-row-clickable {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.commessa-dashboard-row-clickable:hover {
+    background: #f8f9fa;
+}
+
+.commessa-dashboard-link,
+.commessa-dashboard-link-title {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.commessa-dashboard-link:hover,
+.commessa-dashboard-link-title:hover {
+    text-decoration: underline;
+}
+
+.commessa-dashboard-link-title {
+    color: #212529;
+}
+
+/* === LOADING & EMPTY STATE === */
+.commessa-dashboard-loading {
+    text-align: center;
+    color: #6c757d;
+    padding: 32px;
+    font-size: 0.95em;
+}
+
+.commessa-dashboard-empty {
+    text-align: center;
+    color: #6c757d;
+    padding: 32px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 0.95em;
+}

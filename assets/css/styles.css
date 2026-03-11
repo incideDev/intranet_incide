@@ -1,0 +1,6980 @@
+/* Import Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+:root {
+  --light-grey-incide: 204, 204, 204;
+  --medium-grey-incide: 143, 142, 140;
+  --dark-grey-incide: 102, 102, 102;
+  --red-incide: 205, 33, 29;
+
+  /* Variabili font centralizzate */
+  --font1: "Lato", sans-serif;
+  --font2: "Inter", sans-serif;
+  /* fallback o alternativo */
+
+  /* Assegnazione body/heading */
+  --font-family-body: var(--font1);
+  --font-family-heading: var(--font1);
+
+  /* Definizione dei pesi */
+  --weight-hairline: 100;
+  --weight-thin: 200;
+  --weight-extra-light: 250;
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-demi-bold: 600;
+  --weight-bold: 700;
+}
+
+.text-label {
+  font-size: 10px;
+  color: rgba(var(--dark-grey-incide));
+  font-weight: var(--weight-bold);
+  margin: 0;
+  padding: 0;
+}
+
+/* Stile di base per il testo */
+.text {
+  color: black;
+  font-weight: 300;
+}
+
+/* Stili specifici per titoli e sottotitoli */
+.title {
+  font-size: 11px;
+  color: rgba(var(--dark-grey-incide));
+  text-transform: uppercase;
+}
+
+.subtitle {
+  font-size: 11px;
+  color: var(--dark-grey-incide);
+  text-transform: capitalize;
+}
+
+.tab-text {
+  font-size: 10px;
+  color: var(--dark-grey-incide);
+  padding: 4px;
+  text-align: center;
+  background-color: white;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
+}
+
+/* Stile per i sottomenu */
+.submenu {
+  list-style: none;
+  padding-left: 15px;
+  overflow: hidden;
+  max-height: 0;
+  transition:
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease;
+  opacity: 0;
+}
+
+.submenu.submenu-open {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* Stile per i link di navigazione nella sidebar */
+.fixed-sidebar a,
+.submenu a {
+  padding: 8px;
+  display: block;
+  padding-inline: 10px;
+  text-decoration: none;
+  border-radius: 4px;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease;
+  position: relative;
+  /* Per posizionare la freccetta */
+  font-size: 12.5px;
+  color: rgba(var(--dark-grey-incide), 1);
+}
+
+/* Stile per le voci del sottomenu */
+.submenu a {
+  padding: 6px 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    border-left-color 0.3s ease;
+  text-transform: capitalize;
+  font-size: 12px;
+}
+
+.submenu a:hover {
+  transform: scale(1.02);
+  /* Effetto di ingrandimento */
+  /* background-color: rgba(0, 0, 0, 0.05); */
+  /* Oscurisce leggermente il background */
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    font-weight 0.2s ease;
+}
+
+/* Hover per i sottomenu */
+.submenu-item:hover {
+  background-color: rgba(var(--medium-grey-incide), 0.05);
+  padding-left: 10px;
+  transition: padding-left 0.2s ease-in-out;
+}
+
+/* Rimuove i puntini dagli elenchi */
+.fixed-sidebar ul.menu {
+  font-size: 12px;
+  list-style-type: none;
+  /* Rimuove i puntini */
+  margin: 0;
+  padding: 0;
+  text-transform: uppercase;
+}
+
+.submenu-item.active {
+  font-weight: var(--weight-demi-bold);
+  background-color: transparent;
+  transition:
+    border-radius 0.2s ease,
+    border-left-color 0.2s ease;
+  /*color: rgba(var(--red-incide)) !important;*/
+  transition: padding-left 0.2s ease-in-out;
+}
+
+.fixed-sidebar ul.submenu {
+  list-style-type: none;
+  /* Rimuove i puntini */
+  padding-left: 20px;
+  /* Aggiunge un po' di rientro per i sottomenu */
+}
+
+/* Stile per i menu normali */
+.fixed-sidebar .menu-title {
+  text-decoration: none;
+  color: #333;
+  /* Colore predefinito */
+  display: block;
+  /* Rende il link come un blocco per migliorare l'usabilitÃ  */
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.fixed-sidebar .menu-item {
+  background-color: transparent;
+  border-bottom: 1.2px solid rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Effetto evidenziazione al passaggio del mouse SOLO sui menu principali */
+.fixed-sidebar .menu-item > a:hover,
+.fixed-sidebar .menu-item > a:hover .menu-text,
+.fixed-sidebar .menu-item > a:hover .menu-arrow {
+  font-weight: var(--weight-demi-bold);
+  color: rgba(var(--red-incide), 1) !important;
+}
+
+/* Mantieni il colore rosso anche quando il menu Ã¨ aperto (non solo hover) */
+.fixed-sidebar .menu-item.menu-open > a,
+.fixed-sidebar .menu-item.menu-open > a .menu-text,
+.fixed-sidebar .menu-item.menu-open > a .menu-arrow {
+  color: rgba(var(--red-incide), 1) !important;
+}
+
+/* Colore nero/grigio scuro per menu chiusi (default) */
+.fixed-sidebar .menu-item:not(.menu-open) > a,
+.fixed-sidebar .menu-item:not(.menu-open) .menu-text,
+.fixed-sidebar .menu-item:not(.menu-open) .menu-arrow {
+  color: rgba(var(--dark-grey-incide), 1);
+}
+
+/* Stile per la sidebar fissa */
+.fixed-sidebar {
+  position: fixed;
+  top: 10px;
+  left: 0;
+  width: 225px;
+  height: calc(100% - 45px);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
+  /* Altezza dinamica meno il margine superiore */
+  padding: 10px;
+  padding-top: 5px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  /* Scroll verticale abilitato */
+  overflow-x: hidden;
+  /* Nasconde lo scroll orizzontale */
+  scrollbar-width: none;
+  /* Nasconde lo scroll per browser compatibili */
+  margin-top: 40px;
+  z-index: 999;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  transition:
+    transform 0.5s ease-in-out,
+    opacity 0.5s ease-in-out;
+}
+
+.fixed-sidebar.closed {
+  transform: translateX(-120%);
+  opacity: 0.4;
+  pointer-events: none;
+  /* Dissolvenza */
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
+  color: white;
+}
+
+.sidebar-toggle-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background-color: whites;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-toggle-bar:hover {
+  background-color: whitesmoke;
+}
+
+.sidebar-toggle {
+  background-color: transparent;
+  /* Sfondo trasparente */
+  border: none;
+  /* Rimuove il bordo */
+  padding: 0;
+  /* Rimuove il padding */
+  margin: 0;
+  /* Rimuove il margine */
+  cursor: pointer;
+  /* Cambia il cursore per indicare che Ã¨ cliccabile */
+  display: flex;
+  /* Allinea l'immagine al centro */
+  align-items: center;
+}
+
+.sidebar-toggle img.icon {
+  width: 1px;
+  height: 20px;
+}
+
+.icon-toggle {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  cursor: pointer;
+  /* Cambia il cursore per indicare che Ã¨ cliccabile */
+}
+
+.menu-title.active {
+  background-color: #e0e0e0;
+  /* Colore di sfondo per l'elemento attivo */
+  color: #ff0000;
+  /* Cambia il colore del testo se necessario */
+}
+
+.menu-title.active:hover {
+  background-color: #dcdcdc;
+  /* Effetto hover anche sull'elemento attivo */
+}
+
+.menu-action-bar {
+  border-bottom: 1px solid #ddd;
+  height: 10px;
+  margin-top: -6px;
+  padding-bottom: 2px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  /* Posiziona il contenuto a destra */
+}
+
+.menu-action-bar a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  /* Animazione per ingrandimento */
+  padding-right: 5px;
+  /* Spazio tra l'icona e il bordo destro */
+}
+
+.menu-action-bar a:hover {
+  transform: scale(1.3);
+  /* Ingrandisce l'icona al passaggio del mouse */
+  filter: brightness(1.5);
+  /* Cambia il colore schiarendolo */
+}
+
+html {
+  overflow-y: scroll;
+  /* Forza la barra di scorrimento verticale sempre visibile */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(var(--light-grey-incide), 0.2);
+  letter-spacing: 0em;
+  font-family: var(--font-family-body);
+  font-weight: var(--weight-regular);
+  font-size: 14px;
+  font-size: clamp(12px, 1vw, 14px);
+  /* Minimo 12px, massimo 14px */
+  line-height: 1.1;
+  z-index: -2;
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+  border: none;
+}
+
+/*
+input[type="date" i] {
+    text-transform: lowercase;
+}
+*/
+
+/* Per assicurarsi che nessun elemento superi i 14px */
+* {
+  font-size: inherit;
+  /* Eredita la dimensione del carattere del body */
+  /* Nota: max-font-size non esiste in CSS, usa font-size con clamp() se necessario */
+  /* border: 1px solid black; */
+}
+
+/* Stile per il campo data */
+.date-field {
+  display: flex;
+  align-items: center;
+  /* gap: 3px; */
+  font-size: 10px;
+  color: #333;
+}
+
+.date-field input[type="date"] {
+  border: none;
+  outline: none;
+  font-size: 10px;
+  color: #333;
+  padding: 2px;
+  background: transparent;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: var(--weight-bold);
+  /*text-transform: uppercase;*/
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: var(--weight-demi-bold);
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: var(--weight-medium);
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: var(--weight-regular);
+  margin-bottom: 5px;
+  color: rgba(var(--red-incide));
+  font-weight: bold;
+}
+
+h5 {
+  font-size: 14px;
+  font-weight: var(--weight-regular);
+}
+
+h6 {
+  font-size: 12px;
+  font-weight: var(--weight-light);
+}
+
+/* Se necessario, puoi personalizzare altri elementi come titoli */
+/* p {
+    font-family: var(--font-family-heading);
+} */
+
+/* Stile globale per tutti i link, per evitare il colore blu predefinito */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Link Premium Globali */
+.link-incide {
+  color: rgba(var(--red-incide), 1);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease,
+    opacity 0.2s ease;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+}
+
+.link-incide:hover {
+  color: #a83224;
+  border-bottom: 1px solid #a83224;
+  opacity: 0.9;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: #fafaf7;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c0392b;
+  border-radius: 20px;
+  margin: none;
+  border: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #a83224;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.background-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.background-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px);
+  /* Sfocatura intensa */
+  opacity: 0.3;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0) 20%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.6) 80%,
+      rgba(255, 255, 255, 1) 95%
+    ),
+    url("../svg/texture_esagoni.svg");
+  background-position: center;
+  background-size: auto, 2%;
+  background-repeat: repeat;
+  z-index: 1;
+}
+
+/* Stile per il logo nella pagina di login */
+.login-logo {
+  width: 50%;
+}
+
+.login-container {
+  position: relative;
+  margin: 6vh auto 0 auto;
+  max-width: 360px;
+  width: 94vw;
+  background: #ffffff82;
+  border-radius: 15px;
+  box-shadow: 0 0 38px #0002;
+  padding: 28px 30px 22px 30px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+  opacity: 0;
+  animation: fade-zoom-login 1.4s forwards cubic-bezier(0.15, 1.1, 0.75, 1.02);
+  animation-delay: 0.2s;
+  max-height: 88vh;
+  overflow-y: auto;
+  transition:
+    box-shadow 0.17s,
+    padding 0.16s;
+}
+
+@keyframes fade-zoom-login {
+  0% {
+    opacity: 0;
+    transform: translateY(-48%) scale(1.18);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: translateY(-34%) scale(1.06);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0%) scale(1);
+  }
+}
+
+/* Responsive fix su schermi bassi/larghi */
+@media (max-height: 800px) {
+  .login-container {
+    margin-top: 2vh;
+    padding-top: 18px;
+    padding-bottom: 10px;
+    max-height: 94vh;
+  }
+}
+
+@media (max-width: 650px) {
+  .login-container {
+    max-width: 98vw;
+    padding-left: 8px;
+    padding-right: 8px;
+    font-size: 0.98em;
+  }
+
+  .login-logo {
+    width: 78%;
+  }
+}
+
+@media (max-height: 650px) {
+  .login-container {
+    margin-top: 0.5vh;
+    padding-top: 8px;
+    padding-bottom: 6px;
+    font-size: 0.93em;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80%;
+}
+
+/* Etichette e input */
+.login-form label {
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+  font-weight: 600;
+  width: 100%;
+  max-width: 280px;
+  margin-bottom: 5px;
+  margin-top: 10px;
+}
+
+/* Stile input specifico per login */
+.login-form input {
+  width: 100%;
+  max-width: 280px;
+  padding: 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+  text-align: left;
+  transition: border 0.3s ease;
+}
+
+/* Forza il colore bianco anche quando il campo Ã¨ attivo */
+.login-form input:focus {
+  background-color: white !important;
+  outline: none;
+  border-color: rgba(var(--red-incide));
+}
+
+/* Disattiva il colore di autofill (giallo in Chrome, azzurrino in altri browser) */
+.login-form input:-webkit-autofill {
+  background-color: white !important;
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  color: #333 !important;
+}
+
+/* Contenitore password con icona */
+.password-container {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  align-items: center;
+}
+
+.password-container input {
+  padding-right: 35px;
+}
+
+.password-container .toggle-password-icon {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  width: 18px;
+  height: auto;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.password-container .toggle-password-icon:hover {
+  opacity: 1;
+}
+
+.remember-me {
+  align-self: normal;
+  margin-left: 20px;
+  gap: 10px;
+}
+
+/* Sezione "Ricordami" */
+.login-form .remember-me {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Lo centra rispetto agli altri campi */
+}
+
+/* Stile della checkbox */
+.remember-me input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Testo "Ricordami" */
+.remember-me label {
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Pulsante login */
+#login {
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-left: 70%;
+}
+
+/* ============================================
+   WELCOME BACK - Schermata "Bentornato"
+   ============================================ */
+
+.welcome-back-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+  text-align: center;
+}
+
+.welcome-back-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 15px;
+  border: 3px solid rgba(var(--red-incide));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.welcome-back-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.welcome-back-greeting {
+  font-size: 14px;
+  color: rgba(var(--dark-grey-incide));
+  margin: 0 0 5px 0;
+  font-weight: var(--weight-regular);
+}
+
+.welcome-back-name {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 20px 0;
+  font-weight: var(--weight-bold);
+}
+
+.welcome-back-form {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.welcome-back-btn {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+.welcome-back-forget {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.welcome-back-link {
+  background: none;
+  border: none;
+  color: rgba(var(--medium-grey-incide));
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 5px 10px;
+  transition: color 0.2s ease;
+}
+
+.welcome-back-link:hover {
+  color: rgba(var(--red-incide));
+}
+
+/* ============================================ */
+
+/* Stile per i campi di cambio password nella gestione profilo */
+#current-password,
+#new-password,
+#confirm-new-password {
+  width: 100%;
+  border-radius: 5px;
+  transition: border-color 0.3s ease;
+}
+
+/*-------TABELLA---------*/
+
+/* Barra di ricerca */
+.table-search-input {
+  padding: 6px 10px;
+  font-size: 12px;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.filter-icon {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.filter-icon.filter-active img {
+  filter: drop-shadow(0 0 2px #c0392b) brightness(0) saturate(100%) invert(24%)
+    sepia(89%) saturate(4686%) hue-rotate(353deg) brightness(90%) contrast(119%);
+}
+
+/*
+.filter-row th {
+    border-bottom: 1px solid #eee;
+    padding: 3px 6px !important;
+    text-align: left;
+}
+*/
+
+.table-col-search {
+  width: 98%;
+  border: 1px solid #ccc;
+  background: #fafafa;
+  margin: 0;
+}
+
+.filter-icon img {
+  vertical-align: middle;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.filter-icon img:hover {
+  opacity: 1;
+}
+
+/*---Dropdown tabella---*/
+/* Dropdown filtro colonna */
+#column-filter-dropdown {
+  min-width: 120px;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+}
+
+.dropdown-filter-item {
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-filter-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-filter-item:hover {
+  background: #ececec;
+}
+
+/*----------------------*/
+/* Configurazione del container principale */
+.top-container {
+  position: relative;
+  width: 90vw;
+  max-width: clamp(360px, 70vw, 1280px);
+  /* min, preferito, max */
+  min-width: 320px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: box-shadow 0.18s;
+  /* gap: 30px; */
+}
+
+/* Stile per i campi readonly */
+.readonly {
+  background-color: #f9f9f9;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Configurazione per ogni riga con etichetta e input */
+/* .row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    margin-right: 3px;
+} */
+
+/* Configurazione delle righe con due colonne (half-width) */
+.row.half-width {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Due colonne uguali */
+  gap: 12px;
+  /* Spazio tra le colonne */
+  margin-bottom: 10px;
+  /* margin-right: 10px; */
+}
+
+/* Configurazione delle righe con tre colonne */
+.row.three-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* Tre colonne uguali */
+  gap: 20px;
+  /* Spazio tra le colonne */
+  margin-left: 10px;
+  margin-right: -10px;
+}
+
+/* Stile per il select box nella riga full-width */
+.row.full-width .select-box {
+  width: 100%;
+  /* Occupa l'intera larghezza */
+  margin: 0;
+  /* Rimuove margine */
+}
+
+/* Gestione coerente del padding e del border-radius per readonly e select-box */
+.readonly,
+.select-box,
+.select-box[type="text"] {
+  /*border-radius: 4px;*/
+  box-sizing: border-box;
+}
+
+/* Imposta padding coerente sulle righe full-width */
+.row.full-width {
+  margin-bottom: 20px;
+}
+
+/* Configurazione specifica per righe di protocollo */
+.row.protocollo {
+  display: flex;
+  align-items: center;
+  /* Allinea verticalmente al centro */
+  /* gap: 15px; */
+  /* Spazio tra elementi */
+}
+
+/* Stile per la select box del protocollo */
+.select-box.protocollo {
+  flex-grow: 1;
+  /* Occupa tutto lo spazio disponibile */
+  box-sizing: border-box;
+  /* Include padding e bordo nella larghezza */
+  min-width: 0;
+  /* Permette alla select-box di restringersi */
+}
+
+.protocollo-btn-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.archive-container {
+  grid-column: 1 / 3;
+  box-sizing: border-box;
+  /*    overflow-x: auto;*/
+  /*    overflow-y: auto;*/
+}
+
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-background {
+  position: absolute;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  background:
+    linear-gradient(rgb(221 221 221 / 50%), rgb(165 165 165 / 50%)),
+    url("../images/background_texture_2.png") center center no-repeat;
+  background-size: cover;
+  background-size: cover;
+  z-index: -1;
+}
+
+.grid-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 20px 0px;
+}
+
+.grid-item {
+  flex: 1 1 calc(33.333% - 20px);
+  /* Tre contenitori per riga */
+  max-width: 250px;
+  min-width: 240px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.grid-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.item-header {
+  color: white;
+  text-transform: uppercase;
+}
+
+.grid-item .item-header {
+  background-color: rgba(var(--medium-grey-incide));
+  padding: 10px;
+  border-radius: 4px 4px 0 0;
+  text-align: center;
+  margin: 0;
+  /* Rimuove qualsiasi margine */
+  position: relative;
+  /* Assicura che sia posizionato relativo al container */
+}
+
+.grid-item .item-header h3 {
+  margin: 0;
+}
+
+.grid-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.grid-item .button {
+  position: absolute;
+  /* Fissa il pulsante in basso a destra */
+  bottom: 10px;
+  right: 10px;
+  margin: 0;
+  /* Rimuove i margini inutili */
+}
+
+.grid-item p {
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 5px;
+  /*   font-family: var(--font-family);
+    font-weight: var(--weight-demi-bold);    */
+}
+
+.calendar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  padding: 5px 10px;
+}
+
+/*.calendar-profile-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    position: absolute;
+} */
+
+.month-year {
+  font-weight: var(--weight-demi-bold);
+  font-size: 14px;
+  margin: 0;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.item-calendar {
+  height: 230px;
+  background-color: #d3d3d3;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 14px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: white;
+  opacity: 0.8;
+}
+
+.calendar-day-name {
+  font-weight: var(--weight-demi-bold);
+  color: rgba(var(--medium-grey-incide));
+}
+
+.calendar-day {
+  position: relative;
+  padding: 4px;
+}
+
+.calendar-expanded .calendar-day::before {
+  font-size: 20px;
+}
+
+.calendar-day:hover {
+  color: #f1c40f;
+  transform: translateY(-2px);
+  /* Breve saltello */
+  transition: transform 0.2s ease-out;
+}
+
+.calendar-day:hover .calendar-profile-icon {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-out;
+}
+
+.calendar-day-number {
+  display: block;
+  font-size: 12px;
+  font-weight: var(--weight-demi-bold);
+  line-height: 1.2;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.calendar-day-number.calendar-day-today {
+  color: #ffc940;
+  font-weight: 900;
+  font-size: 21px;
+  text-shadow:
+    0 1px 0 #fff,
+    0 2px 2px rgba(0, 0, 0, 0.13);
+}
+
+/* Mese: evidenzia la cella del giorno corrente */
+.cv-day.cv-today {
+  outline: 2px solid #5b8def;
+  /* colore coerente con il tema */
+  outline-offset: -2px;
+  border-radius: 6px;
+  position: relative;
+}
+
+/* Settimana: evidenzia la colonna e il suo header */
+.cv-week-col.cv-today .cv-week-head {
+  box-shadow: inset 0 -3px 0 0 #5b8def;
+  font-weight: 600;
+}
+
+.cv-week-col.cv-today {
+  background: linear-gradient(
+    to bottom,
+    rgba(91, 141, 239, 0.06),
+    rgba(91, 141, 239, 0.02)
+  );
+  border-radius: 6px;
+}
+
+/* Anno (mini-mesi): bordo sottile sulla cella del giorno */
+.cv-ym-day.cv-today {
+  outline: 2px solid #5b8def;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* opzionale: piccolo dot nellâ€™angolo alto a sinistra del giorno corrente (vista mese) */
+.cv-day.cv-today .cv-day-label::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #5b8def;
+  vertical-align: middle;
+}
+
+.calendar .calendar-day,
+.calendar .calendar-day-name {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  margin: 0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.calendar .calendar-day-name {
+  font-weight: var(--weight-demi-bold);
+  color: #555;
+}
+
+.event {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 223, 186, 0.7),
+    rgba(255, 105, 97, 0.8)
+  );
+  color: white;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  transition: transform 0.2s ease-in-out;
+}
+
+.event:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 0px 10px rgba(255, 223, 186, 0.8);
+}
+
+.event-details {
+  text-align: left;
+  max-height: 200px;
+  /* Altezza massima per evitare overflow */
+  overflow-y: auto;
+  /* Scroll verticale per gestire piÃ¹ eventi */
+}
+
+/* Contenitore eventi: si adatta all'interno di item-calendar */
+#eventDetailsContainer {
+  height: 100%;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  overflow: hidden;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+
+#calendarWrapper.show-events #eventDetailsContainer {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Titolo degli eventi */
+#eventDateTitle {
+  font-size: 12px;
+  font-weight: var(--weight-demi-bold);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* Contenitore eventi con scrollbar solo se necessario */
+#eventDetails {
+  max-height: 160px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+/* Personalizzazione scrollbar */
+#eventDetails::-webkit-scrollbar {
+  width: 6px;
+}
+
+#eventDetails::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+#eventDetails::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Bottone "Torna al Calendario" */
+#backToCalendar {
+  background-color: transparent;
+  color: white;
+  border: 1px solid #fff;
+  padding: 2px 3px;
+  border-radius: 4px;
+  font-weight: var(--weight-demi-bold);
+  transition: background 0.3s ease;
+}
+
+#backToCalendar:hover {
+  border: 1px solid rgba(var(--red-incide));
+  color: rgba(var(--red-incide));
+}
+
+/* Calendario Espanso */
+#calendarWrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+
+#calendarContainer,
+#eventDetailsContainer {
+  width: 100%;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+
+#calendarWrapper.show-events #calendarContainer {
+  opacity: 0;
+  pointer-events: none;
+  /* Evita clic sul calendario nascosto */
+}
+
+#calendarWrapper.expanded {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70vw;
+  height: 80vh;
+  z-index: 1000;
+  background-color: #fff;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  overflow: hidden;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+#calendarWrapper.expanded::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(var(--light-grey-incide), 0.2);
+  z-index: -1;
+}
+
+.birthday-icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+.birthday-image {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.birthday-info h4 {
+  margin: 0;
+  color: #333;
+  font-size: 12px;
+}
+
+.birthday-info p {
+  margin: 5px 0 0;
+  color: #666;
+  font-size: 10px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .birthday-card {
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .birthday-image {
+    margin-bottom: 10px;
+  }
+}
+
+/* Disabilita overflow del body quando il calendario Ã¨ espanso */
+body.calendar-expanded {
+  overflow: hidden;
+}
+
+#calendarWrapper.expanded .calendar-controls {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1000;
+}
+
+#calendarWrapper.expanded .month-nav {
+  font-size: 1.6rem;
+  background-color: transparent;
+  color: rgba(var(--red-incide));
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#calendarWrapper.expanded .month-nav:hover {
+  background-color: red;
+}
+
+#calendarWrapper.expanded .calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 15px;
+  width: 100%;
+  height: calc(100% - 100px);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+#calendarWrapper.expanded .calendar .calendar-day-name {
+  font-size: 1.4rem;
+
+  font-weight: var(--weight-demi-bold);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Giorni del calendario espanso senza bordo, solo numero e icona */
+#calendarWrapper.expanded .calendar .calendar-day {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  transition: transform 0.2s ease-out;
+  background: none;
+  /* Rimuove il background dei giorni */
+  border: none;
+  /* Nessun bordo attorno ai numeri */
+}
+
+/* Effetto hover sul calendario espanso */
+#calendarWrapper.expanded .calendar .calendar-day:hover {
+  transform: translateY(-3px);
+  /* Saltello al passaggio del mouse */
+}
+
+/* Mantiene le icone profilo o compleanni */
+#calendarWrapper.expanded .calendar .calendar-day .calendar-profile-icon {
+  width: 35px;
+  height: 35px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#calendarWrapper.expanded .calendar .calendar-day .calendar-profile-icon {
+  width: 50px;
+  height: 50px;
+  position: static;
+  margin-top: 10px;
+}
+
+.toggle-icon {
+  position: absolute;
+  bottom: 10px;
+  /* Posiziona l'icona a 10px dal fondo */
+  right: 10px;
+  /* Posiziona l'icona a 10px dal lato destro */
+  cursor: pointer;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.toggle-icon:hover {
+  transform: scale(1.1);
+  /* Ingrandisce leggermente l'icona al passaggio del mouse */
+}
+
+/* Controlli del calendario piccolo */
+.collapsed-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.collapsed-controls {
+  display: none;
+  /* Nascosti quando il calendario Ã¨ espanso */
+}
+
+body:not(.calendar-expanded) .collapsed-controls {
+  display: flex;
+  /* Visibili solo quando il calendario Ã¨ piccolo */
+}
+
+/* Controlli del calendario espanso */
+.expanded-controls {
+  display: none;
+  /* Nascosti quando il calendario Ã¨ piccolo */
+}
+
+/* VisibilitÃ  dinamica */
+body.calendar-expanded .calendar-controls {
+  display: flex;
+  /* Mostra i controlli nel calendario espanso */
+}
+
+hr {
+  border: none;
+  /* Rimuove il bordo predefinito */
+  height: 1px;
+  /* Imposta l'altezza della linea */
+  background-color: #ccc;
+  /* Imposta un colore di sfondo per la linea */
+  margin: 10px 0;
+  /* Aggiunge un margine verticale per distanziare la linea dagli altri elementi */
+}
+
+.quick-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(var(--light-grey-incide));
+  border-radius: 50%;
+  /* Icone circolari */
+  transition:
+    transform 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.quick-link:hover {
+  background-color: rgba(var(--red-incide));
+  transform: scale(1.1);
+  /* Ingrandimento su hover */
+}
+
+.quick-link .icon {
+  width: 20px;
+  /* Dimensione icona */
+  height: 20px;
+  object-fit: contain;
+}
+
+.doc-container {
+  padding: 20px;
+  border-radius: 4px;
+  margin: 0;
+}
+
+.change-password-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+}
+
+.profile-image-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.profile-image-container .profile-username {
+  color: #333333 !important;
+}
+
+/* Overlay per chiudere la sidebar cliccando fuori */
+.profile-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+/* Sidebar per logout e gestione profilo */
+.profile-sidebar {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1001;
+  top: 0;
+  right: 0;
+  background-color: darkgrey;
+  overflow-x: hidden;
+  transition: width 0.5s ease;
+  color: white;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+  /* Contenuto centrato in alto */
+}
+
+.profile-header .profile-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  margin-bottom: 10px;
+}
+
+.profile-header .profile-username {
+  font-size: 18px;
+
+  font-weight: var(--weight-demi-bold);
+  color: #fff;
+}
+
+.profile-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  /* Larghezza piena per i link */
+}
+
+.profile-links li {
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.profile-links a {
+  display: flex;
+  /* Imposta il layout dei link con Flexbox */
+  align-items: center;
+  /* Allinea verticalmente l'icona e il testo */
+  padding: 10px 15px;
+  text-decoration: none;
+  font-size: 18px;
+  color: white;
+  background-color: transparent;
+  border-radius: 8px;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+  gap: 10px;
+  /* Spaziatura tra icona e testo */
+}
+
+.profile-links a:hover {
+  background-color: #575757;
+  transform: translateY(-2px);
+}
+
+.link-icon {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+}
+
+/* Regola per il contenuto principale */
+.content-container {
+  flex-grow: 1;
+  background-color: #ffffff;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Stile di base per il layout e i container */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  margin-right: 30px;
+  margin-left: 250px;
+  margin-top: 90px;
+  padding: 10px;
+  flex-grow: 1;
+  box-sizing: border-box;
+  transition: margin-left 0.4s ease;
+  /*text-transform: capitalize;*/
+}
+
+.main-container {
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-container.sidebar-closed {
+  margin-left: 40px;
+  /* Larghezza della sidebar chiusa */
+}
+
+.function-bar {
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: fixed;
+  top: 50px;
+  left: 225px;
+  right: 0px;
+  height: 35px;
+  background-color: whitesmoke;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Distribuisce breadcrumb e icone */
+  padding: 0 10px;
+  z-index: 1;
+  transition:
+    left 0.5s ease-in-out,
+    width 0.5s ease-in-out;
+  text-transform: uppercase !important;
+}
+
+.function-bar.sidebar-closed {
+  left: 0px;
+  /* Allineato con la sidebar chiusa */
+  right: 0px;
+  /* Rimane invariato */
+}
+
+.function-bar h2 {
+  margin: 0;
+  font-size: 1.2em;
+  flex-grow: 1;
+}
+
+.function-bar h2 a {
+  transition: color 0.3s ease;
+}
+
+.function-bar.sidebar-closed h2 a {
+  margin-left: 0px;
+  text-decoration: none;
+  color: rgba(var(--red-incide));
+  transition: color 0.3s ease;
+}
+
+.function-bar h2 a:hover {
+  color: rgba(var(--light-grey-incide));
+  transition: color 0.3s ease;
+}
+
+.function-bar h2 span:last-child,
+.function-bar h2 a:last-child {
+  font-weight: var(--weight-demi-bold);
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .fixed-sidebar {
+    width: auto;
+    /* Riduci la larghezza della sidebar sui dispositivi piÃ¹ piccoli */
+  }
+
+  .main-container.open-sidebar {
+    margin-left: 40px;
+  }
+}
+
+.function-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Contenitore della search bar */
+.search-bar {
+  position: relative;
+  width: 100%;
+  max-width: 350px;
+  margin-bottom: 15px;
+}
+
+/* Input della search bar */
+.search-input {
+  width: 100%;
+  padding: 8px 40px;
+  font-size: 14px;
+  border: 2px solid rgba(var(--dark-grey-incide), 0.3);
+  border-radius: 8px;
+  background-color: rgba(var(--light-grey-incide), 0.2);
+  transition: all 0.3s ease-in-out;
+  outline: none;
+}
+
+/* Focus: Cambia il bordo e aggiunge un effetto glow */
+.search-input:focus {
+  border-color: rgba(var(--red-incide));
+  box-shadow: 0 0 8px rgba(var(--red-incide), 0.3);
+  background-color: white;
+}
+
+/* Aggiunta dell'icona della ricerca */
+.search-bar::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  /* Adatta la dimensione dell'icona */
+  height: 18px;
+  background-image: url("/PROJECTS/intra_incide/assets/icons/lente.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.6;
+  display: block;
+}
+
+/* Effetto quando si scrive */
+.search-input:not(:placeholder-shown) {
+  border-color: rgba(var(--red-incide));
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+/* Stile per elementi contenuti editabili */
+[contenteditable="true"] {
+  padding: 1px;
+  margin: 4px 2px;
+}
+
+/* Stili di base per il form di messaggistica */
+.form-messaggio {
+  background-color: #f4f4f4;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.form-messaggio textarea {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  /* Permette all'utente di cambiare l'altezza dell'area di testo */
+  min-height: 100px;
+  /* Altezza minima */
+}
+
+.form-messaggio select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+/* Dropdown che si posiziona correttamente */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 120px;
+  max-width: 200px;
+  max-height: 150px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  /* Aumenta per renderlo sopra altri elementi */
+  white-space: nowrap;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Modifica per l'icona */
+#columnToggleIcon {
+  cursor: pointer;
+  position: relative;
+  width: 15px;
+  /* Modifica se necessario */
+  height: auto;
+}
+
+/* Manteniamo lo stile per i link all'interno del dropdown */
+.dropdown-content a {
+  display: block;
+  color: black;
+  padding: 4px 8px;
+  text-decoration: none;
+  font-size: 10px;
+}
+
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+/* Stile per l'icona del filtro */
+.filter-icon {
+  cursor: pointer;
+  width: 15px;
+  height: auto;
+  vertical-align: middle;
+}
+
+/* Contenitore per il testo e l'icona del filtro */
+.filter-container {
+  text-align: right;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Testo all'interno del contenitore del filtro */
+.filter-text {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.active-filter {
+  background-color: #e0e0e0;
+  /* Colore di evidenziazione per i filtri attivi */
+
+  font-weight: var(--weight-demi-bold);
+}
+
+/* Contenitore per input + icona */
+.filter-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Icona della lente */
+.filter-placeholder-icon {
+  position: absolute;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  /* Impedisce clic accidentali */
+}
+
+.kanban-container {
+  display: flex;
+  gap: 10px;
+  height: calc(100vh - 200px);
+  /* Altezza fissa per il container */
+  white-space: nowrap;
+  /* Impedisce che le colonne si adattino alla larghezza */
+  flex-wrap: nowrap;
+  /* Impedisce che le colonne si vadano a capo */
+  overflow-x: auto;
+  /* Scroll orizzontale se ci sono troppe colonne */
+  overflow-y: hidden;
+  /* Nasconde l'overflow verticale per il container */
+}
+
+/* Posizionamento dello scroll sopra */
+.kanban-container::-webkit-scrollbar {
+  height: 10px;
+  background-color: #f1f1f1;
+  /* Colore della barra di scorrimento */
+}
+
+.kanban-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  /* Colore del cursore */
+  border-radius: 4px;
+}
+
+.kanban-column {
+  background-color: #f5f5f5;
+  /* piÃ¹ chiaro di #f8f8f8 */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* ombra piÃ¹ soft */
+  flex: 0 0 auto;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  display: flex;
+  flex-direction: column;
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.kanban-header.aperta {
+  border-bottom: 3px solid rgba(0, 153, 255, 0.65);
+}
+
+.kanban-header.in_corso {
+  border-bottom: 3px solid rgba(255, 214, 0, 0.65);
+}
+
+.kanban-header.sospesa {
+  border-bottom: 3px solid rgba(255, 152, 0, 0.65);
+}
+
+.kanban-header.rifiutata {
+  border-bottom: 3px solid rgba(229, 57, 53, 0.65);
+}
+
+.kanban-header.chiusa {
+  border-bottom: 3px solid rgba(76, 175, 80, 0.65);
+}
+
+.kanban-header.da_definire {
+  border-bottom: 3px solid #bbb;
+}
+
+.kanban-header.aperto {
+  border-bottom: 3px solid rgba(0, 153, 255, 0.65);
+}
+
+.kanban-header.in_corso {
+  border-bottom: 3px solid rgba(255, 214, 0, 0.65);
+}
+
+.kanban-header.chiuso {
+  border-bottom: 3px solid rgba(76, 175, 80, 0.65);
+}
+
+/* Impedisce bordi o aspetti non desiderati durante il dragging */
+.kanban-column .task.dragging {
+  opacity: 0.8;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.kanban-column .kanban-header {
+  padding: 8px;
+  font-weight: var(--weight-demi-bold);
+  text-align: center;
+  /*border-bottom: 3px solid var(--header-color, #cccccc);*/
+  background-color: transparent;
+  /* Nessun colore di sfondo */
+  color: #000;
+  /* Colore del testo */
+}
+
+.kanban-column .task-container {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 250px);
+  /* Altezza massima della colonna */
+}
+
+/* Nasconde la scrollbar su Chrome, Safari ed Edge */
+.kanban-column .task-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Aggiungi un effetto hover per migliorare l'esperienza */
+.kanban-column:hover .task-container {
+  overflow-y: auto;
+  overflow: visible;
+}
+
+/* Header delle colonne del Kanban */
+.kanban-header {
+  padding: 8px 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: #333;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+/* Titolo delle colonne */
+.kanban-column h2 {
+  text-align: center;
+  margin: 0;
+}
+
+.task-container {
+  flex-grow: 1;
+  /* Occupa tutto lo spazio rimanente nella colonna */
+  max-height: calc(100vh - 250px);
+  padding: 1px;
+  margin-top: 8px;
+}
+
+/* Nasconde scrollbar su Chrome, Safari ed Edge */
+.task-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Singolo task */
+.task {
+  background-color: #ffffffee;
+  width: 100%;
+  height: 140px;
+  /* Altezza fissa delle task */
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s;
+  flex-shrink: 0;
+  /* Evita che si riduca */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.task-header {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
+}
+
+/* Altezza maggiore SOLO per le gare */
+body.page-gare .task {
+  height: 170px;
+}
+
+.task:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.task.dragging {
+  opacity: 0.6;
+  transform: scale(1.05);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.task p,
+.task h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+  overflow: hidden;
+  /* Nasconde il testo lungo */
+  text-overflow: ellipsis;
+  /* Mostra "..." per il testo lungo */
+  white-space: nowrap;
+  /* Evita il ritorno a capo */
+}
+
+/* Campi di testo multi-riga */
+.task textarea {
+  width: 100%;
+  /* Occupa tutta la larghezza del contenitore */
+  height: 80px;
+  /* Altezza predefinita */
+  resize: none;
+  /* Disabilita il ridimensionamento manuale */
+  overflow: auto;
+  /* Aggiungi lo scroll verticale per i contenuti lunghi */
+  box-sizing: border-box;
+  font-size: 14px;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+  background-color: #fff;
+}
+
+.task .editable {
+  white-space: nowrap;
+  /* Mantiene il testo su una sola riga */
+  overflow: hidden;
+  /* Nasconde il testo che eccede */
+  text-overflow: ellipsis;
+  /* Aggiunge "..." quando il testo Ã¨ troppo lungo */
+  width: 100%;
+  /* Occupa tutta la larghezza disponibile */
+  display: inline-block;
+}
+
+.task .editable:focus {
+  white-space: normal;
+  /* Permette di andare a capo solo in fase di modifica */
+  overflow: visible;
+  /* Mostra tutto il testo */
+  text-overflow: unset;
+  /* Rimuove i "..." durante l'editing */
+  background: white;
+  border: 1px solid #ccc;
+  padding: 2px;
+  outline: none;
+}
+
+/* ========================================
+   KANBAN SUBTASKS - Stili dedicati
+   ======================================== */
+.kanban-subtask {
+  background: rgba(255, 255, 255, 0.5);
+  width: calc(100% - 20px);
+  margin-left: 20px;
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 123, 255, 0.2);
+  border-left: 3px solid #007bff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.3s ease,
+    max-height 0.3s ease,
+    padding 0.3s ease;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: auto;
+  height: auto;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Stato collapsed: mostra solo il label */
+.kanban-subtask.collapsed {
+  padding: 3px 6px;
+  max-height: 24px;
+  min-height: 24px;
+}
+
+.kanban-subtask.collapsed .kanban-subtask-label {
+  font-size: 10px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kanban-subtask.collapsed .kanban-subtask-fields,
+.kanban-subtask.collapsed .kanban-subtask-body {
+  display: none;
+}
+
+.kanban-subtask.collapsed .kanban-subtask-toggle-icon {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  font-size: 10px;
+  color: #007bff;
+  transition: transform 0.3s ease;
+}
+
+/* Stato expanded: mostra tutti i dettagli */
+.kanban-subtask.expanded {
+  padding: 6px 8px;
+  max-height: none;
+}
+
+.kanban-subtask.expanded .kanban-subtask-toggle-icon {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  transform: rotate(0deg);
+  font-size: 10px;
+  color: #007bff;
+  transition: transform 0.3s ease;
+}
+
+.kanban-subtask:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: translateX(2px);
+}
+
+/* Subtask nascosta */
+.kanban-subtask.hidden {
+  display: none;
+}
+
+/* Toggle per subtask nella tabella */
+.protocollo-colonna[data-has-subtasks="true"]:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.subtask-toggle-icon {
+  transition: transform 0.3s ease;
+  user-select: none;
+}
+
+.subtask-toggle-icon:hover {
+  color: #0056b3 !important;
+}
+
+/* Animazione per le righe subtask */
+.subtask-row {
+  transition:
+    opacity 0.3s ease,
+    max-height 0.3s ease;
+}
+
+/* ===== CALENDARIO STRAORDINARIO - OVERRIDE TOTALE ===== */
+
+/* OVERRIDE TOTALE PER FORZARE ALTEZZA GIORNI */
+.fc-daygrid-day,
+.fc .fc-daygrid-day,
+.fc-daygrid-day-frame,
+.fc .fc-daygrid-day-frame,
+div[class*="fc-daygrid-day"],
+div[class*="fc-daygrid-day-frame"] {
+  min-height: 180px !important;
+  height: 180px !important;
+  max-height: 180px !important;
+  aspect-ratio: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* OVERRIDE PER IL BODY DEL CALENDARIO */
+.fc-daygrid-body,
+.fc .fc-daygrid-body,
+div[class*="fc-daygrid-body"] {
+  min-height: 180px !important;
+}
+
+/* OVERRIDE PER LE RIGHE */
+.fc-daygrid-day-events,
+.fc .fc-daygrid-day-events,
+div[class*="fc-daygrid-day-events"] {
+  height: 150px !important;
+  min-height: 150px !important;
+  max-height: 150px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* OVERRIDE PER L'HEADER DEL GIORNO */
+.fc-daygrid-day-top,
+.fc .fc-daygrid-day-top,
+div[class*="fc-daygrid-day-top"] {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  flex-shrink: 0 !important;
+}
+
+/* CSS ULTRA-AGGRESSIVO PER FORZARE ALTEZZA */
+*[class*="fc-daygrid-day"] {
+  min-height: 180px !important;
+  height: 180px !important;
+  max-height: 180px !important;
+}
+
+*[class*="fc-daygrid-day-events"] {
+  height: 150px !important;
+  min-height: 150px !important;
+  max-height: 150px !important;
+}
+
+*[class*="fc-daygrid-day-top"] {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+}
+
+/* Massimizza lo spazio dei giorni del calendario - QUADRATI E ALTI - FORZA MASSIMA */
+.fc-daygrid-day,
+.fc .fc-daygrid-day,
+.fc-daygrid-day-frame,
+.fc .fc-daygrid-day-frame {
+  min-height: 180px !important;
+  /* Altezza molto maggiore per forma quadrata */
+  height: 180px !important;
+  /* Altezza fissa per forma quadrata */
+  aspect-ratio: 1 !important;
+  /* Mantiene forma quadrata */
+}
+
+/* Forza anche il contenitore principale */
+.fc-daygrid-body,
+.fc .fc-daygrid-body {
+  min-height: 180px !important;
+}
+
+/* Forza anche le celle della griglia */
+.fc-daygrid-day-top,
+.fc .fc-daygrid-day-top {
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+/* Forza l'altezza delle righe del calendario */
+.fc-daygrid-day-events,
+.fc .fc-daygrid-day-events {
+  height: calc(180px - 30px) !important;
+  /* 150px per le task */
+  min-height: calc(180px - 30px) !important;
+  max-height: calc(180px - 30px) !important;
+}
+
+/* Forza anche il contenitore delle righe */
+.fc-daygrid-day-events .fc-event,
+.fc .fc-daygrid-day-events .fc-event {
+  margin: 1px 0 !important;
+  max-height: 22px !important;
+  overflow: hidden !important;
+}
+
+/* Scroll personalizzato per giorni con molte task */
+.fc-daygrid-day-events::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.fc-daygrid-day-events::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1) !important;
+  border-radius: 2px !important;
+}
+
+.fc-daygrid-day-events::-webkit-scrollbar-thumb {
+  background: rgba(0, 123, 255, 0.6) !important;
+  border-radius: 2px !important;
+}
+
+.fc-daygrid-day-events::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 123, 255, 0.8) !important;
+}
+
+/* Indicatore visivo quando ci sono task nascoste */
+.fc-daygrid-day-events:not(:hover)::-webkit-scrollbar {
+  opacity: 0.3 !important;
+}
+
+.fc-daygrid-day-events:hover::-webkit-scrollbar {
+  opacity: 1 !important;
+}
+
+/* Spazio maggiore tra i giorni */
+.fc-daygrid-day-events {
+  margin: 2px 1px !important;
+  /* Riduce margini per piÃ¹ spazio */
+}
+
+/* Task principali - Design prominente per giorni quadrati */
+.calendar-main-task {
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  padding: 3px 5px !important;
+  margin: 1px 0 !important;
+  border-radius: 3px !important;
+  border-left: 3px solid currentColor !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  background: linear-gradient(
+    135deg,
+    currentColor 0%,
+    currentColor 100%
+  ) !important;
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  line-height: 1.2 !important;
+  max-height: 24px !important;
+  /* Limita altezza per piÃ¹ task */
+}
+
+/* Icona per task principali */
+.calendar-main-task::before {
+  content: "ðŸ“‹" !important;
+  margin-right: 4px !important;
+  font-size: 10px !important;
+}
+
+/* Subtask - Design piÃ¹ piccolo e indentato per giorni quadrati */
+.calendar-subtask {
+  font-weight: 400 !important;
+  font-size: 9px !important;
+  padding: 1px 3px !important;
+  margin: 0.5px 0 !important;
+  margin-left: 6px !important;
+  /* Indentazione ridotta */
+  border-radius: 2px !important;
+  border-left: 2px solid currentColor !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #333 !important;
+  opacity: 0.85 !important;
+  position: relative !important;
+  line-height: 1.1 !important;
+  max-height: 18px !important;
+  /* Altezza ridotta per piÃ¹ subtask */
+}
+
+/* Icona per subtask */
+.calendar-subtask::before {
+  content: "â†³" !important;
+  margin-right: 2px !important;
+  font-size: 8px !important;
+  color: #666 !important;
+}
+
+/* Hover effects */
+.calendar-main-task:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  z-index: 10 !important;
+}
+
+.calendar-subtask:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 1) !important;
+  transform: translateX(2px) !important;
+}
+
+/* Indicatore per task con subtask */
+.calendar-main-task[data-has-subtasks="true"]::after {
+  content: attr(data-subtasks-count) !important;
+  position: absolute !important;
+  top: 2px !important;
+  right: 4px !important;
+  font-size: 8px !important;
+  opacity: 0.9 !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 50% !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: bold !important;
+  line-height: 1 !important;
+}
+
+/* Migliora la leggibilitÃ  del testo */
+.fc-event-title {
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Spazio maggiore per il contenuto del giorno */
+.fc-daygrid-day-top {
+  padding: 2px 4px !important;
+}
+
+/* Riduce lo spazio delle intestazioni per piÃ¹ spazio ai giorni */
+.fc-col-header-cell {
+  padding: 4px 2px !important;
+  font-size: 11px !important;
+}
+
+/* Ottimizza l'header del calendario */
+.fc-toolbar {
+  margin-bottom: 8px !important;
+}
+
+.fc-toolbar-title {
+  font-size: 1.2em !important;
+}
+
+/* Indicatore di conteggio task per ogni giorno */
+.fc-daygrid-day-number {
+  position: relative !important;
+}
+
+.fc-daygrid-day-number::after {
+  content: attr(data-task-count) !important;
+  position: absolute !important;
+  top: -8px !important;
+  right: -8px !important;
+  background: #007bff !important;
+  color: white !important;
+  font-size: 8px !important;
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  width: 16px !important;
+  height: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.fc-daygrid-day-number.has-tasks::after {
+  opacity: 1 !important;
+}
+
+/* Giorni con molte task hanno indicatore piÃ¹ prominente */
+.fc-daygrid-day-number[data-task-count="5"]::after,
+.fc-daygrid-day-number[data-task-count="6"]::after,
+.fc-daygrid-day-number[data-task-count="7"]::after {
+  background: #dc3545 !important;
+  animation: pulseCount 2s ease-in-out infinite !important;
+}
+
+@keyframes pulseCount {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Indicatore visivo quando ci sono task nascoste */
+.fc-daygrid-day-events::after {
+  content: "" !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 20px !important;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.1)) !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.fc-daygrid-day-events.has-scroll::after {
+  opacity: 1 !important;
+}
+
+/* Responsive per schermi piccoli */
+@media (max-width: 768px) {
+  .fc-daygrid-day {
+    min-height: 120px !important;
+    height: 120px !important;
+  }
+
+  .fc-daygrid-day-frame {
+    min-height: 120px !important;
+    height: 120px !important;
+  }
+
+  .calendar-main-task {
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+    max-height: 20px !important;
+  }
+
+  .calendar-subtask {
+    font-size: 8px !important;
+    padding: 1px 2px !important;
+    max-height: 16px !important;
+  }
+}
+
+/* ===== TOOLTIP CALENDARIO STRAORDINARI ===== */
+
+.calendar-tooltip {
+  position: absolute !important;
+  top: -10px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  z-index: 1000 !important;
+  display: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  min-width: 200px !important;
+  max-width: 300px !important;
+  pointer-events: none !important;
+}
+
+.calendar-tooltip::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 100% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  border: 5px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+.tooltip-content {
+  text-align: left !important;
+}
+
+.tooltip-header {
+  margin-bottom: 6px !important;
+  padding-bottom: 4px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  font-size: 12px !important;
+}
+
+.tooltip-body {
+  line-height: 1.4 !important;
+}
+
+.tooltip-body div {
+  margin-bottom: 3px !important;
+}
+
+.tooltip-body strong {
+  color: #ffd700 !important;
+  font-weight: 600 !important;
+}
+
+/* Tooltip per subtask - piÃ¹ piccolo */
+.subtask-tooltip {
+  min-width: 150px !important;
+  max-width: 200px !important;
+  font-size: 10px !important;
+  padding: 6px 8px !important;
+}
+
+.subtask-tooltip .tooltip-header {
+  font-size: 11px !important;
+}
+
+/* Animazioni per i tooltip */
+.calendar-tooltip {
+  animation: tooltipFadeIn 0.2s ease-out !important;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Effetto speciale per task con molte subtask */
+.calendar-main-task[data-subtasks-count]:not([data-subtasks-count="0"]) {
+  animation: pulseGlow 3s ease-in-out infinite !important;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  50% {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 0 8px rgba(0, 123, 255, 0.3) !important;
+  }
+}
+
+/* Task con molte subtask (3+) hanno un effetto piÃ¹ pronunciato */
+.calendar-main-task[data-subtasks-count="3"],
+.calendar-main-task[data-subtasks-count="4"],
+.calendar-main-task[data-subtasks-count="5"] {
+  animation: pulseGlowStrong 2s ease-in-out infinite !important;
+}
+
+@keyframes pulseGlowStrong {
+  0%,
+  100% {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  50% {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 0 12px rgba(0, 123, 255, 0.5) !important;
+  }
+}
+
+/* ===== GANTT CON COLONNE DINAMICHE ===== */
+
+/* Layout flex per le righe del Gantt */
+.gv-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+}
+
+/* Header delle colonne dinamiche */
+.gv-dynamic-col-header {
+  background: #f8f9fa !important;
+  border-right: 1px solid #dee2e6 !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  color: #495057 !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  min-height: 40px !important;
+}
+
+/* Colonne dinamiche nelle righe */
+.gv-dynamic-col {
+  background: white !important;
+  border-right: 1px solid #e9ecef !important;
+  border-bottom: 1px solid #e9ecef !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  color: #495057 !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  min-height: 40px !important;
+}
+
+/* Task label deve essere flessibile */
+.gv-task-label {
+  flex: 1 1 auto !important;
+  min-width: 200px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 8px 12px !important;
+  /* background: white !important; */
+  /* border-right: 1px solid #e9ecef !important; */
+  /* border-bottom: 1px solid #e9ecef !important; */
+}
+
+/* Task lane deve essere flessibile */
+.gv-task-lane {
+  flex: 1 1 auto !important;
+  min-width: 300px !important;
+  position: relative !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Barre del Gantt devono rimanere dentro la timeline */
+.gv-bar {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  height: 20px !important;
+  border-radius: 2px !important;
+  background: var(--gv-bar-color, #007bff) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  z-index: 1 !important;
+  max-width: calc(100% - 6px) !important;
+  /* min-left e max-left non sono proprietà CSS valide, usa left con clamp() se necessario */
+  /* left: clamp(0px, var(--left-value, 0), calc(100% - 20px)); */
+}
+
+/* Stub delle colonne devono essere flex */
+.gv-row > div:first-child {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+}
+
+/* Lane delle timeline devono essere flessibili */
+.gv-months,
+.gv-days {
+  flex: 1 1 auto !important;
+  min-width: 300px !important;
+}
+
+/* Task principali nel Gantt - Design pulito */
+.gv-main-task-row {
+  font-weight: 600 !important;
+  background: white !important;
+  border-left: 3px solid #007bff !important;
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+/* Subtask nel Gantt - Design discreto */
+.gv-subtask-row {
+  font-weight: 400 !important;
+  background: #f8f9fa !important;
+  border-left: 2px solid #dee2e6 !important;
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+/* Colonne dinamiche per subtask */
+.gv-subtask-row .gv-dynamic-col {
+  background: #f8f9fa !important;
+  opacity: 0.8 !important;
+}
+
+/* Hover effects per colonne dinamiche */
+.gv-dynamic-col:hover {
+  background: #e9ecef !important;
+}
+
+.gv-main-task-row .gv-dynamic-col:hover {
+  background: #f8f9fa !important;
+}
+
+.gv-subtask-row .gv-dynamic-col:hover {
+  background: #e9ecef !important;
+}
+
+/* Toggle icon per Gantt */
+.gv-toggle-icon {
+  transition: transform 0.3s ease !important;
+  user-select: none !important;
+  font-weight: bold !important;
+  color: #007bff !important;
+}
+
+.gv-toggle-icon:hover {
+  color: #0056b3 !important;
+  transform: scale(1.1) !important;
+}
+
+/* Indentazione subtask */
+.gv-subtask-indent {
+  font-weight: bold !important;
+  color: #6c757d !important;
+}
+
+/* Hover effects per task principali - Sottile */
+.gv-main-task-row:hover {
+  background: #f8f9fa !important;
+  border-left-color: #0056b3 !important;
+}
+
+.gv-subtask-row:hover {
+  background: #e9ecef !important;
+}
+
+/* Stili per le barre del Gantt - PiÃ¹ eleganti */
+.gv-main-task-row .gv-bar {
+  border: 2px solid currentColor !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 2px !important;
+}
+
+.gv-subtask-row .gv-bar {
+  border: 1px solid currentColor !important;
+  opacity: 0.8 !important;
+  border-radius: 1px !important;
+}
+
+/* Animazioni per toggle - PiÃ¹ fluide */
+.gv-subtask-row {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease !important;
+}
+
+/* Toggle button per subtasks */
+.kanban-subtasks-toggle {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 3px 6px !important;
+  margin-top: auto !important;
+  margin-bottom: 4px !important;
+  background: rgba(0, 123, 255, 0.08) !important;
+  border-radius: 3px !important;
+  cursor: pointer !important;
+  font-size: 10px !important;
+  color: #007bff !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+  white-space: nowrap !important;
+  position: relative !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.kanban-subtasks-toggle:hover {
+  background: rgba(0, 123, 255, 0.15) !important;
+}
+
+.kanban-subtasks-toggle .toggle-icon {
+  position: static !important;
+  display: inline-block !important;
+  font-size: 10px !important;
+  font-weight: bold !important;
+  color: #007bff !important;
+  transition: transform 0.3s ease !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  height: auto !important;
+  margin-left: 0 !important;
+  cursor: pointer !important;
+}
+
+.kanban-subtasks-toggle .subtasks-count {
+  line-height: 1;
+  font-size: 10px !important;
+  color: #007bff !important;
+  font-weight: 600 !important;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.kanban-subtasks-toggle.collapsed .toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.kanban-subtask-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  padding-right: 20px;
+  /* Spazio per l'icona toggle */
+}
+
+.kanban-subtask-label {
+  font-weight: 600;
+  font-size: 11px;
+  color: #007bff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.kanban-subtask-toggle-icon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 10px;
+  color: #007bff;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  user-select: none;
+  font-weight: bold;
+}
+
+.kanban-subtask-fields {
+  background: #f8f9fa;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.kanban-subtask-field {
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
+.kanban-subtask-field:last-child {
+  margin-bottom: 0;
+}
+
+.kanban-subtask-field-name {
+  font-weight: 600;
+  color: #555;
+}
+
+.kanban-subtask-field-value {
+  color: #333;
+  margin-left: 4px;
+}
+
+.kanban-subtask-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kanban-subtask-assigned {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kanban-subtask-assigned img.profile-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.kanban-subtask-assigned img.task-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Scrollbar sottile per le colonne del Kanban */
+.kanban-column::-webkit-scrollbar {
+  width: 6px;
+  /* Larghezza della scrollbar */
+}
+
+.kanban-column::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  /* Colore del cursore */
+  border-radius: 10px;
+}
+
+.kanban-column::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+  /* Colore del background della scrollbar */
+}
+
+/* ResponsivitÃ  del Kanban */
+@media (max-width: 768px) {
+  .kanban-container {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .kanban-column {
+    margin-bottom: 20px;
+  }
+}
+
+/* Scrollbar personalizzata per il contenitore delle task */
+.task-container::-webkit-scrollbar {
+  width: 4px;
+  /* Riduci la larghezza della scrollbar */
+  border-radius: 4px;
+}
+
+.task-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Colore scuro per renderlo visibile */
+  border-radius: 4px;
+  transition: background 0.2s ease-in-out;
+}
+
+.task-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  /* PiÃ¹ scuro quando passi sopra */
+}
+
+.task-container:hover::-webkit-scrollbar {
+  display: block;
+}
+
+.task-container::-webkit-scrollbar-track {
+  background-color: #f0f0f0;
+  /* Colore dello sfondo della scrollbar */
+}
+
+.task-container {
+  overflow-x: hidden !important;
+  /* Scroll attivo */
+  overflow-y: scroll !important;
+  scroll-behavior: smooth;
+  /* Scroll fluido */
+}
+
+/* Stili per la sezione degli archivi */
+.archived-container {
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.archived-state {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 300px;
+  margin: 10px;
+  padding: 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.archived-state:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.archived-state h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.archived-state p {
+  font-size: 14px;
+  color: #666;
+}
+
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.day {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+  height: 100px;
+}
+
+.header {
+  font-weight: var(--weight-demi-bold);
+  background-color: #f0f0f0;
+}
+
+.kanban-header,
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  /* Allinea il titolo al centro e l'icona a destra */
+  align-items: center;
+}
+
+.kanban-header h2,
+.list-header h3 {
+  margin: 0 auto;
+  /* Centra il titolo nella parte disponibile */
+}
+
+/*Impostazione stile per il pulsante "+" */
+.add-task-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+.task-icon {
+  width: 16px;
+  /* Dimensione dell'icona */
+  height: 16px;
+  /* Dimensione dell'icona */
+  transition: transform 0.3s ease;
+  /* Effetto di transizione per il click */
+}
+
+.add-task-btn:active .task-icon {
+  transform: scale(1.5);
+}
+
+/* Responsabili */
+.responsabile-field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.task .add-responsabile {
+  padding: 10px;
+  /* Aumenta l'area di click */
+  cursor: pointer;
+  /* Mantiene il cursore a "mano" */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task .add-responsabile:hover {
+  background: rgba(0, 0, 0, 0.1);
+  /* Effetto hover per indicare cliccabilitÃ  */
+  border-radius: 5px;
+}
+
+.calendar-profile-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.responsabili-icons .profile-icon:hover {
+  transform: scale(1.1);
+}
+
+.responsabile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: block;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 200px;
+  /* ðŸ‘ˆ evita di espandersi */
+  min-width: 150px;
+  max-width: 300px;
+  z-index: 9999;
+  padding: 8px;
+}
+
+.responsabile-menu.visible {
+  display: block;
+}
+
+.responsabile-menu-header {
+  font-weight: var(--weight-demi-bold);
+  margin-bottom: 5px;
+}
+
+.responsabile-option.selected .profile-icon {
+  border: 2px solid red;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.responsabile-option .selection-indicator {
+  margin-left: auto;
+  color: green;
+  font-size: 16px;
+  visibility: hidden;
+}
+
+.responsabile-search {
+  position: sticky;
+  width: 90%;
+  top: 0;
+  background: white;
+  z-index: 10;
+  outline: none;
+}
+
+/* Container principale delle opzioni di visualizzazione e icone */
+.view-selector {
+  display: flex;
+  justify-content: space-between;
+  /* Mantiene gli elementi ai lati opposti */
+  align-items: center;
+  padding-bottom: 10px;
+}
+
+/* Container per i bottoni di visualizzazione */
+.view-tabs {
+  display: flex;
+  /* Imposta i bottoni in una linea orizzontale */
+  align-items: center;
+}
+
+/* Stilizzazione dei bottoni individuali */
+.view-tab {
+  display: flex;
+  /* Spazio tra i bottoni */
+  gap: 5px;
+  margin-right: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+  align-items: center;
+}
+
+.view-tab:hover {
+  background-color: #e2e2e2;
+  /* Cambia colore al passaggio del mouse */
+}
+
+.view-tab.active {
+  color: rgba(var(--red-incide));
+  border-color: rgba(var(--red-incide));
+}
+
+.view-icon {
+  width: 18px;
+  /* Grandezza dell'icona */
+  height: auto;
+  vertical-align: text-bottom;
+  object-fit: contain;
+}
+
+/* ðŸ“Š Contenitore grafici */
+.charts-container {
+  display: flex;
+  flex-wrap: wrap;
+  /* Permette di andare a capo dopo due grafici */
+  justify-content: center;
+  /* Centra i grafici orizzontalmente */
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* ðŸ“ˆ Stile per ogni singolo grafico */
+.chart {
+  flex: 1 1 45%;
+  /* Larghezza al 45% per lasciare spazio tra i grafici */
+  display: flex;
+  justify-content: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.bar-chart-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chart-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.chart-nav-arrow {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.chart-nav-arrow:hover {
+  transform: scale(1.15);
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.chart-nav-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 5px;
+  transition: transform 0.2s ease;
+}
+
+.chart-nav-btn:hover {
+  transform: scale(1.2);
+}
+
+/* ðŸŽ¯ Contenitore grafico a torta con elementi posizionabili */
+.pie-chart-container {
+  position: relative;
+  text-align: center;
+}
+
+/* â¹ï¸ Icona dei filtri in alto a destra */
+.pie-chart-menu-icon {
+  position: absolute;
+  top: 45px;
+  right: 45px;
+  z-index: 1000;
+}
+
+.pie-chart-menu-icon img {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+/* ðŸ”½ Dropdown menu personalizzato */
+.custom-dropdown {
+  position: absolute;
+  top: 35px;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+  padding: 5px 0;
+  list-style: none;
+  z-index: 1001;
+  min-width: 150px;
+  font-size: 13px;
+}
+
+.custom-dropdown li {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.custom-dropdown li:hover {
+  background-color: #f5f5f5;
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+  max-height: 400px;
+  padding: 10px;
+}
+
+.page-title {
+  color: #333;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+#modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#modalContent p {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+#modalContent p strong {
+  color: #333;
+
+  font-weight: var(--weight-demi-bold);
+  margin-right: 10px;
+}
+
+#modalContent p span {
+  color: #555;
+}
+
+/* Responsive per schermi piccoli */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+  }
+}
+
+/* Stile specifico per PDF */
+#pdfModal .modal-content {
+  height: 90vh;
+  width: 90vw;
+  max-width: 100%;
+  margin: 1% auto;
+  padding: 0;
+}
+
+#pdfModal iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Stile specifico per immagini */
+#imageModal .modal-content {
+  height: auto;
+  width: 80%;
+  max-width: 90vw;
+  margin: 2% auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#imageModal img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+/* Stile specifico per file CAD */
+#cadModal .modal-content {
+  height: 90vh;
+  width: 90vw;
+  max-width: 100%;
+  margin: 1% auto;
+  padding: 0;
+}
+
+/* Stile specifico per video */
+#videoModal .modal-content {
+  height: auto;
+  width: 80%;
+  max-width: 90vw;
+  margin: 2% auto;
+  padding: 0;
+}
+
+#videoModal video {
+  width: 100%;
+  height: auto;
+}
+
+.document-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  /* Spazio tra le carte */
+  justify-content: flex-start;
+  padding: 10px;
+}
+
+.document-icon img {
+  max-width: 30px;
+  /* Dimensione massima delle icone */
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.document-info p {
+  margin: 5px 0;
+  padding: 0;
+  width: 100%;
+  /* Assicura che il testo si limiti alla larghezza della card */
+  white-space: nowrap;
+  /* Impedisci il ritorno a capo del testo */
+  overflow: hidden;
+  /* Nascondi il testo che esce dai limiti */
+  text-overflow: ellipsis;
+  /* Aggiungi i puntini di sospensione per il testo lungo */
+  word-break: break-all;
+}
+
+.document-info .file-viewer {
+  margin-top: auto;
+  /* Spingi il bottone in fondo alla carta */
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.document-info .file-viewer:hover {
+  background-color: #0056b3;
+  /* Cambia colore al passaggio del mouse */
+}
+
+@media (max-width: 600px) {
+  .document-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    /* Riduce la grandezza delle carte su schermi piccoli */
+  }
+
+  .document-icon img {
+    max-width: 50px;
+    max-height: 50px;
+  }
+}
+
+.filter-dropdown {
+  position: absolute;
+  z-index: 9999;
+  /* Assicura che sia sopra altri elementi */
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  border-radius: 5px;
+  max-height: 200px;
+  max-width: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #ddd;
+  display: none;
+  /* Nasconde il dropdown inizialmente */
+  white-space: nowrap;
+  /* Evita il ritorno a capo */
+}
+
+.filter-dropdown-dynamic {
+  position: absolute;
+  z-index: 9999;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 0;
+  /* Rimuove il padding generale */
+  border-radius: 6px;
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #ddd;
+  display: none;
+  /* Nasconde inizialmente */
+  opacity: 0;
+  /* Invisibile */
+  visibility: hidden;
+  /* Nasconde completamente */
+  transition: opacity 0.3s ease-in-out;
+  /* Transizione fluida */
+  max-width: 300px;
+  /* Larghezza massima del dropdown */
+}
+
+.filter-dropdown-dynamic.visible {
+  display: block;
+  /* Mostra il dropdown */
+  opacity: 1;
+  /* Gradualmente visibile */
+  visibility: visible;
+  /* Rende visibile */
+}
+
+/* Rende la barra di ricerca coerente */
+.filter-search {
+  width: 100%;
+  padding: 5px;
+  /* border-radius: 4px; */
+  /* box-sizing: border-box; */
+}
+
+.filter-item {
+  cursor: pointer;
+}
+
+.filter-icon.filter-active {
+  filter: brightness(0) saturate(100%) invert(16%) sepia(87%) saturate(7466%)
+    hue-rotate(-1deg) brightness(95%) contrast(119%);
+  /*transform: scale(1.2);*/
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+  /* Transizioni fluide */
+}
+
+/* Layout per card dei contatti e filtri */
+.content-layout {
+  display: flex;
+  gap: 20px;
+}
+
+/* Sezione dei contatti in griglia */
+.contacts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  flex: 3;
+  min-height: 400px;
+}
+
+.contacts-container {
+  transition: min-height 0.3s ease-in-out;
+}
+
+.contact-icon img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+  object-fit: cover;
+}
+
+.contact-details h3 {
+  margin: 0;
+  font-size: 12px;
+  color: #333;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.contact-details p {
+  margin: 0;
+  color: #555;
+  font-size: 12px;
+}
+
+.content-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+  min-height: calc(100vh - 100px);
+  /* ðŸ‘ˆ forza il layout a coprire tutta lâ€™altezza visibile meno navbar/padding */
+}
+
+.filters-contacts .filter-input,
+.filters-contacts .filter-group select,
+.filters-contacts .filter-group input[type="number"],
+.filters-contacts .filter-group input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 14px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.filters-contacts .filter-group label {
+  font-weight: 600;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.filters-container {
+  width: 250px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 90px);
+
+  max-height: calc(100vh - 90px);
+  /* ðŸ‘ˆ altezza massima visibile */
+  overflow-y: auto;
+}
+
+.profile-img {
+  background-color: #eee;
+  border-radius: 50%;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.profile-img[src*="profile_pictures"],
+.profile-img[src$="default_profile.png"],
+.profile-img[src^="data:image"] {
+  opacity: 1;
+}
+
+.columns-container {
+  display: flex;
+  gap: 20px;
+}
+
+.left-column {
+  flex: 1;
+  /* Colonna piÃ¹ piccola */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.right-column {
+  flex: 2;
+  /* Colonna piÃ¹ larga */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.columns {
+  display: flex;
+  gap: 10px;
+}
+
+.column {
+  flex: 1;
+}
+
+.color-picker {
+  margin-right: 10px;
+  width: 20px;
+  /* Dimensione ridotta */
+  height: 20px;
+  /* Dimensione ridotta */
+  border-radius: 50%;
+  /* Rende il selettore rotondo */
+  border: none;
+  /* Rimuove il bordo */
+  background-color: transparent;
+  cursor: pointer;
+  /* Cambia il cursore a una mano quando si passa sopra */
+  opacity: 0;
+  /* Nasconde il selettore di colore */
+}
+
+.kanban-header:hover .color-picker {
+  opacity: 1;
+  /* Rende visibile il selettore solo al passaggio del mouse */
+  position: absolute;
+  /* Posiziona il selettore sopra l'intestazione */
+  right: 30px;
+  /* Distanza dal bordo destro */
+}
+
+/* Stile per la sezione principale */
+.job-profile-container {
+  max-width: 1000px;
+  padding: 20px;
+}
+
+/* Stile comune */
+.custom-budget-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: calc(100% - 40px);
+  margin: 10px 0;
+}
+
+/* Colore della barra per Chrome e Safari */
+.custom-budget-slider::-webkit-slider-runnable-track {
+  height: 10px;
+  background: rgba(var(--light-grey-incide));
+  border-radius: 5px;
+}
+
+/* Thumb per Chrome e Safari */
+.custom-budget-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  background: rgba(var(--red-incide));
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -6px;
+}
+
+/* Colore della barra per Firefox */
+.custom-budget-slider::-moz-range-track {
+  height: 8px;
+  background: rgba(var(--light-grey-incide));
+  border-radius: 5px;
+}
+
+/* Thumb per Firefox */
+.custom-budget-slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  background: #333;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Stile principale del modale */
+.open-search-modal .modal-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Due colonne per label e campo */
+  gap: 15px;
+  /* Spaziatura tra le celle */
+  padding: 20px;
+}
+
+/* Separazione extra per le checkbox di piattaforme e canali interni */
+.open-search-modal .platforms,
+.open-search-modal .internal-channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* Bottone di submit allineato */
+.open-search-modal .btn-submit {
+  grid-column: 1 / -1;
+  /* Occupa tutta la larghezza */
+  justify-self: center;
+  padding: 10px 20px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.candidate h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.candidate p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.candidate:hover {
+  background-color: #eaeaea;
+}
+
+.pipeline-container {
+  display: flex;
+  overflow-x: auto;
+  padding: 20px;
+}
+
+.candidate-icon {
+  height: 15px;
+  width: auto;
+}
+
+.phase-header {
+  padding: 10px;
+  text-align: center;
+  color: white;
+}
+
+.candidates-list {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  min-height: 150px;
+}
+
+.hr-dashboard {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.dashboard-column {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  padding: 20px;
+  width: 30%;
+  min-height: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-counter {
+  font-size: 2rem;
+
+  font-weight: var(--weight-demi-bold);
+  color: rgba(var(--red-incide));
+  margin: 10px 0;
+}
+
+.user-container {
+  display: flex;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  flex-direction: row;
+  /* Elementi affiancati */
+  align-items: center;
+  /* Allinea gli elementi verticalmente al centro */
+  gap: 20px;
+  /* Spaziatura tra immagine e nome utente */
+}
+
+.profile-container {
+  margin: 0 auto;
+  padding: 20px;
+  flex-direction: row;
+  /* Cambiato da 'column' a 'row' per mettere gli elementi affiancati */
+  align-items: center;
+  /* Allinea gli elementi al centro verticalmente */
+  gap: 20px;
+  /* Distanza tra l'immagine del profilo e il nome utente */
+}
+
+.profile-section {
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 15px;
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.profile-section h2 {
+  margin: 0 0 5px;
+  font-size: 20px;
+
+  font-weight: var(--weight-demi-bold);
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  display: inline-block;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.profile-info-grid label {
+  font-size: 12px;
+
+  font-weight: var(--weight-demi-bold);
+  color: #555;
+}
+
+.profile-info-grid p {
+  font-size: 12px;
+  color: #333;
+  margin: 0;
+}
+
+.profile-about p {
+  margin: 0;
+  font-size: 12px;
+  color: #333;
+}
+
+#pdf-preview {
+  width: 100%;
+  height: 400px;
+  border: none;
+  display: none;
+}
+
+#no-cv-message {
+  color: gray;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+#toggle-cv-btn {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+#toggle-cv-btn:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .profile-header img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .profile-header-info {
+    text-align: center;
+  }
+
+  .profile-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.competences-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.responsabile-option {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  gap: 10px;
+  padding: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Limita la larghezza dei nomi e aggiungi i puntini di troncamento */
+.responsabile-option span {
+  display: inline-block;
+  max-width: calc(100% - 40px);
+  /* Spazio disponibile meno margine */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.responsabile-option.selected .selection-indicator {
+  visibility: visible;
+}
+
+.responsabile-option:hover {
+  background-color: #f0f0f0;
+}
+
+.selection-indicator {
+  margin-left: auto;
+  color: green;
+  font-size: 16px;
+  visibility: hidden;
+}
+
+.selection-indicator.hidden {
+  visibility: hidden;
+}
+
+.responsabile-select {
+  max-width: 200px;
+  border: none;
+  padding: 4px;
+  outline: none;
+  /* Rimuove il bordo di focus */
+  background-color: transparent;
+  color: #333;
+  appearance: none;
+  /* Nasconde l'aspetto predefinito */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  background-image: none;
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.responsabile-select:focus {
+  outline: none;
+  /* Assicura che non ci sia il bordo anche durante il focus */
+  background-color: white;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  /* Allinea verticalmente l'immagine e il testo */
+  justify-content: space-between;
+  /* Mantiene gli elementi su lati opposti */
+  gap: 40px;
+  /* Spaziatura tra immagine e informazioni */
+  border-bottom: 1px solid #575757;
+  margin-bottom: 20px;
+}
+
+.profile-header-left {
+  display: flex;
+  align-items: center;
+  /* Allinea verticalmente l'immagine e il testo */
+}
+
+.profile-image-large {
+  width: 100px;
+  /* Regola la dimensione dell'immagine */
+  height: 100px;
+  border-radius: 50%;
+  /* Mantiene l'immagine circolare */
+  margin-right: 15px;
+  /* Spaziatura tra l'immagine e il testo */
+}
+
+.profile-header-info {
+  display: flex;
+  flex-direction: column;
+  /* Disposizione verticale di nome e azienda */
+  justify-content: center;
+  /* Allinea verticalmente */
+  text-align: left;
+  /* Assicura che il testo sia allineato a sinistra */
+}
+
+.profile-header-right {
+  text-align: left;
+  flex: 1;
+}
+
+.profile-header-info {
+  flex: 1;
+}
+
+.profile-header-info h1 {
+  margin: 0;
+  font-size: 24px;
+
+  font-weight: var(--weight-demi-bold);
+  color: #333;
+}
+
+.profile-header-info p {
+  margin: 5px 0 0;
+  font-size: 16px;
+  color: gray;
+}
+
+.contact-info p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-info .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Puntini generici */
+.dot {
+  display: inline-block;
+  width: 6px;
+  /* Dimensione dei puntini */
+  height: 6px;
+  margin: 0 2px;
+  /* Spaziatura laterale */
+  border-radius: 50%;
+  /* Forma rotonda */
+  background-color: #ccc;
+  /* Colore di base */
+}
+
+.dot.filled {
+  background-color: #4caf50;
+  /* Colore dei puntini attivi */
+}
+
+/* Inline layout per il selettore e il menu a tendina */
+.inline-container {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  width: 100%;
+}
+
+.select-container,
+.level-container {
+  flex: 2;
+}
+
+.level-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.level-container input[type="range"] {
+  width: 100%;
+  appearance: none;
+  background: #ccc;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.level-container input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.level-container input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Bottone */
+.inline-container .button {
+  flex: 1;
+  max-width: 150px;
+}
+
+/* Indicatore del livello (puntini orizzontali sotto il selettore) */
+.level-indicator {
+  display: flex;
+  /* Layout flessibile per puntini orizzontali */
+  justify-content: flex-start;
+  /* Allinea i puntini a sinistra */
+  align-items: center;
+  /* Centra verticalmente */
+}
+
+/* Azioni dei filtri inline */
+.filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.advanced-filters {
+  margin-top: 0;
+}
+
+.advanced-filters.hidden {
+  display: none;
+}
+
+.advanced-filters-toggle {
+  cursor: pointer;
+  color: rgba(var(--red-incide));
+  text-decoration: underline;
+  transition: color 0.3s;
+  margin-left: 10px;
+}
+
+.advanced-filters-toggle:hover {
+  color: darkred;
+}
+
+/* Scritta "Filtri Avanzati" cliccabile */
+.advanced-filters-toggle {
+  font-size: 14px;
+
+  font-weight: var(--weight-demi-bold);
+  color: rgba(var(--red-incide));
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s;
+}
+
+.filters th {
+  padding: 0px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 0;
+}
+
+.filters input {
+  width: 100%;
+  padding: 2px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 10px;
+}
+
+.editable-field {
+  padding-bottom: 5px;
+  font-size: 12px;
+  color: #333;
+  transition: background-color 0.3s ease;
+}
+
+.editable-field[contenteditable="true"]:focus {
+  background-color: white;
+  outline: none;
+}
+
+.editable-field input[type="date"] {
+  font-size: 12px;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  color: #333;
+}
+
+.editable-field input[type="date"]:focus {
+  border: none;
+  background-color: white;
+}
+
+.date-field input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  /* Nasconde l'icona del calendario */
+}
+
+.title-field {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Contenitore principale */
+.home-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 50px auto;
+  padding: 40px;
+  width: 100%;
+  gap: 20px;
+}
+
+/* Sezione Benvenuto */
+.welcome-section {
+  text-align: center;
+}
+
+.welcome-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.welcome-title {
+  font-size: 28px;
+  color: #333;
+  margin: 0;
+}
+
+/* Sezione ultime notifiche*/
+.home-notifiche-box,
+.home-changelog-box {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.notifiche-title-row,
+.changelog-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notifiche-mini-box {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 6px;
+  transition: box-shadow 0.15s;
+  background: transparent;
+  border: none;
+}
+
+.notifiche-mini-box,
+.changelog-mini-box {
+  padding: 0 6px 6px 8px;
+  border-bottom: 1px solid;
+  border-bottom-color: #c8c8c8;
+}
+
+.notifiche-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.notifica-sidebar-item {
+  border-bottom: 1px solid #eee;
+  padding: 0 0 5px 0;
+  font-size: 13px;
+  background: none;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.notifica-sidebar-item:last-child {
+  border-bottom: none;
+}
+
+.notifica-unread .notifica-messaggio {
+  /*font-weight: bold;*/
+  color: #555;
+}
+
+.notifica-messaggio {
+  margin-bottom: 2px;
+  display: block;
+  word-break: break-word;
+  color: #222;
+}
+
+.notifica-meta {
+  font-size: 12px;
+  color: #999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notifica-link {
+  color: rgba(var(--dark-grey-incide));
+  text-decoration: none;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.notifica-link:hover {
+  text-decoration: none;
+  color: rgba(var(--red-incide));
+}
+
+.notifiche-sidebar-link {
+  font-size: 12px;
+  color: rgba(var(--dark-grey-incide));
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.notifiche-sidebar-link:hover {
+  text-decoration: underline;
+  color: rgba(var(--red-incide));
+}
+
+/* Welcome-section */
+.welcome-section {
+  min-height: 500px;
+  height: 500px;
+  width: 100%;
+  margin-bottom: 36px;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 28px 0 rgba(60, 60, 90, 0.08);
+}
+
+.featured-news-hero {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  align-items: flex-end;
+  /* allinea in basso */
+  justify-content: flex-start;
+  /* allinea a sinistra */
+}
+
+.featured-news-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    125deg,
+    rgb(0 0 0 / 36%) 50%,
+    rgba(0, 0, 0, 0.33) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.featured-news-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  text-align: left;
+  padding: 32px 32px 38px 32px;
+  /* piÃ¹ spazio sotto */
+  width: 100%;
+  margin: 0 auto;
+  margin-right: 30%;
+  /* min-height: unset; */
+}
+
+.featured-news-title {
+  font-size: 46px;
+  font-weight: 400;
+  line-height: 1.1;
+  margin-bottom: 28px;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
+  text-align: left;
+}
+
+.featured-news-btn {
+  display: inline-block;
+  padding: 8px 22px;
+  background: #c0392b;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 60px;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.17);
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+
+.featured-news-btn:hover,
+.featured-news-btn:focus {
+  background: #a42b1b;
+  transform: translateY(-3px) scale(1.05);
+}
+
+/* Featured News Admin Overlay */
+#featured-news-admin-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 10;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Featured News Admin Form (ora direttamente dentro overlay) */
+#featured-news-admin-form {
+  max-width: 900px;
+  width: 100%;
+  margin: 20px auto;
+  /* background: #fff; */
+  border-radius: 18px;
+  /* box-shadow: 0 3px 32px 0 rgba(80, 82, 124, 0.10); */
+  /* padding: 32px 28px 24px 28px; */
+  /* display: flex; */
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+/* Titolo */
+#featured-news-admin-form h2 {
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+  color: #353642;
+  letter-spacing: 0.01em;
+}
+
+/* Tab navigation (stile gestione_ruoli) */
+#featured-news-admin-form .tab {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+}
+
+#featured-news-admin-form .tab-link {
+  background-color: #e0e0e0;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+  color: #333;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+#featured-news-admin-form .tab-link.active {
+  background-color: white;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  color: #000;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.1);
+  font-weight: var(--weight-demi-bold);
+}
+
+#featured-news-admin-form .tab-link:hover {
+  background-color: #ddd;
+}
+
+/* Tab content - layout a 2 colonne quando attivo */
+#featured-news-admin-form .tabcontent {
+  display: none;
+  padding: 20px 0;
+}
+
+#featured-news-admin-form .tabcontent.active {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 32px;
+  align-items: start;
+}
+
+/* Label e input */
+#featured-news-admin-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+  color: #323344;
+  margin-bottom: 4px;
+  gap: 7px;
+  font-size: 1rem;
+}
+
+#featured-news-admin-form input[type="text"],
+#featured-news-admin-form input[type="url"],
+#featured-news-admin-form input[type="file"] {
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  font-size: 1rem;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
+  outline: none;
+  margin-top: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#featured-news-admin-form input[type="file"] {
+  padding: 8px;
+  cursor: pointer;
+}
+
+#featured-news-admin-form input[type="text"]:focus,
+#featured-news-admin-form input[type="url"]:focus,
+#featured-news-admin-form input[type="file"]:focus {
+  border: 1.2px solid #e53e3e;
+  background: #fff;
+  box-shadow: 0 1px 4px 0 rgba(229, 62, 62, 0.08);
+}
+
+/* Tab link: layout normale */
+#tab-link-content {
+  grid-template-columns: 1fr;
+}
+
+#tab-link-content label {
+  grid-column: 1;
+}
+
+/* Tab immagine: titolo e file a sinistra, preview a destra */
+#tab-image-content label {
+  grid-column: 1 / -1;
+}
+
+#tab-image-content #featured-title-input {
+  grid-column: 1 / -1;
+}
+
+#tab-image-content label[for="featured-image-input"],
+#tab-image-content #featured-image-input {
+  grid-column: 1;
+}
+
+#tab-image-content #image-preview-container {
+  grid-column: 2;
+  margin-top: 0;
+}
+
+/* Bottoni azioni */
+.featured-news-admin-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* Responsive: su schermi piccoli torna a colonna singola */
+@media (max-width: 768px) {
+  #featured-news-admin-form {
+    max-width: 100%;
+    padding: 24px 20px;
+  }
+
+  #featured-news-admin-form .tabcontent {
+    grid-template-columns: 1fr;
+  }
+
+  #tab-image-content #image-preview-container {
+    grid-column: 1;
+    margin-top: 15px;
+  }
+}
+
+/* Sezione News */
+.news-section {
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-size: 14px;
+  color: rgba(var(--red-incide));
+  margin: 0;
+  padding: 10px 0;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.news-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.news-item {
+  flex: 1 1 calc(33.333% - 20px);
+  max-width: 300px;
+  min-width: 250px;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.news-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.image-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Adatta l'immagine al contenitore */
+}
+
+.post-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.post-content h3 {
+  font-size: 14px;
+  color: #333;
+  padding: 10px;
+  margin: 0;
+  font-weight: var(--weight-medium);
+}
+
+.post-content p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.news-link {
+  font-size: 12px;
+  color: rgba(var(--dark-grey-incide));
+  text-decoration: none;
+  position: absolute;
+  /* Posizionamento assoluto */
+  right: 10px;
+  /* Distanza dal bordo destro */
+  bottom: 10px;
+  /* Distanza dal bordo inferiore */
+}
+
+.news-link:hover {
+  text-decoration: underline;
+  color: rgba(var(--red-incide));
+}
+
+/* Sezione Azioni Rapide */
+.quick-actions-section {
+  margin-bottom: 40px;
+}
+
+.quick-actions-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.quick-action {
+  text-align: center;
+  width: 100px;
+  text-decoration: none;
+  color: #333;
+}
+
+.quick-action span {
+  display: block;
+  font-size: 14px;
+}
+
+/* Sezione Comunicazioni */
+.communications-section {
+  margin-bottom: 40px;
+}
+
+.communications-container {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.communication-message {
+  font-size: 14px;
+  color: #333;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-sidebar {
+  flex: 0 0 250px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: auto;
+  /* Adatta allâ€™altezza dei contenuti */
+}
+
+.internal-links {
+  margin-bottom: 20px;
+}
+
+.internal-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.internal-links li {
+  margin-bottom: 10px;
+}
+
+.internal-link {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f1f1f1;
+  color: #333;
+  text-decoration: none;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.internal-link:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.link-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.external-links {
+  margin-bottom: 20px;
+}
+
+.external-links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* Due colonne per riga */
+  gap: 10px;
+  /* Spaziatura tra i bottoni */
+}
+
+.external-link {
+  display: flex;
+  flex-direction: column;
+  /* Disposizione verticale */
+  align-items: center;
+  /* Centra icona e testo */
+  justify-content: center;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-decoration: none;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+  text-align: center;
+  /* Centra il testo sotto l'icona */
+}
+
+.external-link:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.external-link-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 5px;
+  /* Spazio tra icona e testo */
+}
+
+.link-text {
+  font-size: 12px;
+  color: #333;
+}
+
+/* Layout principale */
+.task-layout {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px;
+}
+
+.task-left,
+.task-right {
+  flex: 1;
+}
+
+/* Campo generico */
+.task-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.task-field label {
+  font-size: 10px;
+  color: #555;
+  margin-right: 10px;
+  white-space: nowrap;
+  /* Evita che il testo vada a capo */
+}
+
+.task-field select,
+.task-field input {
+  width: 100%;
+  height: 34px;
+  /* Altezza uniforme per tutti i campi */
+  padding: 5px;
+  font-size: 12px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  border-radius: 0;
+}
+
+.task-icon img {
+  width: 24px;
+  height: 24px;
+}
+
+/* Campi specifici per Tag e Assegnatari */
+#task-tags,
+#task-assignees {
+  width: 200px;
+  /* Larghezza contenuta */
+  height: 34px;
+  /* Altezza uniforme */
+  padding: 5px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Campo Date Inline */
+.date-fields-inline {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  /* Spazio tra gli elementi */
+  flex-wrap: nowrap;
+  /* Mantiene tutti gli elementi sulla stessa riga */
+}
+
+.svg-overlay {
+  position: absolute;
+  top: 74%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.2);
+  width: 80%;
+  opacity: 0.3;
+  filter: blur(8px);
+  /* Mantiene sempre la sfocatura */
+  pointer-events: none;
+
+  /* Animazione modificata per rimanere sfocata */
+  animation: fade-in-blurred 3s forwards ease-out;
+  animation-delay: 0.3s;
+  /* Stesso delay del login */
+}
+
+/* Animazione di Fade + Blur per l'overlay */
+@keyframes fade-in-blurred {
+  0% {
+    opacity: 0;
+    filter: blur(17px);
+    /* PiÃ¹ sfocato all'inizio */
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+
+  50% {
+    opacity: 0.2;
+    filter: blur(12px);
+    /* Rimane leggermente sfocato */
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+
+  100% {
+    opacity: 0.3;
+    filter: blur(10px);
+    /* Non diventa mai completamente nitido */
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.gara-container {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.gara-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gara-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 0;
+}
+
+.gara-field label {
+  color: #333;
+  flex: 1;
+}
+
+.gara-field span,
+.gara-field a {
+  font-weight: var(--weight-demi-bold);
+  flex: 2;
+  text-align: right;
+  color: #555;
+}
+
+.gara-description {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 2px solid #ddd;
+}
+
+.gara-description label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.gara-description textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  padding: 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.editable-field.placeholder {
+  color: #aaa;
+  /* Grigio chiaro per il placeholder */
+}
+
+.kanban-container {
+  display: flex;
+  gap: 15px;
+  height: calc(100vh - 200px);
+  /* Altezza fissa per il container che occupa tutto lo schermo */
+  white-space: nowrap;
+  /* Impedisce che le colonne si adattino alla larghezza */
+  flex-wrap: nowrap;
+  /* Impedisce che le colonne si vadano a capo */
+  overflow-x: auto;
+  /* Scroll orizzontale se ci sono troppe colonne */
+  overflow-y: hidden;
+  /* Nasconde l'overflow verticale per il container generale */
+}
+
+/* Scroll sopra */
+.kanban-container::-webkit-scrollbar {
+  height: 10px;
+  background-color: #f1f1f1;
+}
+
+.kanban-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+/*Stile dei Campi della Task */
+.task-body {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+
+/*Allinea le informazioni della Task */
+.task-body div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #555;
+  gap: 10px;
+}
+
+.ente-field {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ente-field img {
+  flex-shrink: 0;
+  /* margin-right: 5px; */
+  /* Distanza tra l'icona e il testo */
+}
+
+.ente-field span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  /* Il testo occupa tutto lo spazio rimanente */
+  min-width: 0;
+  /* Permette al testo di ridursi senza problemi */
+}
+
+/* Contenitore griglia per i filtri */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* Adatta automaticamente */
+  column-gap: 30px;
+  margin: 20px 0px;
+}
+
+/* Elementi singoli dei filtri */
+.filter-item {
+  flex-direction: column;
+}
+
+/* Evidenziazione dei filtri attivi */
+.filter-active {
+  /*box-shadow: 0 0 3px rgba(255, 0, 0, 0.5);*/
+  outline: none;
+}
+
+/* Contenitore per il filtro con icona di reset */
+.filter-select-wrapper {
+  position: relative;
+  display: flex;
+}
+
+/* Stile della "X" per resettare il filtro */
+.clear-filter {
+  position: absolute;
+  right: 20px;
+  /* Distanza dalla destra per evitare la sovrapposizione con la freccetta */
+  top: 45%;
+  font-size: 14px;
+  cursor: pointer;
+  color: #d9534f;
+  /* Rosso chiaro */
+  background: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 1px solid #d9534f;
+  transition: 0.3s ease;
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* Quando un filtro Ã¨ attivo, la "X" diventa visibile */
+.filter-active + .clear-filter {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Effetto hover per migliorare la UX */
+.clear-filter:hover {
+  background: #d9534f;
+  color: #fff;
+}
+
+/* ðŸ”¥ Mantiene il filtro periodo in una riga */
+.filter-period {
+  display: flex;
+
+  /* Distanza tra etichetta e input */
+  white-space: nowrap;
+}
+
+/* Input del calendario */
+.date-range-picker {
+  cursor: pointer;
+  width: 200px;
+  text-align: center;
+}
+
+/* Mostra la "X" solo quando il periodo Ã¨ selezionato */
+.date-range-picker:not(:placeholder-shown) + .clear-filter {
+  visibility: visible;
+  opacity: 1;
+  right: 30%;
+}
+
+/* ========================================
+   STANDARD GLOBALE PER INPUT/TEXTAREA/SELECT
+   ========================================
+   ⚠️ SPOSTATO IN forms-layout.css (sezione 4)
+   Questo file ora contiene solo override specifici e eccezioni.
+   Per modificare lo stile base di tutti i campi, editare forms-layout.css
+   ======================================== */
+
+/* Gli stili base sono ora in forms-layout.css - qui solo override specifici */
+
+/* ⚠️ TUTTI GLI STILI BASE SONO STATI SPOSTATI IN forms-layout.css (sezione 4) */
+/* Qui sotto ci sono solo override specifici per contesti particolari */
+
+/* Override specifici per contesti particolari (mantiene lo standard ma permette personalizzazioni) */
+.pagina-foglio textarea,
+.view-form-container textarea {
+  /* Override specifico per questi contesti - lo standard è in forms-layout.css */
+  padding: 6px 10px;
+}
+
+/* ⚠️ Gli stili base per focus, disabled, readonly, placeholder, checkbox, radio */
+/* sono ora tutti in forms-layout.css - modificare lì per aggiornare tutto il sito */
+
+/* Stile checkbox */
+.form-group input[type="checkbox"] {
+  width: auto;
+  transform: scale(1.2);
+  /* Ingrandisce la checkbox */
+}
+
+/* gare valutazione */
+.editable-field,
+.dropdown-input,
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+
+  border: 1.2px solid #ccd;
+  border-radius: 6px;
+
+  background: #fafbfc;
+
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border 0.15s;
+}
+
+.editable-field[readonly],
+.form-group input[readonly] {
+  background: #f1f1f1;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* Contenitore principale del form dentro il modale */
+
+.editable-field {
+  /* border: 1px solid #555; */
+  background-color: #ffffff82;
+  transition: background-color 0.3s ease;
+}
+
+/* gare valutazione */
+.editable-field,
+.dropdown-input,
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+
+  border: 1.2px solid #ccd;
+  border-radius: 6px;
+
+  background: #fafbfc;
+
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border 0.15s;
+}
+
+.editable-field[readonly],
+.form-group input[readonly] {
+  background: #f1f1f1;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.header-gara {
+  width: 90vw;
+  max-width: clamp(360px, 70vw, 1280px);
+  /* min, preferito, max */
+  min-width: 320px;
+  transition: box-shadow 0.18s;
+}
+
+@media (max-width: 1100px) {
+  .header-gara {
+    max-width: 98vw;
+  }
+}
+
+/* Responsive per mobile */
+@media (max-width: 900px) {
+  .anagrafiche-container {
+    max-width: 99vw;
+    padding: 11px 2vw 8px 2vw;
+  }
+}
+
+.editable-field.editing {
+  background-color: #ffffffee;
+  /* Giallo chiaro per evidenziare la modifica */
+  border-bottom: 1px solid #55555521;
+}
+
+.dropdown-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-input {
+  flex: 1;
+  padding-right: 30px;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  display: none;
+}
+
+.editing .dropdown-arrow {
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  z-index: 1000;
+}
+
+.dropdown-menu div {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.dropdown-menu div:hover {
+  background-color: #f0f0f0;
+}
+
+.autocomplete-list {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  width: 100%;
+  display: none;
+  z-index: 1000;
+}
+
+.autocomplete-list div {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.autocomplete-list div:hover {
+  background-color: #f0f0f0;
+}
+
+/* Nascondi l'aspetto del select quando non Ã¨ abilitata la modifica */
+.select-hidden {
+  appearance: none;
+  /* Rimuove la freccetta */
+  background-color: transparent;
+  border: none;
+  pointer-events: none;
+  /* Disabilita l'interazione */
+  opacity: 0.5;
+  /* Diminuisce l'opacitÃ  per farlo sembrare disabilitato */
+  width: 100%;
+  /* Fa sÃ¬ che occupi lo stesso spazio */
+}
+
+/* Se vuoi aggiungere uno sfondo per renderlo ancora piÃ¹ visibile come disabilitato */
+.select-hidden::after {
+  content: "Non disponibile";
+  /* Texto che indica che non Ã¨ possibile interagire */
+  font-size: 12px;
+  color: gray;
+}
+
+/* Nascondi la freccia quando non Ã¨ in modalitÃ  di modifica */
+.dropdown-arrow {
+  display: none;
+}
+
+/* Mostra la freccia quando Ã¨ in modalitÃ  modifica */
+.editable-field.editing + .dropdown-arrow {
+  display: inline-block;
+}
+
+/* ðŸ”¥ Personalizzazione Dropzone */
+.dropzone {
+  border: 2px dashed rgba(var(--light-grey-incide));
+  background-color: #f8f9fa;
+  color: #555;
+  padding: 20px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+/* ðŸŸ¢ Effetto al passaggio del mouse */
+.dropzone:hover {
+  background-color: #ffffff;
+  border-color: rgba(var(--dark-grey-incide));
+}
+
+/* ðŸ”„ Stato attivo quando un file viene trascinato sopra */
+.dropzone.dragover {
+  background-color: #ffffffe3;
+  border-color: rgba(var(--red-incide));
+  color: #000000;
+  transition: all 0.3s ease-in-out;
+}
+
+/* ðŸ“‚ Icona di upload */
+.dropzone::before {
+  content: "ðŸ“‚";
+  display: block;
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+/* ðŸŽ¯ Personalizzazione del link di upload manuale */
+.dropzone span {
+  color: rgba(var(--red-incide));
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ðŸ”¥ Effetto quando si passa sopra il link */
+.dropzone span:hover {
+  color: #dc2500f6;
+}
+
+/* âœ… Righe dei Responsabili */
+.responsabile-row {
+  background: #f4f6f9;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.responsabile-row:hover {
+  background: #e3e8f0;
+}
+
+/* âœ… Righe dei Membri (Collaboratori) */
+.membri-container {
+  display: none;
+  background: #f9f9f9;
+}
+
+.membri-container td {
+  padding-left: 30px;
+  font-size: 14px;
+  color: #333;
+}
+
+/* âœ… Effetto Slide Down per i Membri */
+.membri-container ul {
+  list-style-type: none;
+  padding-left: 20px;
+  margin: 5px 0;
+}
+
+.membri-container li {
+  padding: 5px 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+/* âœ… Pulsante per Espandere/Chiudere */
+.toggle-icon {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.expanded .toggle-icon {
+  transform: rotate(90deg);
+}
+
+.total-reports {
+  font-size: 14px;
+  color: #555;
+  margin-top: 10px;
+}
+
+.grid-item:hover {
+  transform: translateY(-5px);
+  cursor: pointer;
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+.dashboard-title {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.dashboard-section {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+  width: 100%;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 8px;
+  margin-top: 10px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #4caf50;
+  transition: width 0.5s ease-in-out;
+}
+
+.recent-segnalazioni {
+  list-style: none;
+  padding: 0;
+}
+
+.recent-segnalazioni li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.recent-segnalazioni li span {
+  font-weight: bold;
+  color: #007bff;
+  margin-right: 10px;
+}
+
+/* Stile delle opzioni nel form */
+.option-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.option-input {
+  flex-grow: 1;
+  padding: 5px;
+}
+
+/* Sezione per i campi della segnalazione */
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-x: hidden;
+  max-height: 75%;
+  /* âœ… Se i campi sono troppi, scrolla dentro */
+}
+
+/* Per evitare che i pulsanti "Aggiungi Campo" escano */
+#addFieldBtn {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Contenitore dell'anteprima */
+#form-preview-container {
+  width: 94%;
+  height: 758px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Pagina A4 con contenuto adattato */
+.preview-page {
+  width: 100%;
+  /* âœ… Si adatta al contenitore */
+  max-width: 100%;
+  /* âœ… Non supera mai la larghezza disponibile */
+  height: 100%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* âŒ Blocca lo scroll orizzontale */
+}
+
+.preview-page .section-divider {
+  border: none;
+  border-top: 3px solid #cccccc;
+  /* fallback se JS non lo sovrascrive */
+  width: 100%;
+  transition: border-color 0.3s ease;
+  border-radius: 2px;
+}
+
+.preview-page .section-divider:hover {
+  cursor: help;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+}
+
+.preview-field {
+  max-width: 100%;
+  padding: 10px;
+}
+
+/* Checkbox e radio allineati correttamente */
+.preview-field fieldset {
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+}
+
+.preview-field input[type="checkbox"],
+.preview-field input[type="radio"] {
+  width: auto;
+  transform: scale(1.2);
+  margin-right: 5px;
+}
+
+/* Opzioni del Selectbox ben allineate */
+.preview-field select {
+  text-align: left;
+}
+
+/* Rendi tutto responsive */
+@media (max-width: 768px) {
+  .modal-container {
+    flex-direction: column;
+  }
+
+  .modal-left,
+  .modal-right {
+    width: 100%;
+  }
+}
+
+/* Titolo, descrizione e responsabile allineati bene */
+.preview-title {
+  text-align: left;
+  width: 100%;
+  padding-bottom: none;
+  margin-bottom: 10px;
+  min-height: 136px;
+}
+
+/* Contenitore dei campi */
+#form-fields-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Header del campo (titolo + bottone toggle) */
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f5f5f5;
+  padding: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Testo del titolo */
+.field-title {
+  flex-grow: 1;
+}
+
+.field-error {
+  outline: 2px solid #e53935;
+}
+
+/* Bottone di toggle */
+.toggle-field {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Effetto al passaggio del mouse */
+.toggle-field:hover {
+  transform: scale(1.1);
+}
+
+/* Il contenuto del campo inizialmente visibile */
+.field-body {
+  padding: 10px;
+  display: block;
+}
+
+.sticky-add-field {
+  position: sticky;
+  background-color: #f5f5f5;
+  bottom: 0;
+  padding: 10px;
+  z-index: 10;
+  /* border-top: 2px solid #ddd; */
+}
+
+.kanban-column {
+  min-width: 220px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-gestione-segnalazioni .kanban-column {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.page-gestione-segnalazioni .kanban-column .task {
+  background-color: #ffffff57 !important;
+}
+
+.stato-select.aperta {
+  background: #e5f6fd;
+  color: #147f9f;
+  border: 1px solid #0099ff;
+}
+
+.stato-select.in_corso {
+  background: #fff9e0;
+  color: #a88201;
+  border: 1px solid #ffd600;
+}
+
+.stato-select.sospesa {
+  background: #fff0e0;
+  color: #e36f00;
+  border: 1px solid #ff9800;
+}
+
+.stato-select.rifiutata {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #e53935;
+}
+
+.stato-select.chiusa {
+  background: #e5fbe6;
+  color: #31743b;
+  border: 1px solid #4caf50;
+}
+
+.stato-select {
+  transition:
+    background 0.18s,
+    border 0.18s,
+    color 0.18s;
+  font-weight: 600;
+}
+
+/* Select assegnato a - stile uniforme a stato-select */
+.assegnato-colonna select.assegnato-select {
+  width: 95%;
+  min-width: 0;
+  font-size: 1em;
+  box-sizing: border-box;
+}
+
+.assegnato-select {
+  transition:
+    background 0.18s,
+    border 0.18s,
+    color 0.18s;
+  font-weight: 500;
+  background: #f0f4f8;
+  border: 1px solid #c0c8d0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.total-reports {
+  /* position: absolute; */
+  /* right: 12px; */
+  /* bottom: 57px; */
+  font-size: 12px;
+  /* color: #295; */
+  /* font-weight: 500; */
+  /* letter-spacing: 0.01em; */
+}
+
+#context-menu ul li:hover {
+  background-color: #f0f0f0;
+}
+
+.page-title-container {
+  border-bottom: 1px solid var(--page-color, #ccc);
+  padding-bottom: 10px;
+  /* margin-bottom: 24px; */
+}
+
+.communication-image {
+  width: 120px;
+  height: auto;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.communication-content {
+  flex: 1;
+}
+
+.communication-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: var(--weight-medium);
+}
+
+.communication-date {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+}
+
+.communication-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: rgba(var(--red-incide));
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.custom-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-confirm-box {
+  background: white;
+  border-radius: 6px;
+  padding: 20px 30px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  /*text-align: center;*/
+}
+
+.custom-confirm-box p {
+  margin-bottom: 20px;
+  font-size: 15px;
+  color: #333;
+}
+
+.custom-confirm-buttons {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.custom-context-menu {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  list-style: none;
+  padding: 0;
+  z-index: 9999;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.custom-context-menu li {
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.custom-context-menu li:hover {
+  background-color: #f0f0f0;
+}
+
+/* Dropzone in stile coerente, ma leggero */
+.dropzone-style {
+  background-color: #f8f8f8;
+  border: 2px dashed #aaa;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  transition: background-color 0.2s ease-in-out;
+  min-height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #444;
+}
+
+/* Dropzone in stile coerente, ma leggero */
+.dropzone-upload {
+  /* Queste sono le regole BASE che devono esserci */
+  background-color: #f9f9f9;
+  color: #6d6d6d;
+  border: 1.5px dashed #b8b8b8;
+  border-radius: 7px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+
+.dropzone-upload.dragover,
+.dropzone-upload:focus-within,
+.dropzone-upload:hover {
+  border-color: #5bbcff;
+  background: #e6f7ff;
+}
+
+.kanban-column.drag-over {
+  background: #f0f7ff;
+  border: 2px dashed rgba(var(--red-incide));
+  transition: background 0.2s;
+}
+
+/* Stile per il testo nella dropzone */
+.dropzone-active span {
+  color: #c20000;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.dropzone-helper-text {
+  font-size: 14px;
+}
+
+.upload-info {
+  font-size: 10px;
+}
+
+.task.just-moved {
+  animation: pop-in 0.18s cubic-bezier(0.39, 0.58, 0.57, 1) 1;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.96);
+    background: #d8eafc;
+  }
+
+  80% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+    background: transparent;
+  }
+}
+
+#communications-container {
+  max-height: 385px;
+  /* altezza stimata per 3 card */
+  overflow-y: auto;
+  padding-right: 8px;
+  scroll-behavior: smooth;
+}
+
+/* (Facoltativo) scrollbar piÃ¹ fine su browser compatibili */
+#communications-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.changelog-mini-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notifiche-mini-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pagina-foglio.editor-mode {
+  display: block !important;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 700px;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.profile-form .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+  max-width: 500px;
+}
+
+.profile-form .form-group label {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+/* Eccezione: Profile form - padding e font-size leggermente diversi */
+.profile-form .form-group input,
+.profile-form .form-group textarea {
+  padding: 8px 12px;
+  font-size: 0.95em;
+  border-color: #ccc;
+  /* width, border-base, border-radius dallo standard globale */
+}
+
+.profile-form .form-group input[readonly] {
+  background-color: #f9f9f9;
+  color: #555;
+}
+
+input[name="Codice_Fiscale"] {
+  text-transform: uppercase;
+}
+
+.profile-form fieldset {
+  border: 1px solid #e0e0e0;
+  border-radius: 7px;
+  margin-bottom: 18px;
+  padding: 14px 14px 6px 14px;
+}
+
+.profile-form fieldset legend {
+  padding: 0 12px;
+  font-size: 1.02em;
+  font-weight: bold;
+  color: #222;
+}
+
+.profile-form .fieldset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+  margin-bottom: 10px;
+  margin-left: 20px;
+}
+
+.profile-form .fieldset-grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 700px) {
+  .profile-form .fieldset-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- NOTIFICHE --- */
+.notification-footer {
+  padding: 8px 12px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+.notification-footer a {
+  color: #007bff;
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.notification-bell {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.bell-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: grayscale(100%) brightness(0%) opacity(0.6);
+}
+
+.notification-bell:hover .bell-icon {
+  filter: none;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  display: none;
+}
+
+.notification-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 30px;
+  background: #fff;
+  border: 1px solid #ccc;
+  min-width: 250px;
+  z-index: 9999;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#notification-dropdown .notifica-vuota {
+  padding: 6px 12px;
+}
+
+.notification-dropdown.visible {
+  display: block;
+}
+
+.notification-dropdown .dropdown-header {
+  padding: 8px;
+  background: #f5f5f5;
+  font-weight: bold;
+}
+
+#notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item.notifica-non-letta {
+  font-size: 13px;
+}
+
+.notification-item.notifica-letta {
+  font-weight: var(--weight-light);
+  /* tipo 300 */
+}
+
+/* Forza layout verticale per il dropdown */
+#notification-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Imposta il link interno a occupare tutta la riga */
+.notification-item a {
+  display: block;
+  width: 100%;
+  text-transform: capitalize !important;
+  color: inherit;
+  text-decoration: none;
+}
+
+.notifica-evidenza {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.icona-intranet-news {
+  width: 18px;
+  height: 18px;
+  margin-right: 2px;
+  margin-bottom: 2px;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 1px #b0d7ff75);
+}
+
+/*--- CENTRO NOTIFICHE ---*/
+.notifiche-lista {
+  max-width: 800px;
+  margin-top: 20px;
+}
+
+.notifica-box {
+  border: 1px solid #ccc;
+  border-left: 6px solid #2980b9;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.notifica-box.letta {
+  opacity: 0.6;
+  font-weight: var(--weight-light);
+}
+
+.notifica-box.non-letta {
+  font-weight: var(--weight-medium);
+}
+
+.notifica-box a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.notifiche-separatore {
+  text-align: center;
+  font-weight: var(--weight-demi-bold);
+  color: #555;
+  margin: 25px auto 10px auto;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.notifica-contenuto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.notifica-contenuto .orario {
+  font-size: 12px;
+  color: #666;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.notifica-intranet-news-box {
+  border-left: 6px solid #d4d01b;
+  background: #fffdf2;
+  box-shadow: 0 1px 8px #bddaff15;
+}
+
+.notifica-bordo-segnalazioni {
+  border-left: 6px solid #c0392b;
+  background: #fff7f6;
+}
+
+/*---PAGINA GESTIONE RUOLI---*/
+.gestione-ruoli-wrapper {
+  display: flex;
+  gap: 30px;
+}
+
+.ruoli-sidebar {
+  min-width: 200px;
+  border-right: 1px solid #ddd;
+  padding-right: 20px;
+}
+
+.ruoli-dettaglio {
+  flex-grow: 1;
+}
+
+.ruoli-dettaglio input,
+.ruoli-dettaglio textarea {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.ruoli-dettaglio textarea {
+  height: 80px;
+}
+
+.permessi-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px 30px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+/* Ogni sezione (Accesso alle pagine, Permessi speciali, etc.) */
+.permessi-checkbox-group > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  /* Previene overflow */
+}
+
+/* Titoli delle sezioni (h4) */
+.permessi-checkbox-group > div > h4 {
+  margin: 0 0 10px 0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #cf504b;
+  padding-bottom: 5px;
+}
+
+/* Label checkbox */
+.permessi-checkbox-group .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: color 0.2s;
+}
+
+.permessi-checkbox-group .checkbox-label:hover {
+  color: #333;
+}
+
+.permessi-checkbox-group input[type="checkbox"] {
+  accent-color: #cf504b;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Messaggi informativi (es. "Nessuna pagina Page Editor disponibile") */
+.permessi-checkbox-group > div > p {
+  margin: 5px 0;
+  font-size: 12px;
+}
+
+/* Responsive: su schermi più piccoli, riduci a 2 colonne */
+@media (max-width: 1200px) {
+  .permessi-checkbox-group {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .permessi-checkbox-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* .hidden { 
+display: none !important; } */
+
+.scad-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 10px;
+  border-radius: 7px;
+  margin-bottom: 7px;
+  margin-right: 8px;
+  vertical-align: middle;
+  letter-spacing: 0.5px;
+}
+
+.segnalazione-tag {
+  background: #fd7c27;
+  color: #fff;
+}
+
+/* === Assignee Avatars in Table === */
+.assignee-avatars-cell {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.assignee-avatars-cell:hover {
+  background: #f0f4ff;
+  border-radius: 4px;
+}
+
+.assignee-avatars-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.assignee-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1.5px #fff;
+  margin-right: 0px;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.assignee-avatar:hover {
+  transform: scale(1.12);
+}
+
+.assignee-overflow-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e9ecef;
+  color: #495057;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1.5px #fff;
+  margin-left: 2px;
+}
+
+.assignee-empty {
+  color: #aaa;
+  font-style: italic;
+}
+
+/* === Multi-User Picker === */
+.multi-user-picker-box {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  width: 380px;
+  max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.multi-user-picker-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #333;
+  text-align: center;
+}
+
+.mup-search {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+
+.mup-search:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.mup-count {
+  font-size: 12px;
+  color: #888;
+  text-align: right;
+  margin-bottom: 6px;
+}
+
+.mup-count.mup-count-limit {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.mup-list {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+
+.mup-user {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.12s;
+}
+
+.mup-user:last-child {
+  border-bottom: none;
+}
+
+.mup-user:hover {
+  background: #f0f4ff;
+}
+
+.mup-user.selected {
+  background: #e8f0fe;
+}
+
+.mup-user-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.mup-cb {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: #007bff;
+}
+
+.mup-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.mup-user-name {
+  font-size: 14px;
+  color: #333;
+}
+
+.mup-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.mup-buttons .button {
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+}
+
+.mup-apply {
+  background: #007bff;
+  color: #fff;
+}
+
+.mup-apply:hover {
+  background: #0056b3;
+}
+
+.mup-cancel {
+  background: #e9ecef;
+  color: #333;
+}
+
+.mup-cancel:hover {
+  background: #d6d8db;
+}
+
+/* ========= GLOBAL LOADER ========= */
+.global-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.global-loader-overlay.is-hidden {
+  display: none;
+}
+
+.global-loader-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px 18px;
+  min-width: 260px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.global-loader-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.15);
+  border-top-color: rgba(0, 0, 0, 0.65);
+  animation: globalLoaderSpin 0.9s linear infinite;
+}
+
+.global-loader-text {
+  font-size: 14px;
+  color: #222;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+@keyframes globalLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

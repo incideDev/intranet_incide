@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Livello_1" data-name="Livello 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 45.08 42">
+  <defs>
+    <linearGradient id="Sfumatura_senza_nome" data-name="Sfumatura senza nome" x1="43.15" y1="2.1" x2="8.87" y2="29.52" gradientTransform="translate(0 44) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#003e72"/>
+      <stop offset=".23" stop-color="#003e72"/>
+      <stop offset=".57" stop-color="#1081c5"/>
+      <stop offset=".65" stop-color="#0f85c5"/>
+      <stop offset=".74" stop-color="#0d92c7"/>
+      <stop offset=".84" stop-color="#0ba8ca"/>
+      <stop offset=".93" stop-color="#07c6ce"/>
+      <stop offset="1" stop-color="#04e2d2"/>
+    </linearGradient>
+  </defs>
+  <path d="M21.75,6.63c.18-.29.56-.48.88-.48.4,0,.76.23.92.56l14.01,27.52-10.03-6.71c-1.89-1.27-4.54-1.99-7.27-1.99-1.73,0-3.34.3-4.69.86l-8.59,3.62L21.75,6.63ZM17.87,3.32L1.42,29.37c-1.25,1.97-1.49,3.64-.73,4.95.6,1.02,1.71,1.61,3.07,1.61.86,0,1.83-.23,2.94-.69l10.34-4.36c.26-.11.55-.2.86-.27.28-.07.58-.12.88-.17.04,0,.09-.01.13-.02.04,0,.09-.01.13-.02.14-.02.29-.02.43-.04.22-.01.44-.02.66-.02,1.33,0,2.67.25,3.77.66.48.19.92.4,1.29.65l13.05,8.73c1.38.92,2.49,1.35,3.53,1.35s2.02-.49,2.57-1.34c1-1.55.24-3.46-.42-4.75L27.69,3.75c-1.12-2.21-2.93-3.47-4.97-3.47-1.89,0-3.62,1.08-4.86,3.04" fill="url(#Sfumatura_senza_nome)"/>
+</svg>

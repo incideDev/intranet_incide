@@ -1,0 +1,641 @@
+/* ===== COMMESSA CRONOPROGRAMMA - STYLING ===== */
+
+/* Header Commessa */
+.commessa-crono-header {
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.commessa-crono-header-title {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 8px;
+}
+
+.commessa-crono-header-desc {
+    font-size: 0.95em;
+    color: #495057;
+    margin-bottom: 12px;
+}
+
+.commessa-crono-header-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.commessa-crono-meta-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.commessa-crono-meta-label {
+    font-size: 0.68em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8590a6;
+}
+
+.commessa-crono-meta-value {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #343a40;
+}
+
+/* Badge stato commessa */
+.commessa-status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #fff;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.commessa-status-badge.aperta,
+.commessa-status-badge.in-corso {
+    background: #28a745;
+}
+
+.commessa-status-badge.creata {
+    background: #6c757d;
+}
+
+.commessa-status-badge.chiusa {
+    background: #17a2b8;
+}
+
+/* Toolbar */
+.commessa-crono-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.commessa-crono-toolbar-title {
+    font-size: 1.05em;
+    font-weight: 700;
+    flex: 1;
+}
+
+.commessa-crono-period-label {
+    font-size: 0.9em;
+    color: #6c757d;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.btn.active {
+    background: #cd211f !important;
+    color: #fff !important;
+    border-color: #cd211f !important;
+}
+
+.btn:not(.active) {
+    background: #fff;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.btn.btn-primary {
+    background: #cd211f;
+    color: #fff;
+    border-color: #cd211f;
+}
+
+/* Grid Gantt */
+.commessa-crono-gantt-grid {
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-bottom: 20px;
+}
+
+/* Header mesi */
+.gantt-header {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+}
+
+.gantt-header-label {
+    background: #f8f9fa;
+    border-right: 1px solid #e1e4e8;
+    border-bottom: 1px solid #e1e4e8;
+    padding: 10px 14px;
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+}
+
+.gantt-header-months {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e1e4e8;
+    display: grid;
+    min-width: 0;
+    /* grid-template-columns viene impostato dinamicamente via JS */
+}
+
+.gantt-month-cell {
+    text-align: center;
+    font-size: 0.72em;
+    font-weight: 600;
+    color: #6c757d;
+    padding: 10px 4px;
+    border-right: 1px solid #e9ecef;
+}
+
+.gantt-month-cell:last-child {
+    border-right: none;
+}
+
+.gantt-month-cell.current-month {
+    color: #cd211f;
+    font-weight: 700;
+}
+
+/* Riga fase */
+.gantt-fase-row {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.gantt-fase-row:hover {
+    background: #fafbfc;
+}
+
+.gantt-fase-label {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    border-right: 1px solid #e1e4e8;
+}
+
+.gantt-fase-toggle {
+    display: inline-block;
+    transition: transform 0.2s;
+    margin-right: 8px;
+    font-size: 0.8em;
+}
+
+.gantt-fase-toggle.open {
+    transform: rotate(90deg);
+}
+
+.gantt-fase-name {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #212529;
+    margin-bottom: 4px;
+}
+
+.gantt-fase-meta {
+    font-size: 0.75em;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* Badge stato fase */
+.fase-status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.fase-status-badge.avanzata {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.fase-status-badge.aperta {
+    background: #d4edda;
+    color: #155724;
+    position: relative;
+    padding-left: 16px;
+}
+
+.fase-status-badge.aperta::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #28a745;
+}
+
+.fase-status-badge.pianificata {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.fase-status-badge.chiusa {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Area barra Gantt */
+.gantt-fase-bar-area {
+    position: relative;
+    padding: 12px 8px;
+    min-height: 48px;
+    min-width: 0;
+    border-bottom: 1px solid #f0f0f0;
+    /* Background grid viene impostato dinamicamente via JS */
+}
+
+.gantt-bar {
+    position: absolute;
+    height: 14px;
+    border-radius: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    overflow: hidden;
+}
+
+.gantt-bar-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.25;
+}
+
+.gantt-bar-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    opacity: 0.9;
+}
+
+.gantt-bar-no-dates {
+    color: #adb5bd;
+    font-size: 0.75em;
+    padding-top: 6px;
+}
+
+/* Colori fasi */
+.gantt-bar-color-1 {
+    background: #007bff;
+}
+
+.gantt-bar-color-2 {
+    background: #fd7e14;
+}
+
+.gantt-bar-color-3 {
+    background: #6f42c1;
+}
+
+.gantt-bar-color-4 {
+    background: #20c997;
+}
+
+.gantt-bar-color-default {
+    background: #6c757d;
+}
+
+/* Marker pagamento */
+.payment-marker {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: #fff;
+    z-index: 2;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.payment-marker.scaduto {
+    border-color: #dc3545;
+}
+
+.payment-marker.ok {
+    border-color: #28a745;
+}
+
+.payment-marker-tooltip {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #212529;
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    white-space: nowrap;
+    z-index: 10;
+    display: none;
+    pointer-events: none;
+}
+
+.payment-marker:hover .payment-marker-tooltip {
+    display: block;
+}
+
+/* Sotto-attività */
+.gantt-subactivity-row {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    background: #fafbfc;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.gantt-subactivity-row.hidden {
+    display: none;
+}
+
+.gantt-subactivity-label {
+    padding: 10px 14px 10px 34px;
+    border-right: 1px solid #e1e4e8;
+}
+
+.gantt-subactivity-code {
+    font-size: 0.72em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #8590a6;
+    margin-bottom: 3px;
+}
+
+.gantt-subactivity-desc {
+    font-size: 0.83em;
+    font-weight: 500;
+    color: #343a40;
+    margin-bottom: 3px;
+}
+
+.gantt-subactivity-resource {
+    font-size: 0.72em;
+    color: #6c757d;
+}
+
+.gantt-subactivity-bar-area {
+    position: relative;
+    min-height: 38px;
+    min-width: 0;
+    padding: 10px 8px;
+    /* Background grid viene impostato dinamicamente via JS */
+}
+
+.gantt-sub-bar {
+    position: absolute;
+    height: 10px;
+    border-radius: 2px;
+    opacity: 0.8;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.gantt-subactivity-badge {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    font-weight: 600;
+}
+
+.gantt-subactivity-badge.aperta {
+    background: #d4edda;
+    color: #155724;
+}
+
+.gantt-subactivity-badge.pianificata {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.gantt-subactivity-badge.chiusa {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Vista Lista */
+.table-crono {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.table-crono thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-crono thead th {
+    font-size: 0.72em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+    padding: 10px 14px;
+    text-align: left;
+}
+
+.table-crono tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.87em;
+}
+
+.table-crono tbody tr:hover {
+    background: #fafbfc;
+}
+
+.table-crono-fase-row {
+    background: #fafbfc;
+    font-weight: 600;
+}
+
+.table-crono-subactivity-cell {
+    padding-left: 32px !important;
+}
+
+/* Riepilogo */
+.commessa-riepilogo-container {
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.commessa-riepilogo-title {
+    font-size: 0.85em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+    margin-bottom: 16px;
+}
+
+/* KPI Grid */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.kpi-box {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+}
+
+.kpi-box-value {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: #212529;
+}
+
+.kpi-box-value.success {
+    color: #28a745;
+}
+
+.kpi-box-value.danger {
+    color: #dc3545;
+}
+
+.kpi-box-label {
+    font-size: 0.72em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.kpi-box-sub {
+    font-size: 0.75em;
+    color: #adb5bd;
+    margin-top: 2px;
+}
+
+/* Barra avanzamento */
+.avanz-bar-container {
+    margin-bottom: 20px;
+}
+
+.avanz-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.85em;
+}
+
+.avanz-bar-labels-left {
+    color: #495057;
+}
+
+.avanz-bar-labels-right {
+    font-weight: 700;
+    color: #212529;
+}
+
+.avanz-bar-track {
+    height: 10px;
+    background: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.avanz-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    transition: width 0.3s ease;
+}
+
+/* Tabella scadenze pagamento */
+.scadenze-table-title {
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.table-crono .stato-scaduto {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.table-crono .stato-dafatturare {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.table-crono .stato-fatturato {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* Cronoprogramma Wrapper (per uso in tab) */
+.cronoprogramma-wrapper {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.cronoprogramma-wrapper .commessa-crono-header,
+.cronoprogramma-wrapper .commessa-crono-gantt-grid,
+.cronoprogramma-wrapper .commessa-riepilogo-container {
+    margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .gantt-header,
+    .gantt-fase-row,
+    .gantt-subactivity-row {
+        grid-template-columns: 200px 1fr;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .commessa-crono-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

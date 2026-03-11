@@ -1,0 +1,137 @@
+/* =========================================
+   SIDEBAR TREE & EXPLORER STYLE
+   ========================================= */
+
+/* Use scoped class .sidebar-nextcloud to isolate styles */
+.sidebar-nextcloud .sb-node {
+    position: relative;
+    list-style: none;
+    cursor: default;
+    transition: background-color 0.2s;
+}
+
+.sidebar-nextcloud .sb-node .menu {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    /* Padding-left is handled inline by JS script based on depth */
+    min-height: 26px;
+    /* Ancora più compatto verticalmente */
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-right: 4px;
+    color: rgba(var(--dark-grey-incide), 1);
+    font-size: 12.5px;
+    /* Slightly smaller for tree view */
+    text-decoration: none;
+    /* Ensure no underline on legacy conflict */
+}
+
+/* Reduce font size for deeper levels */
+.sidebar-nextcloud .submenu .sb-node .menu {
+    font-size: 12px;
+}
+
+/* OVERRIDE: Prevent 'Red when Open' behavior in Nextcloud Tree */
+.sidebar-nextcloud .menu-item.menu-open>.menu,
+.sidebar-nextcloud .sb-node.menu-open>.menu,
+.sidebar-nextcloud .menu-item.menu-open>.menu .menu-text,
+.sidebar-nextcloud .sb-node.menu-open>.menu .menu-text {
+    color: rgba(var(--dark-grey-incide), 1) !important;
+    font-weight: 400;
+    /* Force normal weight when just open */
+}
+
+/* ACTIVE STATE LOGIC WINS OVER OPEN STATE */
+
+/* Generic Active Item (Files, Legacy Subitems inside Nextcloud context) -> Dark Grey + Bold */
+.sidebar-nextcloud .sb-node.active>.menu {
+    background-color: rgba(var(--red-incide), 0.05);
+    /* Soft highlight for active row */
+    font-weight: 600 !important;
+    color: rgba(var(--dark-grey-incide), 1) !important;
+    /* Force Dark Grey per User Request */
+}
+
+/* Specific Active Red for Folders & Top Level */
+/* Note: We use !important to beat the Open State Override above */
+.sidebar-nextcloud .sb-node.menu-item.active>.menu,
+.sidebar-nextcloud .sb-node--folder.active>.menu {
+    color: rgba(var(--red-incide), 1) !important;
+    font-weight: 600 !important;
+}
+
+/* Explicitly target FILES to ensure they stay Dark Grey even if active */
+.sidebar-nextcloud .sb-node--file.active>.menu {
+    color: rgba(var(--dark-grey-incide), 1) !important;
+}
+
+/* Hover State */
+.sidebar-nextcloud .sb-node:hover>.menu {
+    background-color: rgba(0, 0, 0, 0.03);
+    /* Ensure text color doesn't change on hover unless active logic dictates */
+    color: rgba(var(--dark-grey-incide), 1);
+}
+
+/* Allow Top Level Hover to be Red (Legacy style match) */
+.sidebar-nextcloud .sb-node.menu-item:hover>.menu {
+    color: rgba(var(--red-incide), 1);
+}
+
+
+/* Icons */
+.sidebar-nextcloud .sb-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    /* Ridotto margine */
+    vertical-align: middle;
+    font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Twemoji Mozilla", "Noto Color Emoji", "Android Emoji";
+    font-size: 13px;
+    line-height: 1;
+}
+
+/* Caret (Arrow) */
+.sidebar-nextcloud .menu-arrow {
+    display: inline-block;
+    transition: transform 0.15s ease;
+    width: 12px;
+    height: 12px;
+    line-height: 12px;
+    text-align: center;
+    font-size: 10px;
+    color: #999;
+}
+
+/* Explorer Style specifics */
+.sidebar-nextcloud .sb-caret-left {
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.sidebar-nextcloud .sb-caret-left:hover {
+    color: #333;
+}
+
+/* Submenu container transition */
+.sidebar-nextcloud .submenu {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease-out;
+}
+
+.sidebar-nextcloud .submenu.submenu-open {
+    max-height: 3000px;
+    transition: max-height 0.5s ease-in;
+}
+
+/* Folder/File Typography tweaks */
+.sidebar-nextcloud .sb-node--folder>.menu .menu-text {
+    font-weight: 500;
+}
+
+.sidebar-nextcloud .sb-node--file>.menu .menu-text {
+    font-weight: 400;
+}

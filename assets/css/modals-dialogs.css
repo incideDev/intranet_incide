@@ -1,0 +1,895 @@
+/* ============================================
+   CSS MODALS / DIALOGS / OVERLAYS / BACKDROPS / POPUPS
+   File dedicato per tutti gli stili di modali, dialoghi, overlay, backdrop, popup
+   ============================================
+
+   TABLE OF CONTENTS:
+   ==================
+   1. Modal base (generico)
+   2. Modal content, header, body, footer
+   3. Modal varianti (small, medium, large, expanded)
+   4. Modal layout (columns, grid, container)
+   5. Modal specifici riusabili (gare-modal, cv-modal, sic-modal)
+   6. Modal form elements
+   7. Modal animations e transitions
+
+   ============================================ */
+
+/* ============================================
+   1. MODAL BASE (GENERICO)
+   ============================================ */
+
+/* Stile unificato per tutti i modali (rimane invariato) */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1200;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+
+}
+
+.modal {
+
+    transition: opacity 0.25s ease-in-out;
+}
+
+.modal.show {
+    opacity: 1;
+}
+
+.modal.hidden {
+    display: none !important;
+}
+
+.modal.show {
+    display: block !important;
+}
+
+/* Modal da form.css */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    background: rgba(0, 0, 0, .45);
+    z-index: 9999;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.modal.hidden {
+    display: none !important;
+}
+
+.modal.show {
+    display: grid !important;
+    place-items: center !important;
+}
+
+/* ============================================
+   2. MODAL CONTENT, HEADER, BODY, FOOTER
+   ============================================ */
+
+.modal-content {
+    background-color: whitesmoke;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Centra orizzontalmente e verticalmente */
+    padding: 20px;
+    border-radius: 5px;
+    width: 30%;
+    height: auto;
+    max-height: 90%;
+    /* Limita l'altezza al 90% dello schermo */
+    max-width: 80%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    /* Aggiunge una scrollbar interna se il contenuto supera la max-height */
+}
+
+.modal-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* Modal content da form.css */
+.modal .modal-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px 18px;
+    width: min(92vw, 760px);
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, .22);
+    /* position: relative !important; */
+}
+
+/* Stile per il titolo del modale delle gare */
+.modal-header {
+    text-align: center;
+    padding: 10px;
+    border-bottom: 3px solid var(--modal-header-color, #3498db);
+    /* Variabile CSS dinamica */
+    border-radius: 6px 6px 0 0;
+    margin-bottom: 15px;
+}
+
+/* Stile per il titolo principale della gara nel modale */
+.modal-header h1 {
+    font-size: 22px;
+    /* Stessa dimensione dei titoli principali */
+
+}
+
+/*=== DA COMMESSA, DA REVISIONARE ===*/
+.modal-dialog {
+    width: 720px;
+    max-width: 94vw;
+    margin: 8vh auto;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e6e6e6;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-body {
+    padding: 16px;
+}
+
+.modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+/* ============================================
+   3. MODAL VARIANTI (SMALL, MEDIUM, LARGE, EXPANDED)
+   ============================================ */
+
+.modal-small .modal-content {
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal-medium .modal-content {
+    max-width: 650px;
+    width: 90%;
+}
+
+.modal-large .modal-content {
+    max-width: 1100px;
+    width: 95%;
+    height: 85vh;
+}
+
+/* Modal ingrandito */
+.large-modal .modal-content {
+    width: 90%;
+    max-width: 1000px;
+}
+
+.modal-content-expanded {
+    width: 40vw;
+    /* 80% della larghezza dello schermo */
+    height: 60vh;
+    /* 80% dell'altezza dello schermo */
+    margin: auto;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 40px;
+    /* Margini interni per il contenuto */
+}
+
+.modal-content-expanded .section {
+    margin-bottom: 20px;
+    /* Spaziatura tra le sezioni */
+    background-color: white;
+}
+
+.modal-content-expanded .tab {
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 2px solid #ccc;
+}
+
+.modal-content-expanded .tab-content {
+    flex-grow: 1;
+    padding: 15px;
+}
+
+.modal-content-expanded .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+/* Modal dimensioni/padding standard */
+.modal-content--wide {
+    width: 860px;
+    max-width: 96vw;
+}
+
+/* ============================================
+   4. MODAL LAYOUT (COLUMNS, GRID, CONTAINER)
+   ============================================ */
+
+.modal-columns {
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-column-left,
+.modal-column-right {
+    flex: 1;
+    padding: 10px;
+}
+
+/* MODALE IN DUE COLONNE */
+.modal-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 28px;
+    margin-bottom: 18px;
+}
+
+.modal-form-grid>div {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 600px) {
+    .modal-form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px 0;
+    }
+}
+
+/* LAYOUT A DUE COLONNE */
+.modal-container {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    overflow: hidden;
+    height: 800px;
+}
+
+/* Assicura che la colonna sinistra non superi mai la sua larghezza massima */
+.modal-left {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    padding-right: 20px;
+    border-right: 1px solid #ddd;
+}
+
+/* Assicura che i campi della colonna sinistra non superino la larghezza disponibile */
+.modal-left input,
+.modal-left select,
+.modal-left textarea {
+    width: 100%;
+    /* ✅ Si adatta al contenitore */
+    max-width: 100%;
+    /* ✅ Non supera mai la larghezza disponibile */
+    box-sizing: border-box;
+    /* ✅ Evita di superare i bordi */
+}
+
+/* Rende i campi più leggibili e spaziosi */
+.modal-left label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
+
+/* SEZIONE DESTRA (ANTEPRIMA FORM) */
+.modal-right {
+    width: 100%;
+    /* height: 100%; */
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* align-items: center; */
+    /* overflow: hidden; */
+}
+
+/* ============================================
+   5. MODAL SPECIFICI RIUSABILI
+   ============================================ */
+
+/* Stile specifico per PDF */
+#pdfModal .modal-content {
+    height: 90vh;
+    width: 90vw;
+    max-width: 100%;
+    margin: 1% auto;
+    padding: 0;
+}
+
+#pdfModal iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Stile specifico per immagini */
+#imageModal .modal-content {
+    height: 90vh;
+    width: 90vw;
+    max-width: 100%;
+    margin: 1% auto;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#imageModal img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Stile specifico per CAD */
+#cadModal .modal-content {
+    height: 90vh;
+    width: 90vw;
+    max-width: 100%;
+    margin: 1% auto;
+    padding: 0;
+}
+
+/* Stile specifico per video */
+#videoModal .modal-content {
+    height: 90vh;
+    width: 90vw;
+    max-width: 100%;
+    margin: 1% auto;
+    padding: 0;
+}
+
+.open-search-modal .modal-content {
+    width: 90%;
+    max-width: 900px;
+    height: 80vh;
+    max-height: 80vh;
+}
+
+.open-search-modal .platforms,
+.open-search-modal .internal-channels {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.open-search-modal .btn-submit {
+    margin-top: 20px;
+}
+
+/* Stile generale del modale */
+#modalMandato .modal-content {
+    width: 70%;
+    max-width: 800px;
+}
+
+/* DIMENSIONI FISSE DEL MODALE */
+.custom-modal .modal-content {
+    width: 90%;
+    max-width: 1200px;
+    /* overflow: hidden; */
+    /* display: flex; */
+    flex-direction: column;
+}
+
+/* Classi archivio rimosse - ora usa struttura standard .modal, .modal-content, .modal-header, .modal-body, .modal-footer */
+
+/* ===== Modali Sezione Sicurezza (riutilizzabili) ===== */
+.sic-modal .modal-content {
+    border-radius: 14px;
+    padding: 14px 16px 12px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .14);
+}
+
+.sic-modal .modal-header {
+    padding: 4px 2px 8px;
+    border-bottom: 1px solid #e8eef5;
+    margin-bottom: 8px;
+}
+
+.sic-modal .modal-header h3 {
+    margin: 0;
+}
+
+.sic-modal .modal-footer {
+    border-top: 1px solid #e8eef5;
+    padding-top: 10px;
+    margin-top: 6px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* === DOCK MODALE GARE === */
+/* Dock minimizzata/espansa (gare) */
+.modal-dock {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 9999;
+}
+
+/* Toolbar del modale gare */
+.modal .modal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+}
+
+.modal .modal-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* .modal-actions rimosso - ora usa .modal-footer standard */
+
+/* ===== Modal CV ===== */
+.cv-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000
+}
+
+/* Renamed to avoid conflict with cv_manager.css which uses .cv-modal as overlay */
+.cv-modal-card-legacy {
+    width: min(720px, 92vw);
+    max-height: 80vh;
+    overflow: auto;
+    background: var(--cv-card-bg);
+    border-radius: var(--cv-radius);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .15);
+    animation: popIn .2s ease
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(.95);
+        opacity: 0
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1
+    }
+}
+
+.cv-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--cv-border);
+    background: #f9fafb
+}
+
+.cv-modal-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--cv-text)
+}
+
+.cv-modal-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px
+}
+
+.cv-modal-ev {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-left: 4px solid var(--cv-ev-color, #888);
+    background: #f3f4f6;
+    border-radius: 6px;
+    padding: 8px;
+    transition: background .2s
+}
+
+.cv-modal-ev:hover {
+    background: #e0e7ff
+}
+
+/* Modal Gare */
+.gare-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: none;
+    z-index: 1040;
+}
+
+.gare-modal-overlay.show {
+    display: block;
+}
+
+.gare-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    padding: 20px;
+}
+
+.gare-modal.show {
+    display: flex;
+}
+
+.gare-modal-content {
+    width: min(720px, 95vw);
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 28px 80px -32px rgba(15, 23, 42, 0.55);
+    padding: 32px 34px 36px;
+    position: relative;
+    overflow: hidden;
+}
+
+.gare-modal-content::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(47, 119, 241, 0.18), transparent 55%);
+    pointer-events: none;
+}
+
+.gare-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: rgba(148, 163, 184, 0.16);
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #1f2937;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    padding: 0;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    font-weight: 300;
+    text-align: center;
+    vertical-align: middle;
+    z-index: 1001;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    /* Aumenta l'area cliccabile con un padding invisibile */
+    box-sizing: border-box;
+    /* Assicura che tutto il bottone sia cliccabile */
+    touch-action: manipulation;
+}
+
+.gare-modal-close::before {
+    content: '×';
+    display: block;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
+}
+
+.gare-modal-close:hover {
+    background: rgba(47, 119, 241, 0.18);
+    transform: scale(1.05);
+}
+
+.gare-modal-close:active {
+    transform: scale(0.95);
+    background: rgba(47, 119, 241, 0.25);
+}
+
+.gare-modal-header {
+    position: relative;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.gare-modal-illustration {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(47, 119, 241, 0.16) 0%, rgba(59, 130, 246, 0.32) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1d4ed8;
+    box-shadow: 0 16px 32px -20px rgba(37, 99, 235, 0.7);
+}
+
+.gare-modal-hero-icon {
+    width: 36px;
+    height: 36px;
+}
+
+.gare-modal-copy h2 {
+    margin: 0;
+    font-size: 22px;
+    color: #0f172a;
+}
+
+.gare-modal-copy p {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.gare-modal-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ============================================
+   6. MODAL FORM ELEMENTS
+   ============================================ */
+
+.modale-form-gara {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+}
+
+/* Singoli gruppi del form */
+.modale-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label dei campi */
+.modale-form-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Campi di input */
+.modale-form-group input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Miglioramento dell'input al focus */
+.modale-form-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Contenitore delle azioni nel modale */
+.modale-form-actions {
+    right: 20px;
+}
+
+/* Grid per i form dei modali */
+.modale-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* Rende i gruppi più uniformi */
+.modale-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* I campi con class full-width occupano entrambe le colonne */
+.modale-form-group.full-width {
+    grid-column: span 2;
+}
+
+/* Linea sotto il titolo */
+.modal-header-line {
+    height: 2px;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 2px;
+    background-color: #cccccc;
+}
+
+#modal-header-line {
+    height: 2px;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 2px;
+    background-color: #ccc;
+    /* grigio chiaro di default */
+    transition: background-color 0.3s ease;
+}
+
+/* Spazio tra le sezioni */
+.sect {
+    margin-bottom: 20px;
+}
+
+/* Titolini delle sezioni allineati a sinistra */
+.sect legend {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding-left: 5px;
+}
+
+.sect .modal-field {
+    margin-bottom: 12px;
+    margin-inline: 15px;
+}
+
+/* Griglia interna: due colonne per riga */
+.modal-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    /* 15px di margine uniforme tra i campi */
+    align-items: center;
+    /* Allinea meglio gli input */
+}
+
+/* Per i campi che devono occupare un'intera riga, ma mantenere lo stesso spazio */
+.modal-field.full-width {
+    grid-column: span 1;
+    /* NON occupa tutta la riga */
+}
+
+/* Assicura che tutti i campi abbiano lo stesso spazio */
+.modal-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Stile per gli input */
+.modal-field input {
+    width: 100%;
+    /* Mantiene la larghezza */
+}
+
+.modal .close-modal {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* Close buttons - spostati da buttons.css */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: var(--weight-demi-bold);
+    cursor: pointer;
+}
+
+/* Close button variant - position absolute (override) */
+.close {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    cursor: pointer;
+    font-size: 25px;
+    color: #aaa;
+    font-weight: var(--weight-demi-bold);
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* .close-modal-nuova-pagina rimosso - ora usa .close standard */
+
+/* Close button states */
+.close:hover,
+.close:focus {
+    color: #555;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #ff0000;
+    transform: scale(1.2);
+}
+
+/* ============================================
+   7. RESPONSIVE
+   ============================================ */
+
+/* Responsive per schermi piccoli */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px 0;
+    }
+}

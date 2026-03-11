@@ -1,0 +1,1279 @@
+/* ============================================
+   CSS NAVIGATION / MENU / SIDEBAR / TOPBAR / TABS
+   File dedicato per tutti gli stili di navigazione, menu, sidebar, topbar, tabs
+   ============================================
+
+   TABLE OF CONTENTS:
+   ==================
+   1. Menu principale e sottomenu
+   2. Sidebar fissa
+   3. Navbar / Topbar
+   4. Breadcrumb
+   5. Tabs generici
+   6. Tab navigation avanzata
+   7. View tabs
+   8. Tabs page-specific riusabili (gare, jobs)
+   9. Navigation arrows e controlli
+
+   ============================================ */
+
+/* ============================================
+   1. MENU PRINCIPALE E SOTTOMENU
+   ============================================ */
+
+/* Stile base per il menu principale */
+.menu {
+    position: relative;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Contenitore del testo e della freccetta */
+.menu-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+/* Testo del menu */
+.menu-text {
+    font-family: var(--font-family-heading);
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    color: rgba(var(--dark-grey-incide), 1);
+}
+
+/* Stile della freccetta */
+.menu-arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+    min-width: 15px;
+    /* Blocca la dimensione della freccia */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(var(--dark-grey-incide));
+}
+
+/* Quando il menu è aperto - applica colore rosso a tutto il link e i suoi elementi */
+.menu-item.menu-open>.menu,
+.menu-item.menu-open>.menu .menu-text {
+    color: rgba(var(--red-incide), 1) !important;
+    font-weight: var(--weight-medium);
+}
+
+/* Quando il menu è aperto - freccia rossa */
+.menu-item.menu-open .menu-arrow {
+    transform: rotate(90deg);
+    color: rgba(var(--red-incide), 1) !important;
+}
+
+/* Correzione per il primo menu */
+.menu:first-child .menu-arrow {
+    min-width: 15px;
+}
+
+/* Stile per i sottomenu */
+.submenu {
+    list-style: none;
+    padding-left: 15px;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+    opacity: 0;
+}
+
+.submenu.submenu-open {
+    max-height: 2000px;
+    opacity: 1;
+}
+
+/* Stile per i link di navigazione nella sidebar */
+.fixed-sidebar a,
+.submenu a {
+    padding: 8px;
+    display: block;
+    padding-inline: 10px;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: color 0.3s ease, background-color 0.3s ease;
+    position: relative;
+    /* Per posizionare la freccetta */
+    font-size: 12.5px;
+    color: rgba(var(--dark-grey-incide), 1);
+}
+
+/* Stile per le voci del sottomenu */
+.submenu a {
+    padding: 6px 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    transition: color 0.3s ease, background-color 0.3s ease, border-left-color 0.3s ease;
+    text-transform: capitalize;
+    font-size: 12px;
+}
+
+.submenu a:hover {
+    transform: scale(1.02);
+    /* Effetto di ingrandimento */
+    /* background-color: rgba(0, 0, 0, 0.05); */
+    /* Oscurisce leggermente il background */
+    transition: transform 0.2s ease, background-color 0.2s ease, font-weight 0.2s ease;
+}
+
+/* Hover per i sottomenu */
+.submenu-item:hover {
+    background-color: rgba(var(--medium-grey-incide), 0.05);
+    padding-left: 10px;
+    transition: padding-left 0.2s ease-in-out;
+}
+
+/* Rimuove i puntini dagli elenchi */
+.fixed-sidebar ul.menu {
+    font-size: 12px;
+    list-style-type: none;
+    /* Rimuove i puntini */
+    margin: 0;
+    padding: 0;
+    text-transform: uppercase;
+}
+
+.submenu-item.active {
+    font-weight: var(--weight-demi-bold);
+    background-color: transparent;
+    transition: border-radius 0.2s ease, border-left-color 0.2s ease;
+    transition: padding-left 0.2s ease-in-out;
+}
+
+.submenu-item.active>a,
+.submenu-item.active>a .menu-text {
+    color: rgba(var(--red-incide), 1) !important;
+}
+
+/* Quando il menu è aperto, ruota la freccetta */
+.menu-item.submenu-open>.menu .menu-arrow {
+    transform: rotate(90deg);
+}
+
+.fixed-sidebar ul.submenu {
+    list-style-type: none;
+    /* Rimuove i puntini */
+    padding-left: 20px;
+    /* Aggiunge un po' di rientro per i sottomenu */
+}
+
+/* Stile per i menu normali */
+.fixed-sidebar .menu-title {
+    text-decoration: none;
+    color: #333;
+    /* Colore predefinito */
+    display: block;
+    /* Rende il link come un blocco per migliorare l'usabilità */
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.fixed-sidebar .menu-item {
+    background-color: transparent;
+    border-bottom: 1.2px solid rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Effetto evidenziazione al passaggio del mouse SOLO sui menu principali */
+.fixed-sidebar .menu-item>a:hover,
+.fixed-sidebar .menu-item>a:hover .menu-text,
+.fixed-sidebar .menu-item>a:hover .menu-arrow {
+    font-weight: var(--weight-demi-bold);
+    color: rgba(var(--red-incide), 1) !important;
+}
+
+/* Mantieni il colore rosso anche quando il menu è aperto (non solo hover) */
+.fixed-sidebar .menu-item.menu-open>a,
+.fixed-sidebar .menu-item.menu-open>a .menu-text,
+.fixed-sidebar .menu-item.menu-open>a .menu-arrow {
+    color: rgba(var(--red-incide), 1) !important;
+}
+
+/* Colore nero/grigio scuro per menu chiusi (default) */
+.fixed-sidebar .menu-item:not(.menu-open)>a,
+.fixed-sidebar .menu-item:not(.menu-open) .menu-text,
+.fixed-sidebar .menu-item:not(.menu-open) .menu-arrow {
+    color: rgba(var(--dark-grey-incide), 1);
+}
+
+.menu-title.active {
+    background-color: #e0e0e0;
+    /* Colore di sfondo per l'elemento attivo */
+    color: #ff0000;
+    /* Cambia il colore del testo se necessario */
+}
+
+.menu-title.active:hover {
+    background-color: #dcdcdc;
+    /* Effetto hover anche sull'elemento attivo */
+}
+
+.menu-action-bar {
+    border-bottom: 1px solid #ddd;
+    height: 10px;
+    margin-top: -6px;
+    padding-bottom: 2px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    /* Posiziona il contenuto a destra */
+}
+
+.menu-action-bar a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    /* Animazione per ingrandimento */
+    padding-right: 5px;
+    /* Spazio tra l'icona e il bordo destro */
+}
+
+.menu-action-bar a:hover {
+    transform: scale(1.3);
+    /* Ingrandisce l'icona al passaggio del mouse */
+}
+
+/* ============================================
+   2. SIDEBAR FISSA
+   ============================================ */
+
+/* Stile per la sidebar fissa */
+.fixed-sidebar {
+    position: fixed;
+    top: 10px;
+    left: 0;
+    /* width: 225px;*/
+    height: calc(100% - 45px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    /* Altezza dinamica meno il margine superiore */
+    padding: 10px;
+    padding-top: 5px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    /* Scroll verticale abilitato */
+    overflow-x: hidden;
+    /* Nasconde lo scroll orizzontale */
+    scrollbar-width: none;
+    /* Nasconde lo scroll per browser compatibili */
+    margin-top: 40px;
+    z-index: 999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+}
+
+.fixed-sidebar.closed {
+    transform: translateX(-120%);
+    opacity: 0.4;
+    pointer-events: none;
+    /* Dissolvenza */
+}
+
+.sidebar-content {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    height: 100%;
+    overflow-y: auto;
+    color: white;
+}
+
+.sidebar-toggle-bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 100%;
+    background-color: whites;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar-toggle-bar:hover {
+    background-color: whitesmoke;
+}
+
+.sidebar-toggle {
+    background-color: transparent;
+    /* Sfondo trasparente */
+    border: none;
+    /* Rimuove il bordo */
+    padding: 0;
+    /* Rimuove il padding */
+    margin: 0;
+    /* Rimuove il margine */
+    cursor: pointer;
+    /* Cambia il cursore per indicare che è cliccabile */
+    display: flex;
+    /* Allinea l'immagine al centro */
+    align-items: center;
+}
+
+.sidebar-toggle img.icon {
+    width: 1px;
+    height: 20px;
+}
+
+.sidebar-block {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 18px;
+}
+
+.sidebar-section-link {
+    font-size: 12px;
+    color: #555555e3;
+    text-decoration: none;
+    font-weight: 500;
+    padding-left: 12px;
+    transition: color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.sidebar-section-link .arrow {
+    font-size: 1.12em;
+    color: #555555e3;
+}
+
+.sidebar-section-link:hover {
+    color: #1b3c6b;
+    text-decoration: underline;
+}
+
+/* ============================================
+   3. NAVBAR / TOPBAR
+   ============================================ */
+
+/* Navbar */
+.navbar {
+    font-family: var(--font-family-heading);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 50px;
+    background-color: lightgray;
+    display: flex;
+    justify-content: center;
+    /* Centra il contenuto orizzontalmente */
+    align-items: center;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenitore generale della navbar */
+.navbar-container {
+    width: 100%;
+    max-width: 98%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+/* Navbar sinistra (logo + toggle sidebar) */
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Contenitore per entrambi i loghi */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 74px;
+}
+
+/* Logo principale */
+.logo img {
+    height: 30px;
+    width: auto;
+    opacity: 0.75;
+}
+
+/* Logo payoff */
+.payoff img {
+    height: 50px;
+    width: auto;
+    opacity: 0.5;
+    margin-bottom: -3px;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    /* spazio tra gruppi: menu | campanella | profilo */
+    margin-left: auto;
+}
+
+.navbar-menu-links ul {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 20px;
+    /* spazio tra voci menu */
+}
+
+.navbar-menu-links li a {
+    text-decoration: none;
+    color: #333;
+    /*padding: 5px 60px;*/
+    transition: background-color 0.3s ease;
+    text-transform: uppercase;
+    margin-right: 50px;
+}
+
+/* Effetto hover sul menu */
+.navbar-menu-links li a:hover {
+    color: rgba(var(--red-incide));
+}
+
+/* Stile attivo */
+.navbar-menu-links li a.active {
+    font-weight: var(--weight-demi-bold);
+}
+
+/* Immagine profilo */
+.navbar-profile-image {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid whitesmoke;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.centered-nav {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.centered-nav a {
+    cursor: pointer;
+    text-align: center;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-row button {
+    margin-left: auto;
+    /* Forza il bottone a stare tutto a destra */
+}
+
+.header-row h3 {
+    flex-grow: 1;
+    /* Fa espandere l'elemento <h3> fino a riempire lo spazio disponibile */
+    margin: 0;
+    /* Rimuovi margini esterni per allineare correttamente */
+    text-align: left;
+    /* Mantieni il testo allineato a sinistra */
+}
+
+/* ============================================
+   4. BREADCRUMB
+   ============================================ */
+
+.breadcrumb {
+    margin-left: 30px;
+}
+
+.breadcrumb ul {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb li {
+    margin-right: 5px;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.breadcrumb .no-link {
+    color: rgba(var(--medium-grey-incide));
+}
+
+.breadcrumb a {
+    text-decoration: none;
+    color: rgba(var(--dark-grey-incide));
+}
+
+.breadcrumb a:hover {
+    color: rgba(var(--medium-grey-incide));
+}
+
+.breadcrumb .current {
+    color: rgba(var(--red-incide));
+    font-weight: 500;
+    text-wrap-mode: nowrap;
+}
+
+.breadcrumb .separator {
+    color: rgba(var(--light-grey-incide));
+    margin: 0 5px;
+}
+
+/* ============================================
+   5. TABS GENERICI
+   ============================================ */
+
+/* Stile dei tab */
+.tab {
+    display: flex;
+    justify-content: flex-start;
+    background-color: #f5f5f5;
+}
+
+/* Stile dei pulsanti delle schede */
+.tab-link {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    /* Rimuove il bordo inferiore per creare l'effetto attivato */
+    border-radius: 8px 8px 0 0;
+    /* Angoli arrotondati solo in alto */
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    color: #333;
+}
+
+/* Scheda attiva */
+.tab-link.active {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    color: #000;
+    box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.1);
+    /* Aggiunge un'ombra per l'effetto in rilievo */
+}
+
+.tab-link:hover {
+    background-color: #ddd;
+}
+
+.tab-text {
+    font-size: 14px;
+}
+
+/* Tab buttons */
+.tab button {
+    background-color: #f1f1f1;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.tab button.active {
+    background-color: #fff;
+
+    font-weight: var(--weight-demi-bold);
+}
+
+.tab button:hover {
+    background-color: #ddd;
+}
+
+/* ============================================
+   6. TAB NAVIGATION AVANZATA
+   ============================================ */
+
+/* Contenitore della navigazione delle schede */
+.tab-navigation {
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 2px solid #ddd;
+    /* padding: 10px 0; */
+}
+
+/* Contenitore principale delle schede */
+.tab-container {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 2px solid #ddd;
+    /* Bordo del contenitore */
+    position: relative;
+}
+
+/* Lista delle schede */
+.tab-links {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scroll-behavior: smooth;
+    flex: 1;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.tab-links::-webkit-scrollbar {
+    display: none;
+}
+
+/* Singolo tab */
+.tab-links li {
+    margin-right: 10px;
+}
+
+/* Stile base delle schede */
+.tab-links li a {
+    display: inline-block;
+    min-width: 120px;
+    text-align: center;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    background: #fff;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    /* Permette di posizionare il bordo che copre il contenitore */
+}
+
+/* Stile della scheda attiva */
+.tab-links li a.active {
+    background: #fff;
+    /* Stesso colore del contenitore */
+    border-bottom: 2px solid white;
+    /* Nasconde il bordo inferiore */
+    color: #000;
+    font-weight: bold;
+    box-shadow: none;
+}
+
+/* Trucco per coprire il bordo inferiore del contenitore */
+.tab-links li a.active::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    /* Posiziona la sovrapposizione esattamente sul bordo del contenitore */
+    left: 0;
+    width: 100%;
+    height: 2px;
+    /* Copre il bordo */
+    background: #fff;
+    /* Stesso colore del contenuto */
+    z-index: 3;
+}
+
+/* Contenuto delle schede */
+.tabcontent {
+    display: none;
+    padding: 20px;
+    background: #fff;
+    border-radius: 0 8px 8px 8px;
+    position: relative;
+    margin-top: -1px;
+    flex: 1 1 auto;
+    /*    height: calc(100vh - 550px);*/
+    overflow-y: auto;
+}
+
+/* Elimina ombra superiore */
+.tabcontent::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 0px;
+    width: 99.99%;
+    height: 15px;
+    /* Altezza minima per coprire l'ombra */
+    background: #fff;
+    /* Colore dello sfondo per nascondere l'ombra */
+    z-index: 2;
+}
+
+@media (max-width: 900px) {
+    .tabcontent {
+        height: auto !important;
+        min-height: 200px;
+    }
+}
+
+/* Mostra solo il contenuto attivo */
+.tabcontent.active {
+    display: block;
+}
+
+/* Frecce di navigazione */
+.tab-arrow {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 50%;
+    margin: 0 5px;
+    transition: color 0.3s ease;
+    /* Transizione sul colore */
+    color: black;
+    /* Colore di default delle frecce */
+}
+
+.tab-arrow:hover {
+    color: rgba(var(--red-incide));
+}
+
+.tab-arrow:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.5;
+}
+
+/* Contenuto delle schede */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ============================================
+   7. VIEW TABS
+   ============================================ */
+
+/* Container per i bottoni di visualizzazione */
+.view-tabs {
+    display: flex;
+    /* Imposta i bottoni in una linea orizzontale */
+    align-items: center;
+}
+
+/* Stilizzazione dei bottoni individuali */
+.view-tab {
+    display: flex;
+    /* Spazio tra i bottoni */
+    gap: 5px;
+    margin-right: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+    align-items: center;
+}
+
+.view-tab:hover {
+    background-color: #e2e2e2;
+    /* Cambia colore al passaggio del mouse */
+}
+
+.view-tab.active {
+    color: rgba(var(--red-incide));
+    font-weight: var(--weight-demi-bold);
+    background-color: #fff;
+    border-color: rgba(var(--red-incide));
+}
+
+/* ============================================
+   8. TABS PAGE-SPECIFIC RIUSABILI
+   ============================================ */
+
+/* Jobs Tabs (Gare) */
+.jobs-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 2px solid #eef1f7;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.job-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 18px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    min-width: 140px;
+    transition: all 0.2s ease;
+}
+
+.job-tab:hover {
+    background: #f5f7fb;
+}
+
+.job-tab.active {
+    border-bottom-color: #2f77f1;
+    background: rgba(47, 119, 241, 0.08);
+}
+
+.job-tab-status {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eef1f7;
+    color: #4a4f5c;
+}
+
+.job-tab-status.status-completed {
+    background: #e7f7ec;
+    color: #1f9244;
+}
+
+.job-tab-status.status-error,
+.job-tab-status.status-failed {
+    background: #fdeceb;
+    color: #d34836;
+}
+
+.job-tab-status.status-processing {
+    background: #fff6e2;
+    color: #c97708;
+}
+
+/* Tabbed Detail (Gare) */
+.tabbed-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.tabbed-detail,
+.tabbed-detail .tab-navs,
+.tabbed-detail .tab-panes,
+.tabbed-detail .tab-pane,
+.tabbed-detail .table-wrapper,
+.tabbed-detail .table-compact-wrapper {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.tabbed-detail .tab-navs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.tabbed-detail .tab-nav {
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5f5;
+    color: #0f172a;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.tabbed-detail .tab-nav.active,
+.tabbed-detail .tab-nav:hover {
+    background-color: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+}
+
+.tabbed-detail .tab-panes {
+    /* border: 1px solid #e2e8f0; */
+    /* border-radius: 8px; */
+    /* padding: 12px; */
+    /* background-color: #fff; */
+    /* box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); */
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.tabbed-detail .tab-pane {
+    display: none;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.tabbed-detail .tab-pane.active {
+    display: block;
+}
+
+.tabbed-detail .response-value {
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.tabbed-detail .citations-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tabbed-detail .citation-item {
+    background: #f8fafc;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.tabbed-detail .citation-page {
+    display: inline-block;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.tabbed-detail .citation-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.tabbed-detail .table-wrapper,
+.tabbed-detail .table-compact-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tabbed-detail .table-source {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.tabbed-detail .table-source a {
+    color: #2f77f1;
+    text-decoration: none;
+}
+
+.tabbed-detail .table-source a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================
+   9. NAVIGATION ARROWS E CONTROLLI
+   ============================================ */
+
+.month-nav {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.month-nav:hover {
+    opacity: 0.7;
+}
+
+.chart-nav-arrow {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.chart-nav-arrow:hover {
+    transform: scale(1.15);
+}
+
+.chart-nav-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px 5px;
+    transition: transform 0.2s ease;
+}
+
+.chart-nav-btn:hover {
+    transform: scale(1.1);
+}
+
+/* ============================================
+   10. DRAG AND DROP PER TABS (Page Editor)
+   ============================================ */
+
+.tab-link.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+    transform: scale(0.95);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    position: relative;
+    z-index: 1000;
+}
+
+.tab-link.drag-over {
+    border: 2px dashed #007bff;
+    background-color: #e3f2fd;
+    position: relative;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.tab-link.valid-drop-target {
+    background: linear-gradient(90deg,
+            rgba(0, 123, 255, 0.1) 0%,
+            rgba(0, 123, 255, 0.2) 50%,
+            rgba(0, 123, 255, 0.1) 100%);
+    border-color: #007bff;
+}
+
+/* Indicatore visivo di drop zone */
+.tab-link.drag-over::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 80%;
+    background: #007bff;
+    border-radius: 2px;
+    animation: pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: translateY(-50%) scaleY(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: translateY(-50%) scaleY(1.2);
+    }
+}
+
+.tab-link[draggable="true"] {
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.tab-link[draggable="true"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-link[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+/* Placeholder per mostrare la posizione futura */
+.tabs-list {
+    position: relative;
+}
+
+.tab-drop-placeholder {
+    position: absolute;
+    height: 100%;
+    width: 3px;
+    background: #007bff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+    z-index: 999;
+    transition: left 0.15s ease;
+}
+
+.tab-drop-placeholder::before,
+.tab-drop-placeholder::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+.tab-drop-placeholder::before {
+    top: -6px;
+    border-width: 0 6px 6px 6px;
+    border-color: transparent transparent #007bff transparent;
+}
+
+.tab-drop-placeholder::after {
+    bottom: -6px;
+    border-width: 6px 6px 0 6px;
+    border-color: #007bff transparent transparent transparent;
+}
+
+/* ============================================
+   11. MENU CONTESTUALE E OPZIONI
+   ============================================ */
+
+.menu-option {
+    padding: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.menu-option {
+    padding: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.menu-option:hover {
+    background-color: #f0f0f0;
+}
+
+.menu-option.disabled {
+    color: #ccc;
+    pointer-events: none;
+}
+
+/* ============================================
+   12. TAB BUTTONS (spostati da buttons.css)
+   ============================================ */
+
+/* Tab buttons */
+.tab button {
+    background-color: #f1f1f1;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.tab button.active {
+    background-color: #fff;
+    font-weight: var(--weight-demi-bold);
+}
+
+/* Tab button states */
+.tab button:hover {
+    background-color: #ddd;
+}
+
+/* ============================================
+   13. GESTIONE INTRANET SIDEBAR
+   ============================================ */
+
+.gi-sidebar {
+    width: 240px;
+    background: #23283c;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding-top: 18px;
+}
+
+.gi-logo {
+    font-size: 1.3em;
+    font-weight: bold;
+    padding: 16px 24px 32px 24px;
+    color: #d8e3fc;
+}
+
+.gi-menu-item {
+    padding: 13px 24px;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    font-size: 1.09em;
+    transition: background .15s, border .2s;
+}
+
+.gi-menu-item.active,
+.gi-menu-item:hover {
+    background: #2a3047;
+    border-left: 4px solid #36a3ff;
+    color: #fff;
+}
+
+.gi-menu-item i {
+    margin-right: 8px;
+}
+
+.tab-text {
+    font-size: 10px;
+    color: var(--dark-grey-incide);
+    padding: 4px;
+    text-align: center;
+}
+
+.changelog-context-menu .menu-item {
+    padding: 10px;
+    cursor: pointer;
+    color: #c0392b;
+}
+
+.changelog-context-menu .menu-item:hover {
+    background: #f0f0f0;
+}
+
+/* ============================================
+   PAGE EDITOR TABS (Schede Attive)
+   ============================================ */
+
+/* Evidenziazione minima per scheda attiva nel page editor */
+.tab-link.active {
+    background-color: #e3f2fd !important;
+    border-color: #2196f3 !important;
+    color: #1976d2 !important;
+    font-weight: 600 !important;
+}

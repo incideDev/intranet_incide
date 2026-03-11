@@ -1,0 +1,74 @@
+# ---------------------------------------------------------------------------
+# Production-safe .gitignore — PHP intranet platform
+# ---------------------------------------------------------------------------
+
+# environment (secrets, local config)
+.env
+.env.*
+!.env.example
+config/.env
+config/.env.local
+config/.env.*.local
+platform/app/Config/.env
+platform/app/Config/.env.local
+
+# dependencies
+/vendor/
+node_modules/
+
+# Python venv (cron/import scripts)
+.venv/
+venv/
+env/
+
+# logs
+logs/
+*.log
+
+# cache / temp
+tmp/
+cache/
+*.cache
+uploads/tmp_cache/
+uploads/temp/
+uploads/tmp_commesse/
+
+# build artifacts
+dist/
+build/
+*.min.js.map
+*.min.css.map
+
+# IDE and local tools
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.agent/
+.claude/
+*.local.json
+settings.local.json
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# uploads (user-generated content)
+uploads/*
+!uploads/.gitkeep
+
+# optional runtime artifacts
+*.tmp
+*.bak
+*.sql
+*.sqlite
+*.sqlite3
+
+# optional: local overrides (uncomment if you really create them)
+# config.local.php
+# config.dev.php
+# core/Host_db_server.local.php

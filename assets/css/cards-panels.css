@@ -1,0 +1,552 @@
+/* ============================================
+   CSS CARDS / PANELS / BOXES / WIDGETS
+   File dedicato per tutti gli stili di contenitori UI riusabili:
+   card, panel, box, widget, tile
+   ============================================
+
+   TABLE OF CONTENTS:
+   ==================
+   1. Card generiche
+   2. Card con header/body/footer
+   3. Panel generici
+   4. Box generici
+   5. Widget/Tile generici
+   6. Elementi interni (title, actions, meta)
+
+   ============================================ */
+
+/* ============================================
+   1. CARD GENERICHE
+   ============================================ */
+
+.birthday-card {
+    display: flex;
+    align-items: center;
+    background: rgba(var(--light-grey-incide), 0.4);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    gap: 10px;
+    animation: fadeIn 1s ease-out;
+}
+
+.birthday-card:hover {
+    color: #f1c40f;
+    transform: translateY(-1px);
+    /* Breve saltello */
+    transition: transform 0.2s ease-out;
+}
+
+.birthday-card:hover .birthday-card {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease-out;
+}
+
+.document-card {
+    width: 90px;
+    /* Imposta una larghezza fissa per le card */
+    height: auto;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+
+.document-card:hover {
+    transform: scale(1.05);
+    /* Effetto di ingrandimento al passaggio del mouse */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    /* Ombra più grande al passaggio del mouse */
+}
+
+.document-card button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    margin: 0;
+    /* Rimuovi qualsiasi margine di default */
+}
+
+.document-card:hover .document-info p {
+    color: #007bff;
+    /* Colore diverso al passaggio del mouse */
+}
+
+.document-card:active {
+    transform: scale(0.98);
+    /* Effetto di click con leggera riduzione */
+}
+
+/* Card contatti */
+.contact-card {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    /* width rimosso per rispettare grid layout del container */
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.contact-card:hover {
+    transform: scale(1.03);
+}
+
+.candidate-card {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-card:hover {
+    transform: scale(1.05);
+}
+
+.communication-card {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    margin-bottom: 10px;
+    background-color: #f5f5f5;
+    padding: 15px;
+}
+
+/* card scadenze calendario */
+.scadenza-card-custom {
+    background: #fff;
+    border: 2px solid #ffe4a6;
+    border-radius: 12px;
+    padding: 12px 16px 12px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 6px rgba(255, 193, 90, 0.06);
+    transition: box-shadow 0.12s;
+    min-height: 55px;
+}
+
+.scadenza-card-custom:hover {
+    box-shadow: 0 2px 12px rgba(200, 80, 0, 0.11);
+}
+
+.kanban-card {
+    width: 250px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-left: 5px solid #4CAF50;
+    border-radius: 6px;
+    padding: 15px;
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.05);
+}
+
+.kanban-card-header {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.kanban-card-body p {
+    margin: 0 0 5px;
+    font-size: 13px;
+    color: #555;
+}
+
+.kanban-card-actions {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.field-card input[type="text"] {
+    margin-top: 6px;
+}
+
+/* ——— Card riga "verbale/modulo" nella lista ——— */
+.doc-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #e4e4e4;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+}
+
+/* Mini meta secondaria dentro la card (timestamp, ecc.) */
+.doc-card .meta {
+    color: #64748b;
+    font-size: .92em;
+}
+
+.pick-card {
+    text-align: left;
+    background: #fff;
+    border: 1.2px solid #e4e4e4;
+    border-radius: 11px;
+    padding: 14px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: border .17s, box-shadow .17s, transform .12s;
+}
+
+.pick-card:hover {
+    border: 1.5px solid #61d68c;
+    box-shadow: 0 2px 10px rgba(61, 190, 130, .10);
+    transform: translateY(-1px) scale(1.01);
+}
+
+/* SOLO nel modal cantiere/sicurezza → accento ARANCIONE */
+#modal-add-sezione-commessa .pick-card:hover {
+    border: 1.5px solid #FF5F00;
+    box-shadow: 0 2px 10px rgba(255, 95, 0, .10);
+    transform: translateY(-1px) scale(1.01);
+    /* identico al tuo */
+}
+
+/* accessibilità: focus da tastiera coerente con arancione (opzionale ma consigliato) */
+#modal-add-sezione-commessa .pick-card:focus-visible {
+    outline: 2px solid #FF5F00;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(255, 95, 0, .15);
+}
+
+.pick-card.hidden {
+    display: none;
+}
+
+.contact-card-sidebar {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: grab;
+    margin-bottom: 8px;
+}
+
+.contact-card-sidebar img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.contact-card-sidebar .contact-name {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.contact-card-sidebar[draggable="true"] {
+    cursor: move;
+}
+
+.contact-card-sidebar.archiviato {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+    opacity: 0.7;
+}
+
+.public-sidebar-card {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.user-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.user-card-body p {
+    font-size: 13px;
+    margin: 4px 0;
+    color: #333;
+}
+
+.job-summary-grid .summary-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 18px;
+    border: 1px solid #dde6fb;
+    box-shadow: 0 12px 22px -20px rgba(15, 23, 42, 0.55);
+}
+
+/* ============================================
+   2. PANEL GENERICI
+   ============================================ */
+
+/* pannello laterale dettagli impresa */
+.org-azienda-panel {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    width: 320px;
+    max-width: 38vw;
+    z-index: 10;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+}
+
+.org-azienda-panel .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.org-azienda-panel .panel-title {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.org-azienda-panel .panel-summary .az-title {
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.org-azienda-panel .panel-summary .az-meta {
+    color: #6b7280;
+    font-size: .92em;
+}
+
+.org-azienda-panel .panel-subtitle {
+    font-weight: 600;
+    margin: 8px 0 4px;
+}
+
+.org-azienda-panel .panel-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+/* Pannello espanso */
+.dock-panel {
+    position: absolute;
+    right: 0;
+    bottom: 56px;
+    width: 360px;
+    max-height: 60vh;
+    overflow: auto;
+    background: #fff;
+    color: #111;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+    display: none;
+}
+
+.dock-panel.open {
+    display: block;
+}
+
+.dock-panel .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.dock-panel .panel-head h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.dock-panel .panel-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+}
+
+.dock-panel .panel-item {
+    padding: 8px 12px;
+    border-top: 1px dashed #eee;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    align-items: center;
+}
+
+.dock-panel .panel-item:first-child {
+    border-top: 0;
+}
+
+.dock-panel .file-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dock-panel .meta {
+    font-size: .92em;
+    color: #666;
+}
+
+.dock-panel .bad {
+    color: #b91c1c;
+}
+
+.dock-panel .ok {
+    color: #065f46;
+}
+
+.dock-panel .actions {
+    display: flex;
+    gap: 8px;
+}
+
+.dock-panel .btn {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* ============================================
+   3. EDITOR CARD (Form Editor)
+   ============================================ */
+
+/* Header della card - contiene drag-handle, titolo tipo, delete, size-ctrl */
+.editor-card-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e5e7eb;
+    gap: 8px;
+    position: relative;
+}
+
+.editor-card-header .icon-handle {
+    position: static;
+    font-size: 14px;
+    color: #9ca3af;
+    cursor: grab;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.editor-card-header .icon-handle:active {
+    cursor: grabbing;
+}
+
+.editor-card-type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    padding: 2px 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.editor-card-type-badge:hover {
+    background: #d1d5db;
+    color: #374151;
+}
+
+.editor-card-header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.editor-card-header .size-ctrl {
+    position: static;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    margin-right: 8px;
+    /* 🔧 Spaziatura dall'icona delete */
+    flex-shrink: 0;
+    /* 🔧 Evita compressione che causa sovrapposizioni */
+}
+
+.editor-card-header .icon-delete {
+    position: static;
+    width: 16px;
+    height: 16px;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.editor-card-header .icon-delete:hover {
+    opacity: 1;
+}
+
+/* Body della card - contiene configurazione e preview */
+.editor-card-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   4. FIELD CARD (Form Editor)
+   ============================================ */
+
+.field-card {
+    padding: 10px;
+    /* margin-bottom: 8px; */
+    background: white;
+    border-radius: 6px;
+    cursor: grab;
+    transition: background 0.2s;
+    font-weight: bold;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.field-card:hover {
+    background: #f0f0f0;
+}
+
+/* Palette - card sezione */
+.field-card--section {
+    background-color: #f7fbff;
+    border-left: 3px solid #7aa8ff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.field-card--section .fc-title {
+    font-weight: 600;
+}
+
+.field-card--section .fc-sub {
+    opacity: .7;
+}

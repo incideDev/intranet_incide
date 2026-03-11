@@ -1,0 +1,96 @@
+/* ============================================
+   CSS UTILITIES
+   File dedicato per tutte le classi utility generiche (helper di spacing/allineamento/testo/visibilità)
+   ============================================
+
+   TABLE OF CONTENTS:
+   ==================
+   1. Visibilità/Display
+   2. Allineamenti
+   3. Testo
+   4. Spaziature (margin/padding)
+   5. Grid/Span
+   6. Dimensioni piccole generiche
+
+   NOTA: Questo file contiene SOLO utility generiche e riusabili.
+   NON contiene:
+   - Classi di componenti (btn/card/nav/tab/table/modal/form wrapper)
+   - Classi page-specific (commessa*, gara*, office_map*, calendar*, ecc.)
+   - CSS di librerie esterne
+
+   ============================================ */
+
+/* ============================================
+   1. VISIBILITÀ/DISPLAY
+   ============================================ */
+
+.hidden {
+    display: none !important;
+}
+
+.hide {
+    display: none !important;
+}
+
+/* ============================================
+   2. ALLINEAMENTI
+   ============================================ */
+
+/* Classe per centrare il bottone */
+.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ============================================
+   3. TESTO
+   ============================================ */
+
+/* Utility muted */
+.muted {
+  color: #999;
+}
+
+/* ============================================
+   4. SPAZIATURE (MARGIN/PADDING)
+   ============================================ */
+
+.mr-8 {
+  margin-right: 8px;
+}
+
+.mr-6 {
+  margin-right: 6px;
+}
+
+.mr-7 {
+  margin-right: 7px;
+}
+
+/* ============================================
+   5. GRID/SPAN
+   ============================================ */
+
+.span-2 {
+  grid-column: 1 / -1;
+}
+
+/* ============================================
+   6. DIMENSIONI PICCOLE GENERICHE
+   ============================================ */
+
+.icon-16 {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.avatar-22 {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+

@@ -1,0 +1,77 @@
+/* Stile base per il contenitore del calendario */
+#kanban-calendar-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 20px auto;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+#kanban-calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+
+
+#kanban-current-month {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Struttura del calendario */
+#kanban-calendar {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#kanban-calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: rgba(var(--red-incide));
+    color: white;
+    padding: 10px 0;
+    font-weight: bold;
+}
+
+#kanban-calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 100px;
+    gap: 1px;
+    background-color: #ddd;
+}
+
+.kanban-calendar-day {
+    background: white;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    position: relative;
+    border: 1px solid #ddd;
+}
+
+.kanban-calendar-day.disabled {
+    background-color: #f5f5f5;
+    color: #999;
+}
+
+.kanban-task {
+    background: rgba(var(--red-incide));
+    color: white;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 12px;
+    margin: 2px 0;
+    cursor: pointer;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}

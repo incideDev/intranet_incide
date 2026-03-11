@@ -1,0 +1,37 @@
+# Abilita il modulo RewriteEngine
+RewriteEngine On
+
+# Regole per URL puliti
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+)$ index.php?page=$1 [QSA,L]
+
+# Proteggi file sensibili
+<FilesMatch "\.(htaccess|htpasswd|ini|phar|sh|bat|ps1|cmd|sql|bak)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Pagina per errori 404
+ErrorDocument 404 /page-errors/404.php
+ErrorDocument 403 /page-errors/403.php
+ErrorDocument 500 /page-errors/500.php
+
+#Rewrite LOGIN/LOGOUT
+#RewriteRule ^login-pan-id$   process.php [NC,L]
+#RewriteRule ^logout$   process.php [NC,L]
+RewriteRule ^systemlock$   locked.php [NC,L]
+
+# Imposta il tipo MIME per file .msg (opzionale)
+AddType application/vnd.ms-outlook .msg
+
+# Gestione dei file mancanti nella directory uploads/cv
+RewriteCond %{REQUEST_URI} ^/uploads/cv/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ - [R=404,L]
+
+AddType application/pdf .pdf
+AddType application/font-woff2 .woff2
+AddType application/font-woff .woff
+AddType application/x-font-ttf .ttf
+AddType font/ttf .ttf

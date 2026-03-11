@@ -1,0 +1,532 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-family-body: 'Inter', sans-serif;
+  --font-family-heading: 'Inter', sans-serif;
+
+  --light-grey-incide: 204, 204, 204;
+  --medium-grey-incide: 143, 142, 140;
+  --dark-grey-incide: 102, 102, 102;
+  --red-incide: 205, 33, 29;
+
+  --weight-hairline: 100;
+  --weight-thin: 200;
+  --weight-extra-light: 200;
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-demi-bold: 600;
+  --weight-bold: 700;
+}
+
+/* Contenitore stile Word */
+.pagina-foglio {
+  width: 1000px;
+  min-height: 1123px;
+  margin: 40px auto;
+  background: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 60px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+/* Styling base */
+
+/* HEADER */
+/* BODY */
+.view-form-content {
+  flex-grow: 1;
+}
+
+.form-tabs-content,
+.form-tabs-content .view-form-grid,
+#readonly-form {
+  pointer-events: auto;
+}
+
+/* Forza interazione sui campi in modalità edit (Esito) - contrasta overlay antivirus/browser */
+.pagina-foglio .view-form-content,
+.pagina-foglio .form-tabs-content {
+  position: relative;
+  z-index: 2;
+}
+#readonly-form.form-editable {
+  position: relative;
+  z-index: 3;
+}
+#readonly-form.form-editable input:not([type="hidden"]),
+#readonly-form.form-editable select,
+#readonly-form.form-editable textarea,
+#readonly-form.form-editable button[type="button"] {
+  pointer-events: auto !important;
+  cursor: text;
+}
+#readonly-form.form-editable select,
+#readonly-form.form-editable button[type="button"] {
+  cursor: pointer;
+}
+
+/* NOTA: Lo standard globale per textarea Ã¨ definito in styles.css */
+/* Gli override specifici per .pagina-foglio e .view-form-container sono in styles.css */
+/* Qui manteniamo solo regole specifiche per contesti form.css */
+
+/*
+.form-description {
+    text-transform: capitalize !important;
+}
+
+.view-form-header {
+    margin-bottom: 12px;
+}
+*/
+
+/* Campi */
+
+.view-form-group input,
+.view-form-group select,
+.view-form-group textarea {
+  box-sizing: border-box;
+  font-size: 12px;
+  /* Standardizzato a 12px per tutti gli input */
+}
+
+.view-form-group input[type="checkbox"],
+.view-form-group input[type="radio"] {
+  width: auto;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* Checkbox & Radio Groups "Premium" styling - Higher specificity to win over other CSS */
+.view-form-group .checkbox-group {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+  padding: 10px 10px !important;
+  border: 1px solid #c8c8c8b0 !important;
+  border-radius: 4px !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.view-form-group .radio-group {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+  padding: 10px 10px !important;
+  border: 1px solid #c8c8c8b0 !important;
+  border-radius: 4px !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.view-form-group .checkbox-group:hover,
+.view-form-group .radio-group:hover {
+  background-color: #fff !important;
+  border-color: #aaa !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.view-form-group .checkbox-group:focus-within,
+.view-form-group .radio-group:focus-within {
+  border-color: #007bff !important;
+  /* Blue highlight */
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  background-color: #fff !important;
+}
+
+.checkbox-label,
+.radio-label,
+.choice-inline {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  color: #333 !important;
+  user-select: none !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s !important;
+  margin: 0 !important;
+  font-weight: 400;
+}
+
+.checkbox-label:hover,
+.radio-label:hover,
+.choice-inline:hover {
+  background-color: #ededed !important;
+}
+
+.checkbox-label input,
+.radio-label input,
+.choice-inline input[type="radio"] {
+  margin: 0 !important;
+  cursor: pointer !important;
+  width: 17px !important;
+  height: 17px !important;
+  accent-color: #007bff !important;
+}
+
+.checkbox-label input[type="checkbox"],
+.choice-inline input[type="checkbox"] {
+  margin: 0 !important;
+  cursor: pointer !important;
+  width: 17px !important;
+  height: 17px !important;
+  accent-color: #007bff !important;
+}
+
+/* Page editor: choice-group radio/checkbox (stesso layout dei form) */
+.form-group .choice-group.radio-group,
+.form-group .choice-group.checkbox-group,
+.choice-group.radio-group,
+.choice-group.checkbox-group {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+  padding: 10px 10px !important;
+  border: 1px solid #c8c8c8b0 !important;
+  border-radius: 4px !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.choice-group.radio-group:hover,
+.choice-group.checkbox-group:hover {
+  background-color: #fff !important;
+  border-color: #aaa !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.choice-group.radio-group:focus-within,
+.choice-group.checkbox-group:focus-within {
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  background-color: #fff !important;
+}
+
+
+
+#img-modal {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.view-form-img-clickable:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s;
+}
+
+
+@media print {
+
+  /* Reset generale */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-family: var(--font-family-body), sans-serif !important;
+    font-size: 11pt !important;
+    color: #000 !important;
+    background: white !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-family-heading), sans-serif !important;
+    font-weight: var(--weight-demi-bold, 600) !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  .function-bar,
+  .navbar,
+  .sidebar,
+  .no-print,
+  .btn-custom,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  .pagina-foglio {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin-top: -20px !important;
+    padding: 60px 80px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    transform: none !important;
+    overflow: hidden !important;
+  }
+
+}
+
+.view-form-header p.info-row {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.4;
+}
+
+
+.protocollo-tag {
+  font-size: 12px;
+  font-weight: var(--weight-demi-bold);
+  color: rgba(var(--red-incide));
+  /* background: #f5f5f5; */
+  /* padding: 6px 10px; */
+  /* border-radius: 4px; */
+  /* border: 1px solid #ccc; */
+}
+
+.readonly-field {
+  background: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.form-editor-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+/*-- DASHBOARD --*/
+
+.field-dashboard {
+  width: 100%;
+  overflow: auto;
+  padding: 12px;
+}
+
+.field-dashboard h3 {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+}
+
+
+/* Field Builder - Campo nuovo */
+
+/* Input nome campo */
+.field-label-input {
+  font-weight: bold;
+  font-size: 14px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Aggiunta opzioni dinamiche */
+.field-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Singola opzione */
+.option-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.option-line input[type="text"] {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+.option-line input[type="radio"],
+.option-line input[type="checkbox"] {
+  margin-right: 4px;
+  accent-color: #555;
+}
+
+.dropzone-upload:focus,
+.dropzone-upload:hover {
+  border-color: #3498db !important;
+  background: #eaf6fd !important;
+}
+
+.upload-remove-btn:hover {
+  background: #c0392b;
+}
+
+.meta-row {
+  display: contents;
+  /* i figli sono grid items */
+}
+
+div#submited-by {
+  align-items: center !important;
+}
+
+
+.meta-value {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  word-break: break-word;
+  /*white-space: pre-line;*/
+}
+
+
+/* ModalitÃ  Admin in gestione della richiesta */
+.admin-mode-highlight {
+  border: 2px dashed #e74c3c !important;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff0f0 !important;
+  position: relative;
+}
+
+.admin-mode-highlight::before {
+  content: "ModalitÃ  Admin Attivata";
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #e74c3c;
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+/* loading esito o form */
+.esito-segnalazione-block.loading {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+
+.esito-segnalazione-block.loaded {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.15s;
+}
+
+/*==== PAGE EDITOR ====*/
+
+.pe-slot-marker {
+  min-height: 62px;
+  border: 2px dashed #6aa0ff;
+  border-radius: 6px;
+  background: rgba(106, 160, 255, .08);
+  pointer-events: none;
+}
+
+/* ============================================
+   EDITOR GROUPS - Restyling completo
+   ============================================ */
+
+/* ==========================================================================
+   BOTTOM ACTION BAR
+   ========================================================================== */
+.bottom-bar {
+  position: fixed;
+  bottom: -80px;
+  left: 225px; /* Sidebar width */
+  right: 0;
+  height: 60px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.1);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 40px;
+  z-index: 1000;
+  transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s ease;
+}
+
+.bottom-bar--visible {
+  bottom: 0;
+}
+
+body.sidebar-closed .bottom-bar {
+  left: 40px;
+}
+
+body.has-bottom-bar {
+  padding-bottom: 80px;
+}
+
+.bottom-bar__status {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.bottom-bar__actions {
+  display: flex !important;
+  gap: 12px !important;
+  margin-left: auto !important;
+  justify-content: flex-end !important;
+}
+
+.bottom-bar .button {
+  padding: 8px 20px;
+  font-weight: 600;
+  border-radius: 6px;
+  min-width: 130px;
+}

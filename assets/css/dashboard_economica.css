@@ -1,0 +1,630 @@
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD ECONOMICA — assets/css/dashboard_economica.css
+   V2: 2026-03
+   Estende dashboard_ore.css (classi dboard-*) con aggiunte V2
+   ═══════════════════════════════════════════════════════════ */
+
+/* Import base styles from dashboard_ore */
+@import url('dashboard_ore.css');
+
+/* ── UTILITY ───────────────────────────────────────────────── */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-truncate {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.muted {
+    color: #64748b;
+}
+
+/* ── MARGIN HELPERS ─────────────────────────────────────── */
+.dboard-mb-16 {
+    margin-bottom: 16px;
+}
+
+.dboard-mt-16 {
+    margin-top: 16px;
+}
+
+/* ── PAGE HEADER ────────────────────────────────────────── */
+.dboard-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dboard-page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.dboard-page-sub {
+    font-size: 14px;
+    color: #64748b;
+    margin: 4px 0 0;
+}
+
+/* ── FILTER BAR ─────────────────────────────────────────── */
+.dboard-filter-bar {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.dboard-filter-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.dboard-fg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dboard-fg-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.dboard-select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
+    min-width: 150px;
+}
+
+.dboard-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.dboard-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.dboard-vsep {
+    width: 1px;
+    height: 32px;
+    background: #e2e8f0;
+    margin: 0 8px;
+    align-self: center;
+}
+
+/* ── TABS ───────────────────────────────────────────────── */
+.dboard-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.dboard-tab {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.dboard-tab:hover {
+    color: #3b82f6;
+}
+
+.dboard-tab.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+
+/* ── PANELS ─────────────────────────────────────────────── */
+.dboard-panel {
+    display: none;
+}
+
+.dboard-panel.active {
+    display: block;
+}
+
+/* ── STATE BOX (Loading/Error) ──────────────────────────── */
+.dboard-state-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.dboard-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 8px;
+}
+
+.dboard-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── KPI GRID ───────────────────────────────────────────── */
+.dboard-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dboard-kpi-grid--small {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin-bottom: 20px;
+}
+
+.dboard-kpi-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+.dboard-kpi-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dboard-kpi-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.dboard-kpi-hint {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+/* KPI Colors */
+.dboard-kpi-card.kpi-success .dboard-kpi-value {
+    color: #16a34a;
+}
+
+.dboard-kpi-card.kpi-danger .dboard-kpi-value {
+    color: #dc2626;
+}
+
+.dboard-kpi-card.kpi-warning .dboard-kpi-value {
+    color: #d97706;
+}
+
+.dboard-kpi-card.kpi-muted .dboard-kpi-value {
+    color: #94a3b8;
+}
+
+/* ── ROW/COL LAYOUT ─────────────────────────────────────── */
+.dboard-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.dboard-col-4 {
+    flex: 0 0 33.333%;
+    max-width: 33.333%;
+}
+
+.dboard-col-8 {
+    flex: 0 0 66.666%;
+    max-width: 66.666%;
+}
+
+@media (max-width: 992px) {
+    .dboard-row {
+        flex-direction: column;
+    }
+    .dboard-col-4,
+    .dboard-col-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* ── CARD ───────────────────────────────────────────────── */
+.dboard-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dboard-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.dboard-card__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.dboard-card__meta {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.dboard-card__body {
+    padding: 16px;
+}
+
+/* ── TABLE ──────────────────────────────────────────────── */
+.dboard-table-wrap {
+    overflow-x: auto;
+}
+
+.dboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.dboard-table th,
+.dboard-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dboard-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dboard-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.dboard-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── PILLS ──────────────────────────────────────────────── */
+.pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.pill-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.pill-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.pill-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.pill-info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* ── CHART AREA ─────────────────────────────────────────── */
+.dboard-chart-area {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dboard-chart-area--large {
+    min-height: 220px;
+}
+
+.dboard-chart-label {
+    font-size: 11px;
+    fill: #64748b;
+}
+
+.dboard-chart-value {
+    font-size: 10px;
+    fill: #1e293b;
+    font-weight: 500;
+}
+
+.dboard-bar-group rect {
+    transition: opacity 0.2s;
+}
+
+.dboard-bar-group:hover rect {
+    opacity: 0.8;
+}
+
+/* ── CHART LEGEND ───────────────────────────────────────── */
+.dboard-chart-legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.dboard-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.dboard-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+/* ── STAT LIST (for BU distribution) ────────────────────── */
+.dboard-stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dboard-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.dboard-stat-item:last-child {
+    border-bottom: none;
+}
+
+.dboard-stat-label {
+    font-size: 13px;
+    color: #475569;
+}
+
+.dboard-stat-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* ── SAL GRID ───────────────────────────────────────────── */
+.dboard-sal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.dboard-sal-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+}
+
+.dboard-sal-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.dboard-sal-count {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.dboard-sal-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: #3b82f6;
+    margin-top: 4px;
+}
+
+/* ── SUMMARY GRID ───────────────────────────────────────── */
+.dboard-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+/* ── EMPTY STATE ────────────────────────────────────────── */
+.dboard-empty-state {
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.dboard-empty-state p {
+    margin: 0 0 12px;
+}
+
+/* ── PENDING SYNC LIST ──────────────────────────────────── */
+.dboard-pending-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.dboard-pending-list li {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+/* ── BUTTONS ────────────────────────────────────────────── */
+.button {
+    padding: 8px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.button:hover {
+    background: #f1f5f9;
+}
+
+.button.primary {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+.button.primary:hover {
+    background: #2563eb;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .dboard-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dboard-kpi-grid--small {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dboard-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dboard-tab {
+        padding: 10px 14px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .dboard-filter-inner {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dboard-fg {
+        width: 100%;
+    }
+
+    .dboard-select {
+        width: 100%;
+    }
+
+    .dboard-vsep {
+        display: none;
+    }
+
+    .dboard-filter-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .dboard-filter-actions .button {
+        flex: 1;
+    }
+
+    .dboard-pending-list {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dboard-page-title {
+        font-size: 20px;
+    }
+
+    .dboard-kpi-value {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dboard-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dboard-sal-grid {
+        grid-template-columns: 1fr;
+    }
+}

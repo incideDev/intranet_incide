@@ -1,0 +1,422 @@
+/* ============================================
+   ADAPTIVE OVERRIDES
+   File di override responsive per desktop piccoli
+   Importare per ultimo nel layout
+   ============================================
+   
+   BREAKPOINTS:
+   - max-width: 1366px  → Desktop small (Surface 12", laptop piccoli)
+   - max-width: 1280px  → Tablet landscape / small laptop
+   - max-width: 1024px  → Very small desktop
+   - max-height: 800px  → Altezza ridotta (es. 1366x768)
+   
+   PRINCIPI:
+   - Override mirati senza duplicazioni
+   - Nessun !important salvo casi rarissimi
+   - Usa selettori esistenti (no nuove classi)
+   ============================================ */
+
+/* ============================================
+   1. LAYOUT BASE: SIDEBAR + MAIN CONTAINER
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Sidebar: riduzione width da 225px a 200px */
+    .fixed-sidebar {
+        width: 200px;
+    }
+    
+    /* Main container: margin-left ridotto da 250px a 220px */
+    .main-container {
+        margin-left: 220px;
+        margin-right: 20px;
+        padding: 15px;
+    }
+    
+    /* Main container con sidebar chiusa */
+    .main-container.sidebar-closed {
+        margin-left: 40px;
+    }
+    
+    /* Function bar: left position adattata */
+    .function-bar {
+        left: 200px;
+    }
+    
+    .function-bar.sidebar-closed {
+        left: 0px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    /* Sidebar: ulteriore riduzione */
+    .fixed-sidebar {
+        width: 180px;
+    }
+    
+    /* Main container: margin ulteriormente ridotto */
+    .main-container {
+        margin-left: 200px;
+        margin-right: 15px;
+        padding: 12px;
+    }
+    
+    .main-container.sidebar-closed {
+        margin-left: 40px;
+    }
+    
+    /* Function bar */
+    .function-bar {
+        left: 180px;
+        padding: 0 8px;
+    }
+    
+    .function-bar.sidebar-closed {
+        left: 0px;
+    }
+}
+
+/* Very Small Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+    /* Sidebar: riduzione più aggressiva */
+    .fixed-sidebar {
+        width: 160px;
+    }
+    
+    /* Main container */
+    .main-container {
+        margin-left: 180px;
+        margin-right: 10px;
+        padding: 10px;
+    }
+    
+    .main-container.sidebar-closed {
+        margin-left: 40px;
+    }
+    
+    /* Function bar */
+    .function-bar {
+        left: 160px;
+        padding: 0 6px;
+        font-size: 1em;
+    }
+    
+    .function-bar.sidebar-closed {
+        left: 0px;
+    }
+}
+
+/* ============================================
+   2. MODALI E DIALOG
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Modal dialog base: width percentuale invece di 720px */
+    .modal-dialog {
+        width: 90vw;
+        max-width: 90vw;
+        margin: 5vh auto;
+    }
+    
+    /* Modal large: riduzione max-width */
+    .modal-large .modal-content {
+        max-width: 95vw;
+        width: 95%;
+    }
+    
+    /* Large modal: riduzione */
+    .large-modal .modal-content {
+        max-width: 95vw;
+        width: 90%;
+    }
+    
+    /* Modal expanded: riduzione dimensioni */
+    .modal-content-expanded {
+        width: 85vw;
+        height: 75vh;
+        padding: 30px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .modal-dialog {
+        width: 92vw;
+        max-width: 92vw;
+        margin: 4vh auto;
+    }
+    
+    .modal-large .modal-content {
+        max-width: 96vw;
+    }
+    
+    .large-modal .modal-content {
+        max-width: 96vw;
+        width: 92%;
+    }
+    
+    .modal-content-expanded {
+        width: 90vw;
+        height: 80vh;
+        padding: 24px;
+    }
+}
+
+/* Very Small Height (max-height: 800px) */
+@media (max-height: 800px) {
+    /* Modali: max-height ridotta per schermi bassi */
+    .modal-dialog {
+        margin: 2vh auto;
+        max-height: 96vh;
+    }
+    
+    .modal-large .modal-content {
+        max-height: 90vh;
+    }
+    
+    .modal-content-expanded {
+        height: 85vh;
+        max-height: 85vh;
+    }
+    
+    /* Modal body: scroll interno */
+    .modal-body {
+        max-height: calc(90vh - 120px);
+        overflow-y: auto;
+    }
+}
+
+/* ============================================
+   3. TABELLE
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Table container: garantire overflow-x */
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    /* Table responsive: sempre scrollabile */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Table wrapper: scroll garantito */
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    
+    /* Table header: min-width ridotti */
+    .table thead th {
+        min-width: 70px;
+        padding: 8px 10px;
+    }
+    
+    /* Table cells: padding ridotto */
+    .table td {
+        padding: 0px 10px;
+    }
+    
+    /* Prima colonna: min-width ridotto */
+    .table thead th:first-child,
+    .table td:first-child {
+        min-width: 80px;
+    }
+    
+    /* Seconda colonna: min-width ridotto */
+    .table thead th:nth-child(2),
+    .table td:nth-child(2) {
+        min-width: 100px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .table thead th {
+        min-width: 60px;
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    
+    .table td {
+        padding: 0px 8px;
+        font-size: 11px;
+    }
+    
+    .table thead th:first-child,
+    .table td:first-child {
+        min-width: 70px;
+    }
+    
+    .table thead th:nth-child(2),
+    .table td:nth-child(2) {
+        min-width: 90px;
+    }
+}
+
+/* ============================================
+   4. CONTAINER GENERICI
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Container con max-width eccessivi: riduzione */
+    .main-container > * {
+        max-width: 100%;
+    }
+    
+    /* Search bar: max-width ridotto */
+    .search-bar {
+        max-width: 300px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .search-bar {
+        max-width: 250px;
+    }
+}
+
+/* ============================================
+   5. TYPography (Riduzioni Minime)
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Font-size leggermente ridotto solo per elementi grandi */
+    .function-bar h2 {
+        font-size: 1.1em;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .function-bar h2 {
+        font-size: 1em;
+    }
+}
+
+/* ============================================
+   6. TOOLBAR E PANNELLI
+   ============================================ */
+
+/* Very Small Height (max-height: 800px) */
+@media (max-height: 800px) {
+    /* Function bar: padding verticale ridotto */
+    .function-bar {
+        height: 32px;
+        padding: 0 10px;
+    }
+    
+    /* Pannelli con max-height: riduzione */
+    .kanban-column .task-container {
+        max-height: calc(100vh - 200px);
+    }
+    
+    .task-container {
+        max-height: calc(100vh - 200px);
+    }
+}
+
+/* ============================================
+   7. CARDS E PANELS
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* File box: width percentuale invece di 220px fisso */
+    .file-box {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .file-box {
+        max-width: 180px;
+    }
+}
+
+/* ============================================
+   8. FORM LAYOUT
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Form container: max-width fluidi */
+    .form-container,
+    .view-form-container {
+        max-width: 100%;
+        padding: 15px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .form-container,
+    .view-form-container {
+        padding: 12px;
+    }
+}
+
+/* ============================================
+   9. LEGACY OVERRIDES (Problemi Specifici)
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Split gantt: min-width ridotto */
+    .split-calgantt #gantt-view {
+        min-width: 350px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .split-calgantt #gantt-view {
+        min-width: 300px;
+    }
+}
+
+/* Very Small Height (max-height: 800px) */
+@media (max-height: 800px) {
+    /* Gantt container: max-height ridotta */
+    .gv-scroller {
+        max-height: calc(100vh - 150px);
+    }
+}
+
+/* ============================================
+   10. UTILITIES: Overflow e Spacing
+   ============================================ */
+
+/* Desktop Small (max-width: 1366px) */
+@media (max-width: 1366px) {
+    /* Container con padding eccessivo: riduzione */
+    .main-container > .card,
+    .main-container > .panel {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+}
+
+/* Tablet Landscape / Small Laptop (max-width: 1280px) */
+@media (max-width: 1280px) {
+    .main-container > .card,
+    .main-container > .panel {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+}
+
+/* ============================================
+   FINE ADAPTIVE OVERRIDES
+   ============================================ */
+

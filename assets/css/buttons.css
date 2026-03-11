@@ -1,0 +1,509 @@
+/* ============================================
+   CSS BOTTONI - Single Source of Truth
+   File dedicato per tutti gli stili dei bottoni
+   ============================================
+
+   TABLE OF CONTENTS:
+   ==================
+   1. BASE BUTTON ELEMENT
+      - button element base
+      - input[type=submit|button|reset]
+   
+   2. CLASSI GENERICHE "btn* / button*"
+      - .button (base)
+      - .btn-* generiche
+      - .button-* generiche
+   
+   3. VARIANTI (primary/secondary/tertiary/danger)
+      - .button.primary, .button.secondary, etc.
+      - .btn-* con varianti
+      - .gare-button.*
+   
+   4. STATI (hover/focus/active/disabled/loading)
+      - Stati per tutte le classi bottoni
+   
+   5. CONTESTI E WRAPPER
+      - Toolbar, header, table actions
+      - Modal buttons
+      - Form buttons
+   
+   6. LEGACY OVERRIDES
+      - Selettori super specifici di pagina
+      - Override contestuali legacy
+
+   ============================================ */
+
+/* ============================================
+   1. BASE BUTTON ELEMENT
+   ============================================ */
+
+/* Base per button element (font-family ereditato da styles.css) */
+/* Nota: la regola generale input, button, textarea, select { font-family: inherit; }
+   rimane in styles.css perché non è specifica solo per bottoni */
+
+/* button.submit-btn - RIMOSSO (dead code, usato solo come ID, non come classe) */
+
+/* ============================================
+   2. CLASSI GENERICHE "btn* / button*"
+   ============================================ */
+
+/* Stile base per tutti i bottoni */
+.button {
+    font-family: var(--font-family-heading);
+    font-size: 10px;
+    color: black;
+    background-color: white;
+    padding: 5px 12px;
+    border-radius: 5px;
+    text-align: center;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid #979797;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    box-sizing: border-box;
+    display: inline-block;
+    /*margin: 8px auto;*/
+    letter-spacing: 0.1em;
+    vertical-align: middle;
+}
+
+/* Varianti dimensione */
+.button.small {
+    font-size: 10px;
+    padding: 4px 9px;
+}
+
+/* Bottoni generici btn-* */
+.btn-add {
+    background-color: rgba(var(--light-grey-incide));
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+
+    font-weight: var(--weight-demi-bold);
+    margin-bottom: 20px;
+}
+
+.btn-action {
+    padding: 8px 10px;
+    font-size: 0.9em;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    color: rgba(var(--red-incide));
+    margin-right: 5px;
+}
+
+.btn-edit {
+    background-color: rgba(var(--light-grey-incide));
+}
+
+.btn-archive {
+    background-color: rgba(var(--medium-grey-incide));
+}
+
+.btn-submit {
+    background-color: rgba(var(--medium-grey-incide));
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+
+    font-weight: var(--weight-demi-bold);
+}
+
+.btn-filter {
+    background: #f4f7fc;
+    color: #234;
+    border: 1px solid #d0d7e2;
+    padding: 4px 11px;
+    border-radius: 6px;
+    margin-right: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.12s;
+}
+
+/* .btn-page - RIMOSSO (dead code, 0 occorrenze) */
+
+.btn-remove-row {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 3px 7px;
+  cursor: pointer;
+  font-size: 0.8em;
+  font-weight: 600;
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+.btn-add-row {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 3px 7px;
+  cursor: pointer;
+  font-size: 0.8em;
+  font-weight: 600;
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+/* .delete-option-btn - SPOSTATO in legacy.css (one-off) */
+
+/* .icon-btn e .icon-button - SPOSTATI in legacy.css (one-off) */
+
+/* .edit-button - RIMOSSO (dead code, 0 occorrenze) */
+
+.custom-dbselect-button {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #495057;
+  font-size: 12px; /* Standardizzato a 12px */
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* ============================================
+   3. VARIANTI (primary/secondary/tertiary/danger)
+   ============================================ */
+
+/* .button-tertiary - SPOSTATO in legacy.css (one-off) */
+
+/* Bordi colorati per bottoni workspace commesse - SPOSTATI in legacy.css */
+/* Page editor actions - SPOSTATI in legacy.css */
+
+/* Gare buttons - SPOSTATI in legacy.css (page-specific) */
+
+/* ============================================
+   4. STATI (hover/focus/active/disabled/loading)
+   ============================================ */
+
+/* Stati base .button */
+.button:hover {
+    background-color: white;
+    color: rgba(var(--red-incide));
+    border-color: rgba(var(--red-incide));
+}
+
+/* Stati workspace buttons - SPOSTATI in legacy.css */
+
+/* Stati btn-* */
+.btn-add:hover {
+    background-color: rgba(var(--dark-grey-incide));
+}
+
+.btn-edit:hover {
+    background-color: #c82333;
+}
+
+.btn-archive:hover {
+    background-color: #c82333;
+}
+
+.btn-submit:hover {
+    background-color: rgba(var(--dark-grey-incide));
+}
+
+.btn-filter.active,
+.btn-filter:focus {
+    background: #214c7c;
+    color: #fff;
+}
+
+.btn-filter:hover {
+    background: #e0e7f5;
+}
+
+/* .btn-page.active - RIMOSSO (dead code) */
+
+.btn-remove-row:hover {
+  background: #dc2626;
+}
+
+.btn-add-row:hover {
+  background: #059669;
+}
+
+/* .delete-option-btn:hover e .button-tertiary:hover - SPOSTATI in legacy.css */
+
+/* .icon-btn:hover e .icon-button:hover - SPOSTATI in legacy.css */
+
+/* .edit-button:hover - RIMOSSO (dead code) */
+
+.custom-dbselect-button:hover {
+  border-color: #adb5bd;
+}
+
+.custom-dbselect-button:focus {
+  outline: 0;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Stati gare-button e page-editor-actions - SPOSTATI in legacy.css */
+
+/* Disabled states */
+.btn-custom.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    /* 🔴 Questo impedisce il click se il bottone è disabilitato */
+}
+
+.dock-panel .btn[disabled] {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   5. CONTESTI E WRAPPER
+   ============================================ */
+
+/* Container e wrapper */
+.button-container {
+    grid-column: 6 / 7;
+    /* Posizionamento nella griglia */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* Quattro colonne */
+    grid-auto-rows: 60px;
+    /* Altezza uniforme delle righe */
+    gap: 10px;
+    /* Spaziatura tra le icone */
+    justify-content: center;
+    /* Allinea al centro */
+    align-items: center;
+    background-color: transparent;
+    /* Sfondo chiaro */
+    padding: 10px;
+    /* Spaziatura interna */
+    box-shadow: none;
+}
+
+.button-group {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    /* Spinge il gruppo di pulsanti a destra */
+    gap: 10px;
+    /* Spaziatura tra le icone */
+    z-index: 999;
+    margin-right: 60px;
+}
+
+.button-group .btn-custom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.buttons-container {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.button-filter-dynamic {
+    display: flex;
+    gap: 20px;
+    /* Distanza tra i due bottoni */
+    justify-content: center;
+    /* Centra i bottoni */
+    margin-top: 10px;
+}
+
+.button-filter-dynamic .button {
+    min-width: 120px;
+    /* Dimensione minima */
+    max-width: 120px;
+    /* Dimensione massima */
+    width: 120px;
+    /* Dimensione fissa */
+    height: 40px;
+    flex-shrink: 0;
+    /* Evita che si riducano */
+    text-align: center;
+    /* Allinea il testo */
+    padding: 5px 0;
+    /* Mantiene altezza costante */
+    align-self: self-end;
+}
+
+/* Container per le icone */
+.action-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-icon {
+    background: none;
+    border: none;
+    width: auto;
+    height: auto;
+    cursor: pointer;
+    margin: 0 2px;
+    padding: 2px;
+    transition: opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Stile per l'icona del bottone */
+.action-icon img {
+    width: 14px;
+    height: 14px;
+    display: block;
+}
+
+/* Process buttons - SPOSTATO in legacy.css (page-specific) */
+
+/* Page editor actions - SPOSTATO in legacy.css (page-specific) */
+
+/* Modal buttons */
+.modal .modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .05s;
+}
+
+/* Close buttons - SPOSTATI in modals-dialogs.css */
+
+/* submit-modal-gare - SPOSTATO in legacy.css (page-specific) */
+
+/* ============================================
+   STANDARD BUTTON SYSTEM
+   Set standard di bottoni per nuovo codice
+   (I vecchi stili rimangono per compatibilità)
+   ============================================ */
+
+/* Base: .btn */
+.btn {
+    font-family: var(--font-family-heading, 'Inter', sans-serif);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    vertical-align: middle;
+    user-select: none;
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(205, 33, 29, 0.1);
+}
+
+/* Varianti standard - RIMOSSE (0 occorrenze nel markup) */
+/* .btnPrimary, .btnSecondary, .btnDanger, .btnGhost, .btnSm, .btnLg non sono usate */
+
+/* Stati */
+.btn[disabled],
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn[disabled]:hover,
+.btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* ============================================
+   6. LEGACY OVERRIDES
+   Selettori super specifici di pagina/contesto
+   ============================================ */
+
+/* Function bar button - SPOSTATO in legacy.css (page-specific) */
+
+/* Tab buttons - SPOSTATI in nav-tabs.css */
+
+/* Task management boards, candidate-card, add-item-button, custom-context-menu, size-ctrl, contacts-sidebar-header, kanban-calendar-controls, chiusura-form, btn-risolvi-admin - SPOSTATI in legacy.css (page-specific) */
+
+/* ============================================
+   STATI LEGACY OVERRIDES
+   ============================================ */
+
+/* Tab button states - SPOSTATI in nav-tabs.css */
+
+/* Stati page-specific - SPOSTATI in legacy.css */
+
+/* Close button states - SPOSTATI in modals-dialogs.css */
+
+/* Action icon states */
+.action-icon:hover {
+    opacity: 0.7;
+    transform: scale(1.1);
+}
+
+/* Process buttons states - SPOSTATO in legacy.css */
+
+/* Button group states */
+.button-group .btn-custom:hover {
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    /* Aggiunge un leggero arrotondamento per il feedback */
+}
+
+/* Modal button states */
+.modal .modal-btn:hover {
+    background: #f6f7f8;
+    border-color: #ccc;
+}
+
+.modal .modal-btn:active {
+    transform: translateY(1px);
+}

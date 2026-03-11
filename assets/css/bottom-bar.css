@@ -1,0 +1,95 @@
+/* ============================================
+   BOTTOM BAR COMPONENT
+   Barra azioni fissa in basso al viewport.
+   Nascosta di default, attivata via JS.
+   ============================================ */
+
+/* --- Base: nascosta sotto il viewport --- */
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 24px;
+    background: linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0.95));
+    backdrop-filter: blur(8px);
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    box-sizing: border-box;
+}
+
+/* --- Stato visibile (aggiunto via JS) --- */
+.bottom-bar--visible {
+    transform: translateY(0);
+}
+
+/* --- Area status (sinistra) --- */
+.bottom-bar__status {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+}
+
+/* --- Area azioni (destra) --- */
+.bottom-bar__actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* --- Override dimensioni bottoni nel contesto bottom-bar --- */
+.bottom-bar .button {
+    padding: 8px 20px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* --- Variante primary (sfondo rosso Incide) --- */
+.bottom-bar .button-primary {
+    background-color: rgba(var(--red-incide));
+    color: white;
+    border-color: rgba(var(--red-incide));
+}
+
+.bottom-bar .button-primary:hover:not(:disabled) {
+    background-color: #b81c18;
+    color: white;
+}
+
+/* --- Stato disabled --- */
+.bottom-bar .button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* --- Padding contenuto quando la barra e' visibile --- */
+body.has-bottom-bar .dynamic-content {
+    padding-bottom: 64px;
+}
+
+/* --- Nascondi bottoni submit inline quando la barra e' attiva --- */
+body.has-bottom-bar #form-submit-btn,
+body.has-bottom-bar [data-tab-submit-btn] {
+    display: none !important;
+}
+
+/* --- Print: nascondi barra e rimuovi padding --- */
+@media print {
+    .bottom-bar {
+        display: none !important;
+    }
+    body.has-bottom-bar .dynamic-content {
+        padding-bottom: 0 !important;
+    }
+}
