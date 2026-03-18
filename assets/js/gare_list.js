@@ -291,7 +291,8 @@
       return;
     }
 
-    const extractionTypes = JSON.stringify(defaultExtractionTypes());
+    const types = await loadExtractionTypes();
+    const extractionTypes = JSON.stringify(types);
 
     const fd = new FormData();
     fd.append("file[]", file, file.name);
@@ -355,7 +356,8 @@
     submitBtn.disabled = true;
     isUploadingForm = true;
 
-    const extractionTypes = JSON.stringify(defaultExtractionTypes());
+    const types = await loadExtractionTypes();
+    const extractionTypes = JSON.stringify(types);
     const allResults = [];
     let successCount = 0;
     let errorCount = 0;
@@ -363,6 +365,35 @@
     // Mostra il modale e inizializza la lista
     statusBox.classList.remove("hidden");
     statusList.innerHTML = "";
+
+    const files = currentFiles;
+
+    // Pre-flight: check API is online and has enough quota
+    try {
+      const healthRes = await customFetch('gare', 'apiHealth');
+      if (!healthRes.success || !healthRes.data || healthRes.data.status !== 'healthy') {
+        if (typeof window.showToast === 'function') {
+          showToast('API di estrazione non disponibile. Riprova più tardi.', 'error');
+        }
+        isUploadingForm = false;
+        submitBtn.disabled = false;
+        return;
+      }
+
+      const needed = files.length * types.length;
+      const quotaRes = await customFetch('gare', 'checkQuota', { needed });
+      if (quotaRes.success && quotaRes.data && quotaRes.data.can_fulfill === false) {
+        const remaining = quotaRes.data.rpd_remaining ?? 0;
+        if (typeof window.showToast === 'function') {
+          showToast(`Quota API insufficiente: servono ${needed} richieste ma ne restano solo ${remaining}. Riprova domani.`, 'warning');
+        }
+        isUploadingForm = false;
+        submitBtn.disabled = false;
+        return;
+      }
+    } catch (e) {
+      console.warn('Pre-flight check failed, proceeding anyway', e);
+    }
 
     // Carica i file uno alla volta per evitare problemi con post_max_size
     for (let i = 0; i < currentFiles.length; i++) {
@@ -605,6 +636,11 @@
       return;
     }
     isLoading = true;
+    // Mostra stato di caricamento solo se la tabella è vuota (primo load)
+    if (tableBody && !tableBody.children.length) {
+      tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#6c757d;padding:24px;font-size:13px;">Caricamento gare...</td></tr>';
+      emptyMessage?.classList.add('hidden');
+    }
     try {
       // Se siamo in "Archivio Gare", filtra solo archiviate
       // Se siamo in "Elenco Gare", filtra solo participation=1 e non archiviate
@@ -617,6 +653,11 @@
       const res = await customFetch("gare", "getGare", filters);
       if (!res || res.success === false) {
         console.error('Errore caricamento gare (API):', res?.error || 'Errore sconosciuto');
+        tableBody.innerHTML = '';
+        if (emptyMessage) {
+          emptyMessage.textContent = 'Errore nel caricamento delle gare. Riprova più tardi.';
+          emptyMessage.classList.remove('hidden');
+        }
         return;
       }
       const rows = Array.isArray(res?.data) ? res.data : [];
@@ -1640,6 +1681,22 @@
     ];
   }
 
+  let cachedExtractionTypes = null;
+
+  async function loadExtractionTypes() {
+    if (cachedExtractionTypes) return cachedExtractionTypes;
+    try {
+      const res = await customFetch('gare', 'getExtractionTypes');
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        cachedExtractionTypes = res.data;
+        return cachedExtractionTypes;
+      }
+    } catch (e) {
+      console.warn('Failed to load extraction types from API, using defaults', e);
+    }
+    return defaultExtractionTypes();
+  }
+
   function formatSize(bytes) {
     if (!bytes && bytes !== 0) return "0 B";
     const k = 1024;
@@ -1720,6 +1777,12 @@
     });
 
     panel.style.display = '';
+
+    // Riapplica filtri se erano attivi (preserva stato durante refresh)
+    const statoSel = document.getElementById('gf-stato');
+    if (statoSel && statoSel.value) {
+      applyFilters();
+    }
 
     // Click su KPI card → filtra per stato
     if (!panel.dataset.kpiInitialized) {
