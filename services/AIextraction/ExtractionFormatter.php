@@ -30,45 +30,23 @@ class ExtractionFormatter
         'data_scadenza_gara_appalto' => 3,
         'data_uscita_gara_appalto' => 4,
         'settore_industriale_gara_appalto' => 5,
-        'sopralluogo_obbligatorio' => 6,
-        'sopralluogo_deadline' => 7, // Campo per data richiesta sopralluogo (se presente come extraction_type separato)
-        'stazione_appaltante' => 8,
-        'tipologia_di_appalto' => 9,
-        'tipologia_di_gara' => 10,
-        'link_portale_stazione_appaltante' => 11,
-        'importi_opere_per_categoria_id_opere' => 12,
-        'importi_corrispettivi_categoria_id_opere' => 13,
-        'importi_requisiti_tecnici_categoria_id_opere' => 14,
-        'documentazione_richiesta_tecnica' => 15,
-        'requisiti_tecnico_professionali' => 16,
-        'fatturato_globale_n_minimo_anni' => 17,
-        'requisiti_di_capacita_economica_finanziaria' => 18,
-        'requisiti_idoneita_professionale_gruppo_lavoro' => 19,
-    ];
-
-    /**
-     * @deprecated Usa DETTAGLIO_GARA_ORDER invece. Mantenuto per retrocompatibilità.
-     */
-    private const EXTRACTION_SORT_ORDER = [
-        'oggetto_appalto' => 10,
-        'luogo_provincia_appalto' => 20,
-        'data_scadenza_gara_appalto' => 30,
-        'data_uscita_gara_appalto' => 40,
-        'settore_industriale_gara_appalto' => 50,
-        'sopralluogo_obbligatorio' => 60,
-        'stazione_appaltante' => 70,
-        'tipologia_di_appalto' => 80,
-        'tipologia_di_gara' => 90,
-        'link_portale_stazione_appaltante' => 100,
-        'importi_opere_per_categoria_id_opere' => 200,
-        'importi_corrispettivi_categoria_id_opere' => 210,
-        'importi_requisiti_tecnici_categoria_id_opere' => 220,
-        'settore_industriale_gara_appalto_tecnico' => 225,
-        'documentazione_richiesta_tecnica' => 230,
-        'requisiti_tecnico_professionali' => 300,
-        'fatturato_globale_n_minimo_anni' => 310,
-        'requisiti_di_capacita_economica_finanziaria' => 320,
-        'requisiti_idoneita_professionale_gruppo_lavoro' => 330,
+        'settore_gara' => 6,
+        'sopralluogo_obbligatorio' => 7,
+        'sopralluogo_deadline' => 8,
+        'stazione_appaltante' => 9,
+        'tipologia_di_appalto' => 10,
+        'tipologia_di_gara' => 11,
+        'link_portale_stazione_appaltante' => 12,
+        'importi_opere_per_categoria_id_opere' => 13,
+        'importi_corrispettivi_categoria_id_opere' => 14,
+        'importi_requisiti_tecnici_categoria_id_opere' => 15,
+        'documentazione_richiesta_tecnica' => 16,
+        'requisiti_tecnico_professionali' => 17,
+        'fatturato_globale_n_minimo_anni' => 18,
+        'requisiti_di_capacita_economica_finanziaria' => 19,
+        'requisiti_idoneita_professionale_gruppo_lavoro' => 20,
+        'criteri_valutazione_offerta_tecnica' => 21,
+        'documenti_di_gara' => 22,
     ];
 
     /**
@@ -491,12 +469,7 @@ class ExtractionFormatter
             return self::DETTAGLIO_GARA_ORDER[$type];
         }
         
-        // Priorità 2: fallback a EXTRACTION_SORT_ORDER (per retrocompatibilità)
-        if (isset(self::EXTRACTION_SORT_ORDER[$type])) {
-            return self::EXTRACTION_SORT_ORDER[$type];
-        }
-        
-        // Priorità 3: type_code non nella mappa → finisce in coda con ordinamento alfabetico
+        // Priorità 2: type_code non nella mappa → finisce in coda con ordinamento alfabetico
         // Usa 1000 come base + hash del nome per ordinamento alfabetico stabile
         // Questo garantisce che type_code non nella mappa siano ordinati alfabeticamente
         // ma sempre dopo quelli nella mappa (indici 1-19)

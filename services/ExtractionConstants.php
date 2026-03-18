@@ -27,6 +27,9 @@ class ExtractionConstants
         'fatturato_globale_n_minimo_anni' => 'Fatturato globale minimo (anni)',
         'requisiti_di_capacita_economica_finanziaria' => 'Requisiti di capacità economico-finanziaria',
         'requisiti_idoneita_professionale_gruppo_lavoro' => 'Requisiti di idoneità professionale del gruppo di lavoro',
+        'settore_gara' => 'Settore della gara (classificazione)',
+        'criteri_valutazione_offerta_tecnica' => 'Criteri di valutazione dell\'offerta tecnica',
+        'documenti_di_gara' => 'Documenti di gara',
     ];
 
     public static function getDisplayName(string $type): string
