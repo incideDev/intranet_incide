@@ -399,8 +399,8 @@ class GareService
         if (!empty($uniqueBatchIds)) {
             try {
                 $env = self::expandEnvPlaceholders(self::loadEnvConfig());
-                $apiBase = trim((string) ($env['AI_API_BASE'] ?? $env['PDF_API_BASE'] ?? ''));
-                $apiKey = trim((string) ($env['AI_API_KEY'] ?? $env['PDF_API_KEY'] ?? ''));
+                $apiBase = trim((string) ($env['AI_API_BASE'] ?? ''));
+                $apiKey = trim((string) ($env['AI_API_KEY'] ?? ''));
 
                 // Solo se API è configurata, recupera progress dal batch
                 if ($apiBase !== '' && $apiKey !== '') {
@@ -1455,8 +1455,8 @@ class GareService
         // Carica l'env e espande i placeholder tipo ${AI_API_BASE}
         $env = self::expandEnvPlaceholders(self::loadEnvConfig());
         $isLocal = (($env['APP_ENV'] ?? 'prod') === 'local');
-        $apiBase = trim((string) ($env['AI_API_BASE'] ?? $env['PDF_API_BASE'] ?? ''));
-        $apiKey  = trim((string) ($env['AI_API_KEY'] ?? $env['PDF_API_KEY'] ?? ''));
+        $apiBase = trim((string) ($env['AI_API_BASE'] ?? ''));
+        $apiKey  = trim((string) ($env['AI_API_KEY'] ?? ''));
 
         // Se l'API non è configurata logghiamo solo l'essenziale;
         // il dettaglio viene comunque salvato in error_message più sotto.
@@ -1732,8 +1732,8 @@ class GareService
 
         // Carica l'env e espande i placeholder tipo ${AI_API_BASE}
         $env = self::expandEnvPlaceholders(self::loadEnvConfig());
-        $apiBase = trim((string) ($env['AI_API_BASE'] ?? $env['PDF_API_BASE'] ?? ''));
-        $apiKey  = trim((string) ($env['AI_API_KEY'] ?? $env['PDF_API_KEY'] ?? ''));
+        $apiBase = trim((string) ($env['AI_API_BASE'] ?? ''));
+        $apiKey  = trim((string) ($env['AI_API_KEY'] ?? ''));
 
         if ($apiBase === '' || $apiKey === '') {
             return [
@@ -4051,166 +4051,14 @@ class GareService
     }
     private static function externalBatchStatus(string $batchId, array $env): array
     {
-        $url = self::externalUrl($env, '/api/batch/' . rawurlencode($batchId) . '/status');
-        return self::externalJsonRequest('GET', $url, [], $env);
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        return $client->getBatchStatus($batchId);
     }
 
     private static function externalBatchResults(string $batchId, array $env): array
     {
-        $url = self::externalUrl($env, '/api/batch/' . rawurlencode($batchId) . '/results');
-        return self::externalJsonRequest('GET', $url, [], $env);
-    }
-
-    private static function externalUrl(array $env, string $path): string
-    {
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return $path;
-        }
-        $base = rtrim($env['AI_API_BASE'] ?? $env['PDF_API_BASE'] ?? '', '/');
-        if ($base === '') {
-            throw new \RuntimeException('AI_API_BASE non configurata');
-        }
-        return $base . $path;
-    }
-
-    private static function externalJsonRequest(string $method, string $url, array $payload, array $env): array
-    {
-        $headers = self::authHeaders($env);
-        $headers[] = 'Content-Type: application/json';
-        $headers[] = 'Accept: application/json';
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => strtoupper($method),
-            CURLOPT_TIMEOUT => 120,
-            CURLOPT_HTTPHEADER => $headers,
-        ]);
-
-        if (in_array(strtoupper($method), ['POST', 'PUT', 'PATCH'], true)) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_UNICODE));
-        }
-
-        self::applyCurlExtras($ch, $env);
-
-        $raw = curl_exec($ch);
-        $err = curl_error($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($raw === false) {
-            throw new \RuntimeException($err ?: 'HTTP error');
-        }
-
-        $json = json_decode($raw, true);
-        return ['status' => $code, 'body' => is_array($json) ? $json : null, 'raw' => $raw];
-    }
-
-    private static function externalMultipartManual(string $url, array $singleFields, array $repeatedFields, array $fileParts, array $extraHeaders, array $env): array
-    {
-        $boundary = '----pb-' . bin2hex(random_bytes(12));
-        $eol = "\r\n";
-        $body = '';
-
-        $addPart = function (string $name, string $content, ?string $filename = null, ?string $contentType = null) use (&$body, $boundary, $eol) {
-            $body .= "--{$boundary}{$eol}";
-            if ($filename !== null) {
-                $body .= "Content-Disposition: form-data; name=\"{$name}\"; filename=\"{$filename}\"{$eol}";
-                $body .= "Content-Type: " . ($contentType ?: 'application/octet-stream') . "{$eol}{$eol}";
-            } else {
-                $body .= "Content-Disposition: form-data; name=\"{$name}\"{$eol}{$eol}";
-            }
-            $body .= $content . "{$eol}";
-        };
-
-        foreach ($singleFields as $k => $v) {
-            if ($v === null) {
-                continue;
-            }
-            $addPart($k, (string) $v);
-        }
-
-        foreach ($repeatedFields as $name => $values) {
-            foreach ((array) $values as $v) {
-                $addPart($name, (string) $v);
-            }
-        }
-
-        foreach ($fileParts as $f) {
-            if (empty($f['field']) || empty($f['tmp_name'])) {
-                continue;
-            }
-            $ct = $f['type'] ?? (mime_content_type($f['tmp_name']) ?: 'application/octet-stream');
-            $fn = $f['name'] ?? basename($f['tmp_name']);
-            $bin = @file_get_contents($f['tmp_name']);
-            if ($bin === false) {
-                throw new \RuntimeException('file_read_error: ' . ($f['tmp_name'] ?? ''));
-            }
-            $addPart((string) $f['field'], $bin, $fn, $ct);
-        }
-
-        $body .= "--{$boundary}--{$eol}";
-
-        $headers = self::authHeaders($env);
-        $headers[] = "Content-Type: multipart/form-data; boundary={$boundary}";
-        $headers[] = "Content-Length: " . strlen($body);
-        $headers = array_merge($headers, $extraHeaders);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 300,
-        ]);
-
-        self::applyCurlExtras($ch, $env);
-
-        $raw = curl_exec($ch);
-        $err = curl_error($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($raw === false) {
-            throw new \RuntimeException($err ?: 'HTTP error');
-        }
-
-        $json = json_decode($raw, true);
-        return ['status' => $code, 'body' => is_array($json) ? $json : null, 'raw' => $raw];
-    }
-
-    private static function authHeaders(array $env): array
-    {
-        $headers = [];
-        $apiKey = $env['AI_API_KEY'] ?? $env['PDF_API_KEY'] ?? null;
-        if ($apiKey) {
-            $headers[] = 'x-api-key: ' . $apiKey;
-        }
-
-        if (!empty($env['AI_AUTH_BEARER'])) {
-            $headers[] = 'Authorization: Bearer ' . $env['AI_AUTH_BEARER'];
-        } elseif (!empty($env['AI_AUTH_BASIC'])) {
-            $headers[] = 'Authorization: Basic ' . base64_encode($env['AI_AUTH_BASIC']);
-        }
-
-        if (!empty($env['AI_FORCE_HOST_HEADER']) && !empty($env['AI_API_HOST'])) {
-            $headers[] = 'Host: ' . $env['AI_API_HOST'];
-        }
-
-        return $headers;
-    }
-
-    private static function applyCurlExtras($ch, array $env): void
-    {
-        if (!empty($env['AI_DNS_RESOLVE'])) {
-            $entries = array_map('trim', explode(',', $env['AI_DNS_RESOLVE']));
-            curl_setopt($ch, CURLOPT_RESOLVE, $entries);
-        }
-        if (!empty($env['AI_TLS_INSECURE'])) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        }
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        return $client->getBatchResults($batchId);
     }
 
     private static function normalizeExternalStatus(array $body): string
@@ -4760,11 +4608,10 @@ class GareService
 
         // 6) Da getenv() (priorità più alta, sovrascrive tutto)
         $envVars = [
-            'AI_API_BASE', 'AI_API_KEY', 'AI_API_START_URL',
+            'AI_API_BASE', 'AI_API_KEY', 'AI_API_START_URL', 'AI_API_VERSION',
             'AI_AUTH_BEARER', 'AI_AUTH_BASIC', 'AI_DNS_RESOLVE',
             'AI_TLS_INSECURE', 'AI_FORCE_HOST_HEADER', 'AI_API_HOST',
-            'APP_ENV', 'AI_NOTIFICATION_EMAIL',
-            'PDF_API_BASE', 'PDF_API_KEY'
+            'APP_ENV', 'AI_NOTIFICATION_EMAIL'
         ];
         $getenvCount = 0;
         foreach ($envVars as $var) {
@@ -4781,8 +4628,8 @@ class GareService
         }
 
         // Log solo se API non configurata (per debug)
-        $finalApiBase = trim((string) ($env['AI_API_BASE'] ?? $env['PDF_API_BASE'] ?? ''));
-        $finalApiKey = trim((string) ($env['AI_API_KEY'] ?? $env['PDF_API_KEY'] ?? ''));
+        $finalApiBase = trim((string) ($env['AI_API_BASE'] ?? ''));
+        $finalApiKey = trim((string) ($env['AI_API_KEY'] ?? ''));
         if ($finalApiBase === '' || $finalApiKey === '') {
             error_log('GareService::loadEnvConfig - API non configurata: ' . implode(' | ', $debugSteps));
         }
@@ -8466,7 +8313,8 @@ class GareService
             $files = array_values(array_filter($items, fn($i) => !($i['is_dir'] ?? false)));
             return ['success' => true, 'data' => $files, 'folder' => $folder];
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            error_log('GareService::listNcFolderGara error (job_id=' . $jobId . '): ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Impossibile accedere alla cartella Nextcloud'];
         }
     }
 
@@ -8498,6 +8346,13 @@ class GareService
         if ($jobId <= 0 || empty($fileInfo['path'])) {
             return ['success' => false, 'message' => 'job_id e path obbligatori'];
         }
+        // Validazione: path deve appartenere alla cartella NC della gara
+        $path = str_replace('..', '', $fileInfo['path']);
+        $allowedRoot = self::NC_GARE_ROOT . $jobId . '/';
+        if (strpos($path, $allowedRoot) !== 0) {
+            return ['success' => false, 'message' => 'Percorso file non valido per questa gara'];
+        }
+        $fileInfo['path'] = $path;
         global $database;
         self::ensureGaraExists($jobId);
         $pdo = $database->connection;
