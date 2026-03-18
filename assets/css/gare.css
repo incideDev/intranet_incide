@@ -1485,8 +1485,25 @@
     font-style: italic;
   }
 
-  /* ---- Print Tables ---- */
-  .print-extraction-details table {
+  /* ---- Hide interactive UI elements in print ---- */
+  .filter-row,
+  thead .filter-row,
+  .column-resize-handle,
+  .filter-icon,
+  .dropdown-filter-item,
+  .table-col-search {
+    display: none !important;
+  }
+
+  /* Hide sort indicators from th text */
+  th .filter-icon,
+  th svg,
+  th .dropdown-filter {
+    display: none !important;
+  }
+
+  /* ---- Print Tables (all tables, not just .print-extraction-details) ---- */
+  table {
     width: 100% !important;
     border-collapse: collapse !important;
     table-layout: auto !important;
@@ -1496,7 +1513,7 @@
     print-color-adjust: exact;
   }
 
-  .print-extraction-details th {
+  th {
     background: #e5e7eb !important;
     color: #1f2937 !important;
     border: 1px solid #d1d5db !important;
@@ -1505,33 +1522,45 @@
     font-weight: 700;
     text-align: left;
     white-space: nowrap;
+    /* Reset inline styles from JS table_resize */
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
   }
 
-  .print-extraction-details td {
+  td {
     border: 1px solid #d1d5db !important;
     padding: 4px 6px !important;
     font-size: 10px !important;
     vertical-align: top;
     word-break: break-word;
+    /* Reset inline styles from JS table_resize */
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
   }
 
   /* Colonna ID Opera — compatta */
-  .print-extraction-details td:first-child,
-  .print-extraction-details th:first-child {
+  td:first-child,
+  th:first-child {
     white-space: nowrap;
-    width: auto;
   }
 
   /* Colonne importo — allineamento a destra, non spezzare */
-  .print-extraction-details td:last-child,
-  .print-extraction-details th:last-child {
+  td:last-child,
+  th:last-child {
     text-align: right;
     white-space: nowrap;
   }
 
   /* Righe alternate per leggibilità */
-  .print-extraction-details tr:nth-child(even) td {
+  tbody tr:nth-child(even) td {
     background: #f9fafb !important;
+  }
+
+  /* Remove last job's page-break to avoid blank trailing page */
+  .print-job:last-child {
+    page-break-after: auto;
   }
 
   /* ---- Print Extraction Details box ---- */
