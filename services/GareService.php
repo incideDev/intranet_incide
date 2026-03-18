@@ -1894,73 +1894,26 @@ class GareService
         // Non chiamarlo qui perché le estrazioni non sono ancora state salvate in ext_extractions
         self::logBatchResults($batchId, $results['body'] ?? null);
 
+        // Salva risultati API direttamente in ext_extractions (senza re-parsing)
         $timeStart = microtime(true);
-        $answers = self::mapExternalAnswersFromBatch($results['body'] ?? []);
-        $timeMap = microtime(true) - $timeStart;
-        self::addDebugLog("Job {$jobId}: jobPull - answers mappati: " . count($answers) . " (tempo: " . round($timeMap * 1000, 2) . "ms)");
+        self::saveApiResults($jobId, $results['body'] ?? []);
+        $timeSave = microtime(true) - $timeStart;
+        self::addDebugLog("Job {$jobId}: saveApiResults completato (tempo: " . round($timeSave * 1000, 2) . "ms)");
 
-        if (!empty($answers)) {
+        // Normalizzazione tabelle gar_gara_*
+        try {
             $timeStart = microtime(true);
-            self::upsertExtractions($jobId, $answers);
-            $timeUpsert = microtime(true) - $timeStart;
-            self::addDebugLog("Job {$jobId}: Estrazioni salvate in ext_extractions (tempo: " . round($timeUpsert * 1000, 2) . "ms), ora processo requisiti normalizzati");
-
-            // Processa e popola le tabelle normalizzate (solo se ci sono estrazioni valide)
-            try {
-                $timeStart = microtime(true);
-                self::processNormalizedRequirements($jobId);
-                $timeProcess = microtime(true) - $timeStart;
-                self::addDebugLog("Job {$jobId}: processNormalizedRequirements completato (tempo: " . round($timeProcess * 1000, 2) . "ms)");
-            } catch (\Throwable $e) {
-                // Log errore ma non bloccare il flusso principale
-                $errorMsg = "Errore processamento requisiti normalizzati per job {$jobId}: " . $e->getMessage();
-                self::addDebugLog($errorMsg);
-                self::addDebugLog("Stack trace: " . $e->getTraceAsString());
-                error_log($errorMsg);
-                error_log("Stack trace: " . $e->getTraceAsString());
+            $normalizeResult = self::normalizeGara($jobId);
+            $timeNormalize = microtime(true) - $timeStart;
+            if ($normalizeResult['success']) {
+                self::addDebugLog("Job {$jobId}: normalizeGara completato (tempo: " . round($timeNormalize * 1000, 2) . "ms)");
+            } else {
+                self::addDebugLog("Job {$jobId}: normalizeGara fallito: " . ($normalizeResult['message'] ?? 'errore sconosciuto'));
             }
-
-            // ============================================================
-            // NORMALIZZAZIONE TABELLE gar_gara_*
-            // ============================================================
-            // IMPORTANTE: Questa chiamata avviene DOPO aver salvato le estrazioni
-            // in ext_extractions (riga 1448: upsertExtractions).
-            // 
-            // GaraDataNormalizer::normalizeAll() legge da ext_extractions e popola:
-            // - gar_gare_anagrafica (dati scalari: oggetto, stazione appaltante, ecc.)
-            // - gar_gara_importi_opere (importi lavori per categoria/id_opera)
-            // - gar_gara_corrispettivi_opere (onorari per categoria/id_opera)
-            // - gar_gara_requisiti_tecnici (testo generale) + gar_gara_requisiti_tecnici_categoria
-            // - gar_gara_fatturato_minimo (fatturato minimo globale)
-            // - gar_gara_capacita_econ_fin (requisiti capacità economico-finanziaria)
-            // - gar_gara_idoneita_professionale (requisiti idoneità professionale)
-            //
-            // Se le tabelle gar_gara_* non esistono, la normalizzazione viene
-            // saltata silenziosamente (vedi GaraDataNormalizer::tableExists()).
-            // ============================================================
-            try {
-                $timeStart = microtime(true);
-                $normalizeResult = self::normalizeGara($jobId);
-                $timeNormalize = microtime(true) - $timeStart;
-                if ($normalizeResult['success']) {
-                    self::addDebugLog("Job {$jobId}: normalizeGara completato (tempo: " . round($timeNormalize * 1000, 2) . "ms)");
-                } else {
-                    self::addDebugLog("Job {$jobId}: normalizeGara fallito: " . ($normalizeResult['message'] ?? 'errore sconosciuto'));
-                }
-            } catch (\Throwable $e) {
-                // Log errore ma non bloccare il flusso principale
-                // Il frontend usa ancora ext_*, quindi la normalizzazione può fallire senza rompere la UI
-                $errorMsg = "Errore normalizzazione gara per job {$jobId}: " . $e->getMessage();
-                self::addDebugLog($errorMsg);
-                self::addDebugLog("Stack trace: " . $e->getTraceAsString());
-                error_log($errorMsg);
-                error_log("Stack trace: " . $e->getTraceAsString());
-            }
-        } else {
-            // Log quando non ci sono risposte dalle API
-            $msg = "Nessuna risposta valida dalle API per job {$jobId} - processNormalizedRequirements NON verrà chiamato";
-            self::addDebugLog($msg);
-            error_log($msg);
+        } catch (\Throwable $e) {
+            $errorMsg = "Errore normalizzazione gara per job {$jobId}: " . $e->getMessage();
+            self::addDebugLog($errorMsg);
+            error_log($errorMsg);
         }
 
         self::updateJobStatus($jobId, 'completed', null, ['done' => 100, 'total' => 100]);
@@ -2412,6 +2365,69 @@ class GareService
         $stmt->execute([':id' => $jobId]);
         $job = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $job ?: null;
+    }
+
+    /**
+     * Salva i risultati dell'API v1 direttamente in ext_extractions.
+     * Converte il formato API v1 (results[].data) nel formato atteso da upsertExtractions().
+     * Elimina il bisogno di mapExternalAnswersFromBatch() e mapSingleAnswer().
+     */
+    private static function saveApiResults(int $jobId, array $batchBody): void
+    {
+        $results = $batchBody['results'] ?? [];
+        if (empty($results)) {
+            self::addDebugLog("Job {$jobId}: saveApiResults - nessun risultato nel batch");
+            return;
+        }
+
+        $answers = [];
+        foreach ($results as $r) {
+            $status = $r['status'] ?? 'unknown';
+            if ($status !== 'completed') {
+                self::addDebugLog("Job {$jobId}: skip result " . ($r['extraction_type'] ?? 'unknown') . " - status: {$status}");
+                continue;
+            }
+
+            $type = $r['extraction_type'] ?? 'unknown';
+            $data = $r['data'] ?? null;
+
+            if (!is_array($data)) {
+                continue;
+            }
+
+            // data È il value_json — puliscilo dai campi di debug
+            $valueJson = self::cleanValueJson($data);
+
+            // Genera value_text dal dato strutturato
+            $valueText = self::extractCleanAnswer($data);
+
+            // Estrai citations da data.citations
+            $citations = [];
+            if (!empty($data['citations']) && is_array($data['citations'])) {
+                foreach ($data['citations'] as $cit) {
+                    if (!is_array($cit)) continue;
+                    $citations[] = [
+                        'page_number' => $cit['page_number'] ?? 0,
+                        'snippet' => is_array($cit['text'] ?? null) ? implode(' ', $cit['text']) : ($cit['text'] ?? null),
+                        'highlight_rel_path' => null,
+                    ];
+                }
+            }
+
+            $answers[] = [
+                'type_code'  => $type,
+                'value_text' => $valueText,
+                'value_json' => $valueJson,
+                'confidence' => null,
+                'citations'  => $citations,
+            ];
+        }
+
+        self::addDebugLog("Job {$jobId}: saveApiResults - " . count($answers) . " risultati convertiti da " . count($results) . " API results");
+
+        if (!empty($answers)) {
+            self::upsertExtractions($jobId, $answers);
+        }
     }
 
     private static function upsertExtractions(int $jobId, array $answers): void
