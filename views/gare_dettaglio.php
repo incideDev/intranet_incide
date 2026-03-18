@@ -25,58 +25,31 @@ if (!$garaId && !$jobId) {
             margin: 5mm 10mm !important;
         }
     }
+
+    /* API Status & Batch Usage */
+    .api-status-section { margin-bottom: 1rem; border: 1px solid #e0e0e0; border-radius: 4px; }
+    .api-status-header { padding: 0.5rem 1rem; cursor: pointer; background: #f8f9fa; }
+    .api-status-header h4 { margin: 0; font-size: 0.9rem; }
+    .api-status-section.collapsed .api-status-body { display: none; }
+    .api-status-body { padding: 0.5rem 1rem; }
+    .quota-bar { height: 8px; background: #e9ecef; border-radius: 4px; margin: 0.5rem 0; }
+    .quota-bar-fill { height: 100%; background: #28a745; border-radius: 4px; transition: width 0.3s; }
+    .batch-usage-info { display: flex; gap: 1.5rem; padding: 0.5rem 0; color: #6c757d; font-size: 0.85rem; }
+    .highlighted-pdf-links { margin-top: 0.5rem; }
+    .highlighted-pdf-links .btn { margin-right: 0.25rem; }
 </style>
 <link rel="stylesheet" href="/assets/css/gare.css">
 
 <div class="main-container">
+    <?php renderPageTitle('Dettaglio Gara', '#3498DB'); ?>
     <div class="gare-detail-wrapper" id="gare-detail-root" data-gara-id="<?= $garaId ?: '' ?>" data-job-id="<?= $jobId ?: '' ?>">
-        <h1>Dettaglio Gara</h1>
-
-        <!-- Commessa collegata -->
-        <div id="gare-commessa-widget" style="display:none;margin-bottom:14px;max-width:440px;">
-            <label for="gd-commessa" style="font-size:12px;font-weight:600;color:#586069;display:block;margin-bottom:4px;">Commessa collegata</label>
-            <div style="position:relative;">
-                <input type="text" id="gd-commessa"
-                       placeholder="Cerca codice commessa..."
-                       autocomplete="off"
-                       style="width:100%;padding:7px 10px;border:1px solid #d1d5da;border-radius:6px;font-size:13px;box-sizing:border-box;">
-                <div id="gd-commessa-suggestions"
-                     style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d1d5da;border-radius:0 0 6px 6px;z-index:200;max-height:220px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
-            </div>
-        </div>
-
-        <!-- Documenti Nextcloud -->
-        <div id="gare-nc-widget" style="display:none;margin-bottom:20px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                <span style="font-size:12px;font-weight:600;color:#586069;text-transform:uppercase;letter-spacing:.5px;">Documenti Gara (Nextcloud)</span>
-                <button id="gd-nc-browse-btn" type="button"
-                        style="padding:4px 12px;font-size:12px;border:1px solid #d1d5da;border-radius:6px;background:#fff;cursor:pointer;color:#24292e;">
-                    + Sfoglia NC
-                </button>
-            </div>
-            <div id="gd-nc-files-list" style="display:flex;flex-wrap:wrap;gap:8px;min-height:32px;"></div>
-        </div>
-
-        <!-- Modal browser Nextcloud -->
-        <div id="gd-nc-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);">
-            <div style="background:#fff;border-radius:10px;max-width:560px;width:94%;margin:60px auto;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2);">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e1e4e8;">
-                    <strong style="font-size:15px;">Seleziona file da Nextcloud</strong>
-                    <button id="gd-nc-modal-close" type="button" style="background:none;border:none;font-size:20px;cursor:pointer;color:#586069;">&times;</button>
-                </div>
-                <div id="gd-nc-modal-body" style="flex:1;overflow-y:auto;padding:16px 20px;">
-                    <div id="gd-nc-modal-list" style="display:flex;flex-direction:column;gap:6px;"></div>
-                </div>
-                <div style="padding:12px 20px;border-top:1px solid #e1e4e8;text-align:right;">
-                    <button id="gd-nc-modal-confirm" type="button"
-                            style="padding:7px 18px;background:#0366d6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">
-                        Allega selezionati
-                    </button>
-                </div>
-            </div>
-        </div>
+        <!-- API Status Section (populated by gare_detail.js) -->
+        <div id="api-status-container"></div>
 
         <div class="jobs-container hidden" id="gare-jobs"></div>
+
+        <!-- Batch Usage Info (populated by gare_detail.js) -->
+        <div id="batch-usage-container"></div>
     </div>
 </div>
 
