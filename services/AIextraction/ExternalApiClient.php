@@ -36,8 +36,7 @@ class ExternalApiClient
      */
     public function analyzeSingleFile(array $fields, array $file): array
     {
-        $base = $this->getApiBase();
-        $startUrl = $this->getStartUrl();
+        $startUrl = $this->buildUrl('/batch/analyze');
 
         // L'API si aspetta il campo 'files' anche per singolo file
         $fileParts = [[
@@ -49,7 +48,7 @@ class ExternalApiClient
 
         $singleFields = [
             'file_name'          => $fields['file_name'] ?? $file['name'] ?? 'document.pdf',
-            'notification_email' => $fields['notification_email'] ?? $this->getDefaultEmail(),
+            'notification_email' => $fields['notification_email'] ?? ($this->config['AI_NOTIFICATION_EMAIL'] ?? ''),
         ];
 
         $repeated = [
@@ -67,7 +66,7 @@ class ExternalApiClient
      */
     public function getBatchStatus(string $batchId): array
     {
-        $url = $this->buildUrl('/api/batch/' . rawurlencode($batchId) . '/status');
+        $url = $this->buildUrl('/batch/' . rawurlencode($batchId) . '/status');
         return $this->jsonRequest('GET', $url);
     }
 
@@ -79,7 +78,7 @@ class ExternalApiClient
      */
     public function getBatchResults(string $batchId): array
     {
-        $url = $this->buildUrl('/api/batch/' . rawurlencode($batchId) . '/results');
+        $url = $this->buildUrl('/batch/' . rawurlencode($batchId) . '/results');
         return $this->jsonRequest('GET', $url);
     }
 
@@ -249,7 +248,7 @@ class ExternalApiClient
         $headers = [];
 
         // API key
-        $apiKey = $this->config['AI_API_KEY'] ?? $this->config['PDF_API_KEY'] ?? null;
+        $apiKey = $this->config['AI_API_KEY'] ?? null;
         if ($apiKey) {
             $headers[] = 'x-api-key: ' . $apiKey;
         }
@@ -297,9 +296,12 @@ class ExternalApiClient
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
         }
-
         $base = rtrim($this->getApiBase(), '/');
-        return $base . $path;
+        $version = $this->config['AI_API_VERSION'] ?? 'v1';
+        if (preg_match('#^/api/v\d#', $path)) {
+            return $base . $path;
+        }
+        return $base . '/api/' . $version . $path;
     }
 
     /**
@@ -307,48 +309,11 @@ class ExternalApiClient
      */
     private function getApiBase(): string
     {
-        $base = trim((string)($this->config['AI_API_BASE'] ?? $this->config['PDF_API_BASE'] ?? ''));
+        $base = trim((string)($this->config['AI_API_BASE'] ?? ''));
         if ($base === '') {
             throw new \RuntimeException('AI_API_BASE not configured');
         }
         return $base;
-    }
-
-    /**
-     * Ottiene URL di start per l'analisi
-     */
-    private function getStartUrl(): string
-    {
-        $base = rtrim($this->getApiBase(), '/');
-        
-        // Se esplicitamente configurato, usa quello
-        $configured = trim((string)($this->config['AI_API_START_URL'] ?? ''));
-        if ($configured !== '') {
-            return $configured;
-        }
-
-        // Altrimenti usa endpoint singolo: /api/analyze
-        return $base . '/api/analyze';
-    }
-
-    /**
-     * Ottiene email di notifica default
-     */
-    private function getDefaultEmail(): string
-    {
-        if (!empty($this->config['AI_NOTIFICATION_EMAIL'])) {
-            return $this->config['AI_NOTIFICATION_EMAIL'];
-        }
-        return 'noreply@piattaforma-bandi.local';
-    }
-
-    /**
-     * Carica configurazione da environment (delega a GareService per uniformità)
-     * @deprecated Usa direttamente GareService::loadEnvConfig() e expandEnvPlaceholders()
-     */
-    public static function loadEnvConfig(): array
-    {
-        return \Services\GareService::expandEnvPlaceholders(\Services\GareService::loadEnvConfig());
     }
 
     /**
@@ -405,7 +370,7 @@ class ExternalApiClient
     public static function listExtractionTypes(): array
     {
         $client = self::getInstance();
-        $url = $client->buildUrl('/api/extraction-types');
+        $url = $client->buildUrl('/extraction-types');
         $response = $client->jsonRequest('GET', $url);
         
         if (($response['status'] ?? 500) >= 400) {
@@ -477,7 +442,7 @@ class ExternalApiClient
     public static function jobStatus(string $jobId): array
     {
         $client = self::getInstance();
-        $url = $client->buildUrl('/api/jobs/' . rawurlencode($jobId));
+        $url = $client->buildUrl('/jobs/' . rawurlencode($jobId));
         return $client->jsonRequest('GET', $url);
     }
 
@@ -490,7 +455,7 @@ class ExternalApiClient
     public static function jobResult(string $jobId): array
     {
         $client = self::getInstance();
-        $url = $client->buildUrl('/api/jobs/' . rawurlencode($jobId) . '/result');
+        $url = $client->buildUrl('/jobs/' . rawurlencode($jobId) . '/result');
         return $client->jsonRequest('GET', $url);
     }
 
@@ -529,5 +494,132 @@ class ExternalApiClient
         $client = self::getInstance();
         $url = $client->buildUrl($rel);
         return $client->jsonRequest('GET', $url);
+    }
+
+    // ===== NEW V1 API METHODS =====
+
+    public function getQuota(): array
+    {
+        $url = $this->buildUrl('/quota');
+        $res = $this->jsonRequest('GET', $url);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Quota check failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    public function checkQuota(int $needed): array
+    {
+        $url = $this->buildUrl('/quota/check');
+        $res = $this->jsonRequest('POST', $url, ['requested' => $needed]);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Quota check failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    public function getDailyUsage(?string $date = null): array
+    {
+        $url = $this->buildUrl('/usage');
+        if ($date) {
+            $url .= '?date=' . rawurlencode($date);
+        }
+        $res = $this->jsonRequest('GET', $url);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Usage fetch failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    public function getBatchUsage(string $batchId): array
+    {
+        $url = $this->buildUrl('/usage/batch/' . rawurlencode($batchId));
+        $res = $this->jsonRequest('GET', $url);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Batch usage fetch failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    public function getUsageHistory(int $days = 30, ?string $cursor = null): array
+    {
+        $url = $this->buildUrl('/usage/history') . '?days=' . $days;
+        if ($cursor) {
+            $url .= '&cursor=' . rawurlencode($cursor);
+        }
+        $res = $this->jsonRequest('GET', $url);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Usage history failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    public function healthCheck(): array
+    {
+        $url = $this->buildUrl('/health');
+        $res = $this->jsonRequest('GET', $url);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Health check failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    public function listBatches(?string $status = null, int $limit = 20, int $offset = 0): array
+    {
+        $url = $this->buildUrl('/batches') . '?limit=' . $limit . '&offset=' . $offset;
+        if ($status) {
+            $url .= '&status=' . rawurlencode($status);
+        }
+        $res = $this->jsonRequest('GET', $url);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Batch list failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    public function deleteJob(string $jobId): array
+    {
+        $url = $this->buildUrl('/jobs/' . rawurlencode($jobId));
+        $res = $this->jsonRequest('DELETE', $url);
+        if (($res['status'] ?? 500) >= 400) {
+            return ['success' => false, 'message' => 'Delete failed: HTTP ' . ($res['status'] ?? 'unknown')];
+        }
+        return ['success' => true, 'data' => $res['body']];
+    }
+
+    /**
+     * Download binary file (highlighted PDFs).
+     * Returns raw binary content, not JSON-decoded.
+     *
+     * @return array ['status' => int, 'body' => string, 'content_type' => string]
+     */
+    public function downloadBinary(string $jobId, string $filename): array
+    {
+        $url = $this->buildUrl('/jobs/' . rawurlencode($jobId) . '/download/' . rawurlencode($filename));
+
+        $headers = $this->buildHeaders();
+        $headers[] = 'Accept: application/pdf, application/octet-stream';
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPGET        => true,
+            CURLOPT_TIMEOUT        => 120,
+            CURLOPT_HTTPHEADER     => $headers,
+        ]);
+
+        $this->applyCurlOptions($ch);
+
+        $raw  = curl_exec($ch);
+        $err  = curl_error($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $ct   = curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: 'application/octet-stream';
+        curl_close($ch);
+
+        if ($raw === false) {
+            return ['status' => 0, 'body' => '', 'content_type' => '', 'error' => $err];
+        }
+
+        return ['status' => $code, 'body' => $raw, 'content_type' => $ct];
     }
 }
