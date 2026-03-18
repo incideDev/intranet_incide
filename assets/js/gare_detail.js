@@ -241,6 +241,12 @@
 
   scheduleLoadJobs();
 
+  // Load API health status on page init
+  const apiStatusContainer = document.getElementById('api-status-container');
+  if (apiStatusContainer) {
+    loadApiStatus(apiStatusContainer);
+  }
+
   function scheduleLoadJobs() {
     jobsInitialLoadPromise = loadJobs();
     return jobsInitialLoadPromise;
@@ -302,6 +308,15 @@
           const job = jobs.get(jobId);
           job.results = res;
           renderJobs();
+
+          // Load batch usage info if the job is completed
+          if (job.status === 'completed' || job.status === 'done') {
+            const batchId = job.ext_batch_id;
+            const usageContainer = document.getElementById(`batch-usage-${job.job_id}`);
+            if (batchId && usageContainer) {
+              loadBatchUsage(batchId, usageContainer);
+            }
+          }
         }
       } catch (e) {
         console.error('Errore caricamento risultati job:', e);
@@ -392,6 +407,23 @@
     initializeExtractionTables(jobsEl);
 
     attachDetailHandlers(jobsEl);
+
+    // Render highlighted PDF download links for each extraction item
+    for (const job of jobs.values()) {
+      const jobEl = document.getElementById(`gare-job-${job.job_id}`);
+      if (!jobEl) continue;
+      const detailInners = jobEl.querySelectorAll('.details-inner');
+      const items = job.normalized_items || [];
+      detailInners.forEach((detailInner, index) => {
+        const item = items[index];
+        if (item) {
+          renderHighlightedPdfLinks(
+            { ...item, ext_job_id: item.ext_job_id || job.ext_job_id, job_id: job.job_id },
+            detailInner
+          );
+        }
+      });
+    }
   }
 
   function initializeExtractionTables(scope) {
@@ -426,22 +458,60 @@
     return '';
   }
 
+  function resolveFieldFromResults(job, typeCodes) {
+    if (!job) return '';
+    const data = job.results && Array.isArray(job.results.data) ? job.results.data : [];
+    for (const item of data) {
+      const code = (item.type_code || item.tipo || item.type || '').toLowerCase();
+      if (typeCodes.includes(code)) {
+        const primary = extractPrimaryValue(item);
+        const text = stringifyValue(primary);
+        if (text && text.trim()) return text.trim();
+      }
+    }
+    return '';
+  }
+
+  function resolveEnte(job) {
+    return resolveFieldFromResults(job, ['stazione_appaltante']);
+  }
+
+  function resolveScadenza(job) {
+    return resolveFieldFromResults(job, ['data_scadenza_gara_appalto', 'data_scadenza']);
+  }
+
+  function resolveTipologia(job) {
+    return resolveFieldFromResults(job, ['tipologia_di_gara', 'tipologia_gara']);
+  }
+
+  function resolveLuogo(job) {
+    return resolveFieldFromResults(job, ['luogo_provincia_appalto', 'luogo']);
+  }
+
   function renderJobSummary(job) {
     const percent = progressPercent(job);
     const updated = job.updated_at || job.completed_at || job.created_at;
-    const createdLabel = formatDate(job.created_at);
     const updatedLabel = formatDate(updated);
-    const completedLabel = formatDate(job.completed_at);
     const statusText = job.status_label || statusLabel(job.status);
+    const isComplete = percent >= 100 || job.status === 'completed' || job.status === 'done';
+
+    // Resolve key fields from extraction results
+    const ente = resolveEnte(job);
+    const scadenza = resolveScadenza(job);
+    const tipologia = resolveTipologia(job);
+    const luogo = resolveLuogo(job);
     const resultsCount =
       job.results && job.results.ok && Array.isArray(job.results.data)
         ? job.results.data.length
         : null;
+
+    const docIcon = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+
     return `
       <section class="job-summary">
         <header class="job-summary-header">
           <div class="job-summary-title">
-            <span class="job-summary-icon" aria-hidden="true">📄</span>
+            <span class="job-summary-icon" aria-hidden="true">${docIcon}</span>
             <div class="job-summary-text">
               <h2 class="job-summary-name">${escapeHtml(job.file_name || 'Documento senza nome')}</h2>
               <div class="job-summary-meta">
@@ -452,28 +522,20 @@
           </div>
           <div class="job-summary-status-group">
             <span class="status-chip status-${job.status}">${escapeHtml(statusText)}</span>
+            ${!isComplete ? `
             <div class="job-summary-progress">
               <div class="job-summary-progress-track">
                 <span style="width:${percent}%;"></span>
               </div>
               <span class="job-summary-progress-value">${percent}%</span>
-            </div>
+            </div>` : ''}
           </div>
         </header>
         <div class="gare-detail-summary job-summary-grid">
-          <div class="summary-card">
-            <span class="field-label">Job ID</span>
-            <span class="field-value">#${escapeHtml(String(job.job_id))}</span>
-          </div>
-          <div class="summary-card">
-            <span class="field-label">Creato</span>
-            <span class="field-value">${createdLabel}</span>
-          </div>
-          <div class="summary-card">
-            <span class="field-label">Completato</span>
-            <span class="field-value">${completedLabel}</span>
-          </div>
-          ${job.gara_id ? `<div class="summary-card"><span class="field-label">Codice gara</span><span class="field-value">#${escapeHtml(String(job.gara_id))}</span></div>` : ''}
+          ${ente ? `<div class="summary-card"><span class="field-label">Stazione Appaltante</span><span class="field-value">${escapeHtml(ente)}</span></div>` : ''}
+          ${scadenza ? `<div class="summary-card"><span class="field-label">Scadenza</span><span class="field-value">${escapeHtml(scadenza)}</span></div>` : ''}
+          ${tipologia ? `<div class="summary-card"><span class="field-label">Tipologia</span><span class="field-value">${escapeHtml(tipologia)}</span></div>` : ''}
+          ${luogo ? `<div class="summary-card"><span class="field-label">Luogo</span><span class="field-value">${escapeHtml(luogo)}</span></div>` : ''}
           ${resultsCount !== null ? `<div class="summary-card"><span class="field-label">Elementi estratti</span><span class="field-value">${escapeHtml(String(resultsCount))}</span></div>` : ''}
         </div>
       </section>
@@ -780,6 +842,7 @@
           </thead>
           <tbody>${rows}</tbody>
         </table>
+        <div id="batch-usage-${job.job_id}" class="batch-usage-container"></div>
       </div>
     `;
   }
@@ -1904,6 +1967,8 @@
       updated_at: row.updated_at,
       completed_at: row.completed_at,
       gara_id: row.gara_id || row.garaId || null,
+      ext_batch_id: row.ext_batch_id || row.batch_id || null,
+      ext_job_id: row.ext_job_id || row.job_id || row.id || null,
       results: null,
     };
   }
@@ -2296,217 +2361,6 @@
     return null;
   }
 
-  // ── NEXTCLOUD FILES WIDGET ────────────────────────────────────────────────
-  (function initNcWidget() {
-    const widget = document.getElementById('gare-nc-widget');
-    const filesList = document.getElementById('gd-nc-files-list');
-    const browseBtn = document.getElementById('gd-nc-browse-btn');
-    const modal = document.getElementById('gd-nc-modal');
-    const modalClose = document.getElementById('gd-nc-modal-close');
-    const modalList = document.getElementById('gd-nc-modal-list');
-    const modalConfirm = document.getElementById('gd-nc-modal-confirm');
-    if (!widget || !filesList || !browseBtn || !modal) return;
-
-    let selectedPaths = new Set();
-    let ncBrowserItems = [];
-
-    function getJobId() { return garaId || initialJobId; }
-
-    function renderFileChip(file) {
-      const chip = document.createElement('div');
-      chip.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 10px;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:20px;font-size:12px;max-width:260px;';
-      chip.title = file.path;
-      const nameEl = document.createElement('span');
-      nameEl.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;';
-      nameEl.textContent = file.name || file.path;
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.innerHTML = '&times;';
-      removeBtn.title = 'Rimuovi';
-      removeBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:#e74c3c;font-size:14px;padding:0;line-height:1;flex-shrink:0;';
-      removeBtn.addEventListener('click', () => detachFile(file.path));
-      chip.appendChild(nameEl);
-      chip.appendChild(removeBtn);
-      return chip;
-    }
-
-    async function loadFiles() {
-      const jid = getJobId();
-      if (!jid) { setTimeout(loadFiles, 300); return; }
-      try {
-        const res = await customFetch('gare', 'getNcFiles', { job_id: jid });
-        renderFiles((res && res.success && Array.isArray(res.data)) ? res.data : []);
-        widget.style.display = '';
-      } catch (e) { console.warn('NC widget: errore caricamento', e); }
-    }
-
-    function renderFiles(files) {
-      filesList.innerHTML = '';
-      if (!files.length) {
-        filesList.innerHTML = '<span style="color:#6c757d;font-size:12px;">Nessun documento allegato</span>';
-        return;
-      }
-      files.forEach(f => filesList.appendChild(renderFileChip(f)));
-    }
-
-    async function detachFile(path) {
-      const jid = getJobId();
-      if (!jid) return;
-      if (!confirm('Rimuovere questo documento dalla gara?')) return;
-      try {
-        const res = await customFetch('gare', 'detachNcFile', { job_id: jid, path });
-        renderFiles((res && res.success && Array.isArray(res.data)) ? res.data : []);
-      } catch (e) { console.warn('NC widget: errore detach', e); }
-    }
-
-    async function openBrowser() {
-      const jid = getJobId();
-      if (!jid) return;
-      selectedPaths.clear();
-      modalList.innerHTML = '<em style="color:#6c757d;font-size:13px;">Caricamento...</em>';
-      modal.style.display = '';
-      try {
-        const res = await customFetch('gare', 'listNcFolder', { job_id: jid });
-        ncBrowserItems = (res && res.success && Array.isArray(res.data)) ? res.data : [];
-        renderBrowserList();
-      } catch (e) {
-        modalList.innerHTML = '<em style="color:#e74c3c;font-size:13px;">Errore caricamento cartella NC</em>';
-      }
-    }
-
-    function renderBrowserList() {
-      modalList.innerHTML = '';
-      if (!ncBrowserItems.length) {
-        modalList.innerHTML = '<em style="color:#6c757d;font-size:13px;">Cartella vuota</em>';
-        return;
-      }
-      ncBrowserItems.forEach(item => {
-        const row = document.createElement('label');
-        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;cursor:pointer;font-size:13px;';
-        row.addEventListener('mouseenter', () => { row.style.background = '#f6f8fa'; });
-        row.addEventListener('mouseleave', () => { row.style.background = ''; });
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.value = item.path;
-        cb.checked = selectedPaths.has(item.path);
-        cb.addEventListener('change', () => {
-          if (cb.checked) selectedPaths.add(item.path);
-          else selectedPaths.delete(item.path);
-        });
-        const nameEl = document.createElement('span');
-        nameEl.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-        nameEl.textContent = item.name || item.path;
-        row.appendChild(cb);
-        row.appendChild(nameEl);
-        modalList.appendChild(row);
-      });
-    }
-
-    async function attachSelected() {
-      const jid = getJobId();
-      if (!jid || !selectedPaths.size) return;
-      modal.style.display = 'none';
-      const toAttach = ncBrowserItems.filter(i => selectedPaths.has(i.path));
-      for (const item of toAttach) {
-        try {
-          await customFetch('gare', 'attachNcFile', {
-            job_id: jid,
-            path: item.path,
-            name: item.name || item.path,
-            mime: item.mime || 'application/octet-stream',
-            size: item.size || 0,
-          });
-        } catch (e) { console.warn('NC widget: errore attach', e); }
-      }
-      loadFiles();
-    }
-
-    browseBtn.addEventListener('click', openBrowser);
-    modalClose.addEventListener('click', () => { modal.style.display = 'none'; });
-    modalConfirm.addEventListener('click', attachSelected);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
-
-    loadFiles();
-  })();
-
-  // ── COMMESSA WIDGET ───────────────────────────────────────────────────────
-  (function initCommessaWidget() {
-    const widget = document.getElementById('gare-commessa-widget');
-    const input = document.getElementById('gd-commessa');
-    const suggestBox = document.getElementById('gd-commessa-suggestions');
-    if (!widget || !input || !suggestBox) return;
-
-    // Load current value when job_id is known
-    async function loadCommessa(jobId) {
-      try {
-        const res = await customFetch('gare', 'getGaraMetadata', { job_id: jobId });
-        if (res && res.success && res.data) {
-          input.value = res.data.codice_commessa || '';
-        }
-        widget.style.display = '';
-      } catch (e) {
-        console.warn('Commessa widget: errore caricamento', e);
-      }
-    }
-
-    // Watch for garaId to be set
-    function tryInit() {
-      const jid = garaId || initialJobId;
-      if (jid) {
-        loadCommessa(jid);
-      } else {
-        setTimeout(tryInit, 300);
-      }
-    }
-    tryInit();
-
-    let debTimer;
-    function debounceSearch(fn, ms) {
-      return function(q) { clearTimeout(debTimer); debTimer = setTimeout(() => fn(q), ms); };
-    }
-
-    function renderSuggestions(items) {
-      suggestBox.innerHTML = '';
-      if (!items.length) { suggestBox.style.display = 'none'; return; }
-      items.forEach(item => {
-        const div = document.createElement('div');
-        div.style.cssText = 'padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f0f0f0;';
-        div.textContent = item.label || item.value;
-        div.addEventListener('mousedown', e => {
-          e.preventDefault();
-          input.value = item.value;
-          suggestBox.style.display = 'none';
-          saveCommessa(item.value);
-        });
-        div.addEventListener('mouseenter', () => { div.style.background = '#f0f4ff'; });
-        div.addEventListener('mouseleave', () => { div.style.background = ''; });
-        suggestBox.appendChild(div);
-      });
-      suggestBox.style.display = '';
-    }
-
-    async function saveCommessa(codice) {
-      const jid = garaId || initialJobId;
-      if (!jid) return;
-      try {
-        const res = await customFetch('gare', 'updateGaraField', { job_id: jid, field: 'codice_commessa', value: codice });
-        if (!res || !res.success) console.warn('Commessa widget: errore salvataggio', res);
-      } catch (e) {
-        console.warn('Commessa widget: errore salvataggio', e);
-      }
-    }
-
-    const doSearch = debounceSearch(async q => {
-      if (q.length < 2) { suggestBox.style.display = 'none'; return; }
-      try {
-        const res = await customFetch('gare', 'searchCommesse', { q });
-        renderSuggestions((res && res.success && Array.isArray(res.data)) ? res.data : []);
-      } catch (e) { suggestBox.style.display = 'none'; }
-    }, 300);
-
-    input.addEventListener('input', () => doSearch(input.value));
-    input.addEventListener('blur', () => setTimeout(() => { suggestBox.style.display = 'none'; }, 150));
-  })();
 
   function normalizeSopralluogoDeadlineLabel(value) {
     if (!value) return null;
@@ -2516,5 +2370,82 @@
       return normalized.charAt(0).toUpperCase() + normalized.slice(1);
     }
     return `Entro ${normalized}`;
+  }
+
+  // --- PDF download buttons for highlighted PDFs ---
+  function renderHighlightedPdfLinks(extraction, container) {
+    const paths = extraction.highlighted_pdf_paths;
+    if (!paths || !Array.isArray(paths) || paths.length === 0) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'highlighted-pdf-links';
+    paths.forEach(path => {
+      const filename = path.split('/').pop();
+      const btn = document.createElement('a');
+      btn.className = 'btn btn-sm btn-secondary';
+      btn.textContent = 'Vedi nel PDF';
+      const jobId = extraction.ext_job_id || extraction.job_id;
+      btn.href = `ajax.php?section=gare&action=downloadHighlightedPdf&job_id=${encodeURIComponent(jobId)}&filename=${encodeURIComponent(filename)}`;
+      btn.target = '_blank';
+      wrapper.appendChild(btn);
+    });
+    container.appendChild(wrapper);
+  }
+
+  // --- Batch usage/cost info after completion ---
+  async function loadBatchUsage(batchId, container) {
+    if (!batchId) return;
+    try {
+      const res = await customFetch('gare', 'getBatchUsage', { batch_id: batchId });
+      if (res.success && res.data) {
+        const d = res.data;
+        const usageHtml = `
+          <div class="batch-usage-info">
+            <span><strong>Token:</strong> ${(d.tokens?.prompt_tokens || 0).toLocaleString()} in / ${(d.tokens?.output_tokens || 0).toLocaleString()} out</span>
+            <span><strong>Costo:</strong> $${(d.cost?.total_cost || 0).toFixed(4)}</span>
+          </div>`;
+        container.insertAdjacentHTML('beforeend', usageHtml);
+      }
+    } catch (e) {
+      console.warn('Failed to load batch usage', e);
+    }
+  }
+
+  // --- API health status section ---
+  async function loadApiStatus(container) {
+    if (!container) return;
+    try {
+      const [healthRes, quotaRes] = await Promise.all([
+        customFetch('gare', 'apiHealth'),
+        customFetch('gare', 'getQuota')
+      ]);
+
+      let html = '<div class="api-status-section">';
+      html += '<div class="api-status-header" onclick="this.parentElement.classList.toggle(\'collapsed\')">';
+      html += '<h4>Stato API Estrazione</h4></div>';
+      html += '<div class="api-status-body">';
+
+      if (healthRes.success && healthRes.data) {
+        const h = healthRes.data;
+        const statusClass = h.status === 'healthy' ? 'pill-success' : 'pill-danger';
+        html += `<p><span class="pill ${statusClass}">${escapeHtml(h.status)}</span> Modello: ${escapeHtml(h.gemini_model || 'N/A')}</p>`;
+      } else {
+        html += '<p><span class="pill pill-danger">Offline</span></p>';
+      }
+
+      if (quotaRes.success && quotaRes.data) {
+        const q = quotaRes.data;
+        const pctUsed = q.percentage_used || 0;
+        html += `<div class="quota-bar">
+          <div class="quota-bar-fill" style="width: ${pctUsed}%"></div>
+        </div>
+        <p>Quota: ${q.rpd_remaining || 0} / ${q.rpd_limit || 0} richieste rimanenti</p>`;
+      }
+
+      html += '</div></div>';
+      container.insertAdjacentHTML('afterbegin', html);
+    } catch (e) {
+      console.warn('Failed to load API status', e);
+    }
   }
 })();
