@@ -20,67 +20,61 @@ if (!$garaId && !$jobId) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     @media print {
-        @page {
-            size: A4;
-            margin: 5mm 10mm !important;
-        }
+        @page { size: A4; margin: 5mm 10mm !important; }
     }
-
-    /* API Status & Batch Usage */
-    .api-status-section { margin-bottom: 1rem; border: 1px solid #e0e0e0; border-radius: 4px; }
-    .api-status-header { padding: 0.5rem 1rem; cursor: pointer; background: #f8f9fa; }
-    .api-status-header h4 { margin: 0; font-size: 0.9rem; }
-    .api-status-section.collapsed .api-status-body { display: none; }
-    .api-status-body { padding: 0.5rem 1rem; }
-    .quota-bar { height: 8px; background: #e9ecef; border-radius: 4px; margin: 0.5rem 0; }
-    .quota-bar-fill { height: 100%; background: #28a745; border-radius: 4px; transition: width 0.3s; }
-    .batch-usage-info { display: flex; gap: 1.5rem; padding: 0.5rem 0; color: #6c757d; font-size: 0.85rem; }
-    .highlighted-pdf-links { margin-top: 0.5rem; }
-    .highlighted-pdf-links .btn { margin-right: 0.25rem; }
+    .gd-loading { text-align: center; padding: 60px 20px; color: #9a9893; }
+    .gd-loading p { margin-top: 12px; font-size: 14px; }
+    .gd-error { padding: 20px; background: #fcecea; border: 1px solid #f5c6cb; border-radius: 10px; color: #8f2a1f; margin-bottom: 20px; }
 </style>
 <link rel="stylesheet" href="/assets/css/gare.css">
 
 <div class="main-container">
-    <?php renderPageTitle('Dettaglio Gara', '#3498DB'); ?>
-    <div class="gare-detail-wrapper" id="gare-detail-root" data-gara-id="<?= $garaId ?: '' ?>" data-job-id="<?= $jobId ?: '' ?>">
-        <!-- API Status Section (populated by gare_detail.js) -->
+    <div class="gare-detail-root" id="gare-detail-root"
+         data-gara-id="<?= $garaId ?: '' ?>"
+         data-job-id="<?= $jobId ?: '' ?>">
+
+        <!-- Loading state -->
+        <div id="gd-loading" class="gd-loading">
+            <div class="spinner"><div class="spinner-border"></div></div>
+            <p>Caricamento dettaglio gara...</p>
+        </div>
+
+        <!-- Error state -->
+        <div id="gd-error" class="gd-error" style="display:none"></div>
+
+        <!-- Intestazione -->
+        <div id="gd-header" style="display:none"></div>
+
+        <!-- API Status -->
         <div id="api-status-container"></div>
 
-        <div class="jobs-container hidden" id="gare-jobs"></div>
+        <!-- Panoramica -->
+        <div id="gd-overview" style="display:none"></div>
 
-        <!-- Batch Usage Info (populated by gare_detail.js) -->
+        <!-- Importi e valori economici -->
+        <div id="gd-importi" style="display:none"></div>
+
+        <!-- Requisiti tecnico-professionali -->
+        <div id="gd-requisiti" style="display:none"></div>
+
+        <!-- Requisiti economico-finanziari -->
+        <div id="gd-economici" style="display:none"></div>
+
+        <!-- Documentazione e ruoli -->
+        <div id="gd-docs-ruoli" style="display:none"></div>
+
+        <!-- Tutti i campi — vista tabella fallback -->
+        <div id="gd-all-fields" style="display:none"></div>
+
+        <!-- Batch Usage Info -->
         <div id="batch-usage-container"></div>
+
+        <!-- Action bar -->
+        <div id="gd-actions" style="display:none"></div>
+
+        <!-- Print layout (populated by JS) -->
+        <div class="jobs-print print-only" id="gare-print-root"></div>
     </div>
 </div>
 
-<div id="modalAddGaraOverlay" class="gare-modal-overlay"></div>
-<div id="modalAddGara" class="gare-modal">
-    <div class="gare-modal-content">
-        <button type="button" class="gare-modal-close" id="gare-modal-close" aria-label="Chiudi">×</button>
-        <h2>Nuova estrazione PDF</h2>
-        <form id="gareUploadForm" class="gare-upload-form" enctype="multipart/form-data">
-            <div class="gare-upload-area" id="gareUploadArea">
-                <input type="file" id="gareUploadInput" name="file[]" accept="application/pdf" multiple hidden>
-                <div class="icon">📄</div>
-                <strong>Trascina i PDF qui</strong>
-                <span>oppure <a href="#" id="gareUploadSelect">clicca per selezionare</a></span>
-            </div>
-
-            <div class="gare-selected-files hidden" id="gareSelectedFiles">
-                <ul id="gareSelectedList"></ul>
-            </div>
-
-            <div class="gare-form-actions">
-                <button type="submit" id="gareUploadSubmit" disabled>Carica</button>
-                <button type="button" id="gareUploadCancel">Annulla</button>
-            </div>
-        </form>
-
-        <div class="gare-upload-status hidden" id="gareUploadStatus">
-            <ul id="gareUploadStatusList"></ul>
-        </div>
-    </div>
-</div>
-
-<script src="/assets/js/gare_list.js" defer></script>
 <script src="/assets/js/gare_detail.js" defer></script>
