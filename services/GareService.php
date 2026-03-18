@@ -2715,6 +2715,29 @@ class GareService
             }
         }
 
+        // Bool answer (sopralluogo_obbligatorio)
+        if (array_key_exists('bool_answer', $data)) {
+            return $data['bool_answer'] ? 'Sì' : 'No';
+        }
+
+        // Oggetto appalto: project_name
+        if (isset($data['project_name']) && is_string($data['project_name']) && trim($data['project_name']) !== '') {
+            return trim($data['project_name']);
+        }
+
+        // Settore: prevalent_id_opere + prevalent_categoria
+        if (isset($data['prevalent_id_opere']) && isset($data['prevalent_categoria'])) {
+            return trim($data['prevalent_id_opere'] . ' ' . strtoupper($data['prevalent_categoria']));
+        }
+
+        // Tipi tabellari — non hanno display value scalare
+        // entries[], requirements[], documents[], criteria[], turnover_requirement
+        // Ritorna null: il frontend li renderizza come tabelle
+        if (isset($data['entries']) || isset($data['requirements']) || isset($data['documents'])
+            || isset($data['criteria']) || isset($data['turnover_requirement'])) {
+            return null;
+        }
+
         // Niente risposta pulita trovata
         return null;
     }
