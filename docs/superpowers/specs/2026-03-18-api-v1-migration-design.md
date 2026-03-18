@@ -103,7 +103,36 @@ Esempio: `http://incide-api.159-69-127-5.sslip.io/api/v1/batch/analyze`
 
 ## 4. Cambiamenti per file
 
-### 4.1 ExternalApiClient.php
+### 4.1 Consolidamento layer HTTP: eliminare duplicati GareService ↔ ExternalApiClient
+
+**Problema attuale:** GareService contiene un proprio layer HTTP duplicato (~180 righe): `externalJsonRequest()`, `externalMultipartManual()`, `externalUrl()`, `authHeaders()`, `applyCurlExtras()`. Questi sono quasi identici ai metodi di ExternalApiClient.
+
+**Soluzione:** Migrare `externalBatchStatus()`, `externalBatchResults()` e `externalAnalyzeSingle()` di GareService a delegare interamente a ExternalApiClient. Rimuovere i metodi HTTP duplicati da GareService:
+
+| Metodo GareService da rimuovere | Sostituito da |
+|--------------------------------|---------------|
+| `externalJsonRequest()` | `ExternalApiClient::jsonRequest()` |
+| `externalMultipartManual()` | `ExternalApiClient::multipartRequest()` |
+| `externalUrl()` | `ExternalApiClient::buildUrl()` |
+| `authHeaders()` | `ExternalApiClient::buildHeaders()` |
+| `applyCurlExtras()` | `ExternalApiClient::applyCurlOptions()` |
+
+I metodi wrapper in GareService diventano:
+```php
+private static function externalBatchStatus(string $batchId, array $env): array
+{
+    $client = new \Services\AIextraction\ExternalApiClient($env);
+    return $client->getBatchStatus($batchId);
+}
+
+private static function externalBatchResults(string $batchId, array $env): array
+{
+    $client = new \Services\AIextraction\ExternalApiClient($env);
+    return $client->getBatchResults($batchId);
+}
+```
+
+### 4.2 ExternalApiClient.php
 
 **Path v1:** Tutti i metodi che costruiscono URL passano da `/api/` a `/api/v1/`.
 
@@ -125,44 +154,54 @@ private function buildUrl(string $path): string
 I metodi esistenti cambiano i path:
 - `getBatchStatus()`: `/batch/{id}/status` (buildUrl aggiunge `/api/v1`)
 - `getBatchResults()`: `/batch/{id}/results`
-- `getStartUrl()`: costruisce `$base/api/$version/batch/analyze`
 - `listExtractionTypes()`: `/extraction-types`
 - `jobStatus()`: `/jobs/{id}`
 - `jobResult()`: `/jobs/{id}/result`
 
+**`getStartUrl()` rimosso.** `analyzeSingleFile()` usa direttamente `$this->buildUrl('/batch/analyze')`.
+
 **Nuovi metodi:**
 
 ```php
+// Quota & Usage
 public function getQuota(): array
 public function checkQuota(int $needed): array
 public function getDailyUsage(?string $date = null): array
 public function getBatchUsage(string $batchId): array
 public function getUsageHistory(int $days = 30, ?string $cursor = null): array
-public function downloadFile(string $jobId, string $filename): array
+
+// Batch management
+public function listBatches(?string $status = null, int $limit = 20, int $offset = 0): array
 public function deleteJob(string $jobId): array
 public function healthCheck(): array
-public function listBatches(?string $status = null, int $limit = 20, int $offset = 0): array
+
+// Binary download (PDF evidenziati) — metodo dedicato, non usa jsonRequest()
+public function downloadBinary(string $jobId, string $filename): array
 ```
+
+**Nota su `downloadBinary()`:** Questo metodo NON usa `jsonRequest()` (che decodifica JSON). Usa cURL direttamente e ritorna `['status' => int, 'body' => string (binary), 'content_type' => string]`. Il chiamante (GareService) streamma il contenuto binario al browser.
 
 **Pulizia:**
 - Rimuovere metodo `loadEnvConfig()` deprecato (riga 349-352)
 - Rimuovere tutti i fallback `$this->config['PDF_API_BASE']` e `$this->config['PDF_API_KEY']`
-- `getStartUrl()`: rimuovere la lettura di `AI_API_START_URL` dal config, costruire sempre da base+version
+- Rimuovere `getStartUrl()` — sostituito da `buildUrl('/batch/analyze')`
+- Rimuovere `getDefaultEmail()` se non più usato dall'API v1
 
-### 4.2 GareService.php
+**Pattern eccezioni:** I nuovi metodi restituiscono `['success' => false, 'message' => ...]` in caso di errore HTTP, allineandosi al pattern del progetto (`rules/php.md`). I metodi esistenti che lanciano `RuntimeException` vengono gradualmente migrati a restituire array di errore.
 
-**Metodi `externalBatch*`:**
-- `externalBatchStatus()`: path da `/api/batch/...` a `/batch/...` (buildUrl del client gestisce il prefisso v1)
-- `externalBatchResults()`: idem
-- `externalAnalyzeSingle()`: nessun cambio (delega a ExternalApiClient)
+### 4.3 GareService.php
 
-**Metodo `expandEnvPlaceholders()`:** resta per gestire `${VAR_NAME}` ma ora ha meno template da espandere.
+**Eliminazione layer HTTP duplicato:** Rimuovere `externalJsonRequest()`, `externalMultipartManual()`, `externalUrl()`, `authHeaders()`, `applyCurlExtras()`. Vedere sezione 4.1.
+
+**Metodi `externalBatch*`:** Delegano a ExternalApiClient (non più HTTP diretto).
 
 **Rimozione fallback legacy:** in `upload()` e `jobPull()`, rimuovere tutti i `?? $env['PDF_API_BASE']` e `?? $env['PDF_API_KEY']`.
 
-**Nuove action in `handleAction()`:**
+**`AI_API_VERSION` nel loadEnvConfig():** Aggiungere `'AI_API_VERSION'` alla lista di variabili caricate in `loadEnvConfig()` perché il metodo usa una lista esplicita di env vars.
 
-| Action | Metodo | Descrizione |
+**Nuovi metodi statici** (chiamati da `service_router.php`, non da `handleAction()` che non esiste):
+
+| Action (in service_router.php) | Metodo GareService | Descrizione |
 |--------|--------|-------------|
 | `checkQuota` | `checkQuota($input)` | Pre-flight quota check |
 | `getExtractionTypes` | `getExtractionTypes()` | Tipi estrazione dinamici da API |
@@ -170,32 +209,76 @@ public function listBatches(?string $status = null, int $limit = 20, int $offset
 | `getBatchUsage` | `getBatchUsage($input)` | Usage/costi per batch |
 | `apiHealth` | `apiHealth()` | Health check API |
 | `listBatches` | `listBatches($input)` | Storico batch |
+| `deleteRemoteJob` | `deleteRemoteJob($input)` | Cancella job remoto |
 
-### 4.3 ExtractionConstants.php
+**`downloadHighlightedPdf` — gestione binaria:**
+Questo metodo NON usa `sendJsonResponse()`. Riceve il binary da `ExternalApiClient::downloadBinary()` e lo streamma con:
+```php
+header('Content-Type: application/pdf');
+header('Content-Disposition: inline; filename="' . $sanitizedFilename . '"');
+echo $response['body'];
+exit;
+```
+Il filename deve essere sanitizzato: solo caratteri alfanumerici, trattini, underscore, punto. Nessun path traversal (`../`).
 
-Aggiungere 3 nuovi tipi:
+### 4.4 ExtractionConstants.php
+
+Aggiungere 3 nuovi tipi dalla API v1. **Nota:** `settore_gara` è un type_code DISTINTO da `settore_industriale_gara_appalto` (che resta). L'API v1 li tratta come estrazioni separate.
 
 ```php
-'settore_gara' => 'Settore della gara',
+'settore_gara' => 'Settore della gara (classificazione)',
 'criteri_valutazione_offerta_tecnica' => 'Criteri di valutazione dell\'offerta tecnica',
 'documenti_di_gara' => 'Documenti di gara',
 ```
 
-### 4.4 ExtractionFormatter.php
+**Mapping completo dei 21 tipi API v1:**
 
-**Rimuovere:** `EXTRACTION_SORT_ORDER` (deprecata, righe 52-72) e il fallback in `sortKeyForType()` (riga 494-497).
+| # | type_code API v1 | Presente in ExtractionConstants? |
+|---|-----------------|--------------------------------|
+| 1 | `link_portale_stazione_appaltante` | Sì |
+| 2 | `importi_corrispettivi_categoria_id_opere` | Sì |
+| 3 | `importi_opere_per_categoria_id_opere` | Sì |
+| 4 | `importi_requisiti_tecnici_categoria_id_opere` | Sì |
+| 5 | `data_scadenza_gara_appalto` | Sì |
+| 6 | `data_uscita_gara_appalto` | Sì |
+| 7 | `oggetto_appalto` | Sì |
+| 8 | `sopralluogo_obbligatorio` | Sì |
+| 9 | `stazione_appaltante` | Sì |
+| 10 | `tipologia_di_appalto` | Sì |
+| 11 | `tipologia_di_gara` | Sì |
+| 12 | `luogo_provincia_appalto` | Sì |
+| 13 | `requisiti_tecnico_professionali` | Sì |
+| 14 | `settore_industriale_gara_appalto` | Sì (resta) |
+| 15 | `fatturato_globale_n_minimo_anni` | Sì |
+| 16 | `documentazione_richiesta_tecnica` | Sì |
+| 17 | `requisiti_di_capacita_economica_finanziaria` | Sì |
+| 18 | `requisiti_idoneita_professionale_gruppo_lavoro` | Sì |
+| 19 | `settore_gara` | **NUOVO** — distinto da `settore_industriale_gara_appalto` |
+| 20 | `criteri_valutazione_offerta_tecnica` | **NUOVO** |
+| 21 | `documenti_di_gara` | **NUOVO** |
 
-**Aggiornare `DETTAGLIO_GARA_ORDER`:** aggiungere i 3 nuovi tipi:
+Nessun tipo è stato rinominato. I 18 esistenti restano identici, si aggiungono 3 nuovi.
+
+### 4.5 ExtractionFormatter.php
+
+**Rimuovere:** `EXTRACTION_SORT_ORDER` (deprecata, righe 52-72) e il fallback in `sortKeyForType()` (righe 494-497).
+
+**Verificare callers:** `sortKeyForType()` è usato da `compareExtractionSort()` e `compareExtractionSortRow()`. Entrambi funzionano correttamente con solo `DETTAGLIO_GARA_ORDER` perché i type_code non nella mappa finiscono in coda (indice >= 1000).
+
+**Aggiornare `DETTAGLIO_GARA_ORDER`:** aggiungere i 3 nuovi tipi in posizione logica:
 
 ```php
-'settore_gara' => 20,               // dopo 'criteri_valutazione...'
-'criteri_valutazione_offerta_tecnica' => 21,
-'documenti_di_gara' => 22,
+'settore_gara' => 6,                           // dopo settore_industriale (5), sono affini
+'settore_industriale_gara_appalto' => 5,        // resta invariato
+'criteri_valutazione_offerta_tecnica' => 20,    // in coda
+'documenti_di_gara' => 21,                      // in coda
 ```
 
-### 4.5 service_router.php
+Nota: `settore_gara` va vicino a `settore_industriale_gara_appalto` (indice 5) perché sono affini. Si inserisce a indice 6, spostando gli indici successivi di 1 (da sopralluogo_obbligatorio in poi: 7, 8, 9, ...).
 
-Aggiungere le nuove action nel case `'gare'`:
+### 4.6 service_router.php
+
+Aggiungere le nuove action nel case `'gare'` (switch su `$action`):
 
 ```php
 case 'checkQuota':
@@ -204,9 +287,16 @@ case 'downloadHighlightedPdf':
 case 'getBatchUsage':
 case 'apiHealth':
 case 'listBatches':
+case 'deleteRemoteJob':
 ```
 
-Tutte delegano a GareService con le opportune permission check.
+**Permission per action:**
+- `checkQuota`, `getExtractionTypes`, `apiHealth`, `listBatches` → `view_gare`
+- `getBatchUsage` → `view_gare`
+- `downloadHighlightedPdf` → `view_gare`
+- `deleteRemoteJob` → `edit_gare` o `create_gare`
+
+**Nota:** `downloadHighlightedPdf` NON passa per `sendJsonResponse()`. GareService gestisce direttamente gli header HTTP e lo streaming binario.
 
 ### 4.6 config/.env
 
@@ -264,11 +354,17 @@ Come descritto nella sezione 3.
 | File | Cosa | Motivo |
 |------|------|--------|
 | `ExternalApiClient.php` | `loadEnvConfig()` (riga 349-352) | Deprecato, delega già a GareService |
+| `ExternalApiClient.php` | `getStartUrl()` | Sostituito da `buildUrl('/batch/analyze')` |
+| `ExternalApiClient.php` | `getDefaultEmail()` | Non usato dall'API v1 |
 | `ExternalApiClient.php` | Fallback `PDF_API_BASE`/`PDF_API_KEY` in `buildHeaders()` e `getApiBase()` | Legacy rimosso da .env |
 | `ExtractionFormatter.php` | `EXTRACTION_SORT_ORDER` (righe 52-72) | Duplicato deprecato di `DETTAGLIO_GARA_ORDER` |
 | `ExtractionFormatter.php` | Fallback a `EXTRACTION_SORT_ORDER` in `sortKeyForType()` (righe 494-497) | Usa solo `DETTAGLIO_GARA_ORDER` |
+| `GareService.php` | `externalJsonRequest()` (~50 righe) | Duplicato di `ExternalApiClient::jsonRequest()` |
+| `GareService.php` | `externalMultipartManual()` (~60 righe) | Duplicato di `ExternalApiClient::multipartRequest()` |
+| `GareService.php` | `externalUrl()` (~10 righe) | Duplicato di `ExternalApiClient::buildUrl()` |
+| `GareService.php` | `authHeaders()` (~20 righe) | Duplicato di `ExternalApiClient::buildHeaders()` |
+| `GareService.php` | `applyCurlExtras()` (~15 righe) | Duplicato di `ExternalApiClient::applyCurlOptions()` |
 | `GareService.php` | Tutti i `?? $env['PDF_API_BASE']` e `?? $env['PDF_API_KEY']` | Fallback legacy rimossi |
-| `GareService.php` | Lettura di `AI_API_START_URL` da config in `getStartUrl()` | Path costruito dal client |
 | `config/.env` | `AI_API_START_URL`, `AI_API_STATUS_URL_TPL`, `AI_API_RESULTS_URL_TPL` | Template URL non più necessari |
 
 ### 5.2 Nessun file nuovo
@@ -278,6 +374,10 @@ Tutti i cambiamenti avvengono nei file esistenti. Nessun file creato, nessun fil
 ### 5.3 Nessun alias di compatibilità
 
 I path legacy (`/api/...`) non vengono mantenuti nel codice. Switch netto a v1.
+
+### 5.4 Singleton e cache
+
+`ExternalApiClient::getInstance()` usa un singleton statico. Dopo la migrazione, il singleton viene rigenerato ad ogni richiesta PHP (Apache per-request lifecycle), quindi non c'è rischio di config stale. Stesso discorso per `GareService::loadEnvConfig()` che usa `static $cache`.
 
 ---
 
@@ -319,9 +419,11 @@ Frontend (gare_detail.js)
 
 - Tutte le nuove action richiedono login + CSRF (gestiti da ajax.php)
 - `downloadHighlightedPdf` fa proxy server-side (non espone URL API al frontend)
+- `downloadHighlightedPdf`: il parametro `filename` viene sanitizzato contro path traversal: solo `[a-zA-Z0-9._-]` ammessi, nessun `../` o `..\\`
 - `apiHealth` e `getQuota` richiedono almeno `view_gare` permission
 - L'API key non viene mai esposta al frontend
-- `deleteJob` richiede `edit_gare` o `create_gare` permission
+- `deleteRemoteJob` richiede `edit_gare` o `create_gare` permission
+- `checkQuota`: il parametro `needed` viene validato come intero positivo (max 100)
 
 ---
 
