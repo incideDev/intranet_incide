@@ -4637,6 +4637,109 @@ class GareService
         return $cache = $env;
     }
 
+    // ========== API PROXY ACTIONS ==========
+
+    public static function checkQuota(array $input): array
+    {
+        $needed = (int) ($input['needed'] ?? 0);
+        if ($needed <= 0 || $needed > 100) {
+            return ['success' => false, 'message' => 'needed deve essere un intero positivo (max 100)'];
+        }
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        return $client->checkQuota($needed);
+    }
+
+    public static function getExtractionTypes(): array
+    {
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        try {
+            $types = $client->listExtractionTypes();
+            return ['success' => true, 'data' => $types];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    public static function apiHealth(): array
+    {
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        return $client->healthCheck();
+    }
+
+    public static function getBatchUsageAction(array $input): array
+    {
+        $batchId = trim((string) ($input['batch_id'] ?? ''));
+        if ($batchId === '') {
+            return ['success' => false, 'message' => 'batch_id obbligatorio'];
+        }
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        return $client->getBatchUsage($batchId);
+    }
+
+    public static function listBatchesAction(array $input): array
+    {
+        $status = !empty($input['status']) ? trim($input['status']) : null;
+        $limit  = min(100, max(1, (int) ($input['limit'] ?? 20)));
+        $offset = max(0, (int) ($input['offset'] ?? 0));
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        return $client->listBatches($status, $limit, $offset);
+    }
+
+    public static function downloadHighlightedPdf(array $input): void
+    {
+        $jobId    = trim((string) ($input['job_id'] ?? ''));
+        $filename = trim((string) ($input['filename'] ?? ''));
+
+        if ($jobId === '' || $filename === '') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'job_id e filename obbligatori']);
+            exit;
+        }
+
+        // Sanitize filename: only allow safe characters
+        $sanitized = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
+        if ($sanitized === '' || $sanitized !== $filename) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'Filename non valido']);
+            exit;
+        }
+
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        $response = $client->downloadBinary($jobId, $sanitized);
+
+        if (($response['status'] ?? 0) !== 200 || empty($response['body'])) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'Download fallito: HTTP ' . ($response['status'] ?? 'unknown')]);
+            exit;
+        }
+
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        header('Content-Type: ' . ($response['content_type'] ?: 'application/pdf'));
+        header('Content-Disposition: inline; filename="' . $sanitized . '"');
+        header('Content-Length: ' . strlen($response['body']));
+        echo $response['body'];
+        exit;
+    }
+
+    public static function deleteRemoteJob(array $input): array
+    {
+        $jobId = trim((string) ($input['job_id'] ?? ''));
+        if ($jobId === '') {
+            return ['success' => false, 'message' => 'job_id obbligatorio'];
+        }
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $client = new \Services\AIextraction\ExternalApiClient($env);
+        return $client->deleteJob($jobId);
+    }
+
     private static function defaultNotificationEmail(array $fields = []): string
     {
         if (!empty($fields['notification_email']) && is_string($fields['notification_email'])) {
