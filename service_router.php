@@ -1439,11 +1439,21 @@ switch ($section) {
                 break;
 
             case 'jobPull':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
                 sendJsonResponse(\Services\GareService::jobPull($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'jobResults':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
                 sendJsonResponse(\Services\GareService::jobResults($jobId), JSON_UNESCAPED_UNICODE);
                 break;
@@ -1460,6 +1470,11 @@ switch ($section) {
                 break;
 
             case 'listJobsByGara':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
                 // Ora accetta job_id (gara_id = job_id per retrocompatibilità)
                 $jobId = (int) ($input['job_id'] ?? $input['gara_id'] ?? 0);
                 sendJsonResponse(\Services\GareService::listJobsByGara($jobId), JSON_UNESCAPED_UNICODE);
@@ -1478,11 +1493,21 @@ switch ($section) {
                 break;
 
             case 'getNormalizedDocs':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
                 echo json_encode(\Services\GareService::getNormalizedDocs($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'getNormalizedEcon':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
                 echo json_encode(\Services\GareService::getNormalizedEcon($jobId), JSON_UNESCAPED_UNICODE);
                 break;
@@ -1506,6 +1531,11 @@ switch ($section) {
                 break;
 
             case 'getNormalizedRoles':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
                 echo json_encode(\Services\GareService::getNormalizedRoles($jobId), JSON_UNESCAPED_UNICODE);
                 break;
@@ -1683,6 +1713,72 @@ switch ($section) {
                 }
                 $q = isset($input['q']) ? trim((string)$input['q']) : '';
                 sendJsonResponse(\Services\CommesseService::searchCommesse(['q' => $q]), JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'checkQuota':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                sendJsonResponse(\Services\GareService::checkQuota($input), JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'getExtractionTypes':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                sendJsonResponse(\Services\GareService::getExtractionTypes(), JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'apiHealth':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                sendJsonResponse(\Services\GareService::apiHealth(), JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'getQuota':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                $env = \Services\GareService::expandEnvPlaceholders(\Services\GareService::loadEnvConfig());
+                $client = new \Services\AIextraction\ExternalApiClient($env);
+                sendJsonResponse($client->getQuota(), JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'getBatchUsage':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                sendJsonResponse(\Services\GareService::getBatchUsageAction($input), JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'listBatches':
+                if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                sendJsonResponse(\Services\GareService::listBatchesAction($input), JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'deleteRemoteJob':
+                if (!function_exists('userHasPermission') ||
+                    (!userHasPermission('edit_gare') && !userHasPermission('create_gare'))) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                sendJsonResponse(\Services\GareService::deleteRemoteJob($input), JSON_UNESCAPED_UNICODE);
                 break;
 
             default:

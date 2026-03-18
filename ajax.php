@@ -50,6 +50,31 @@ if (
 }
 // ── FINE EARLY-EXIT ────────────────────────────────────────────────
 
+// ── EARLY-EXIT: stream binario PDF evidenziato (gare AI) ─────────
+if (
+    $_SERVER['REQUEST_METHOD'] === 'GET'
+    && ($_GET['section'] ?? '') === 'gare'
+    && ($_GET['action'] ?? '') === 'downloadHighlightedPdf'
+) {
+    ob_end_clean();
+
+    // Sessione valida (utente loggato)
+    if ($database->LockedTime() > 0 || $Session->logged_in !== true) {
+        http_response_code(403);
+        exit('Not authenticated');
+    }
+
+    // Permission check
+    if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
+        http_response_code(403);
+        exit('Permesso negato');
+    }
+
+    \Services\GareService::downloadHighlightedPdf($_GET);
+    exit;
+}
+// ── FINE EARLY-EXIT PDF ──────────────────────────────────────────
+
 // Risposta JSON per API (charset esplicito)
 header('Content-Type: application/json; charset=utf-8');
 
