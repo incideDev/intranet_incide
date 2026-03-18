@@ -1951,42 +1951,10 @@ class GareService
         return ['ok' => true, 'data' => $row];
     }
 
-    /**
-     * Espande i placeholder ${VAR} nei valori dell'array env.
-     * Esempio: se AI_API_BASE="http://host" e
-     * AI_API_START_URL="${AI_API_BASE}/api/batch/analyze",
-     * questo metodo sostituisce il placeholder con il valore reale.
-     */
     public static function expandEnvPlaceholders(array $env): array
     {
-        if (empty($env)) {
-            return $env;
-        }
-
-        // Facciamo un paio di passaggi per gestire dipendenze incrociate semplici
-        $maxPasses = 2;
-
-        for ($pass = 0; $pass < $maxPasses; $pass++) {
-            foreach ($env as $key => $value) {
-                if (!is_string($value)) {
-                    continue;
-                }
-
-                $env[$key] = preg_replace_callback(
-                    '/\$\{([A-Z0-9_]+)\}/',
-                    static function (array $m) use ($env) {
-                        $varName = $m[1] ?? '';
-                        if ($varName === '' || !array_key_exists($varName, $env)) {
-                            // Se non troviamo la variabile, lasciamo il placeholder com'è
-                            return $m[0];
-                        }
-                        return (string) $env[$varName];
-                    },
-                    $value
-                );
-            }
-        }
-
+        // Template URL variables (${AI_API_BASE}/...) removed in v1 migration.
+        // Method kept as pass-through to avoid updating 12+ call sites.
         return $env;
     }
 
