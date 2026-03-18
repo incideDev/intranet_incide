@@ -77,13 +77,6 @@ class GareService
         return self::GARE_STATUS_COLORS;
     }
 
-    // Costanti spostate in ExtractionFormatter
-
-
-
-
-
-
     /**
      * Elenco delle estrazioni con informazioni aggregate sui bandi.
      */
@@ -620,21 +613,7 @@ class GareService
         return number_format($value, 2, ',', '.') . ' €';
     }
 
-
-
     
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Garantisce la presenza delle colonne gara_id / progress negli ext_*.
@@ -732,69 +711,14 @@ class GareService
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Array statico per accumulare i log di debug
      */
     private static $debugLogs = [];
 
-
-
-
-
-
-
-
-
-
-
     /**
      * Pulisce testo rimuovendo spazi multipli
      */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public static function ensureGaraColumns(\PDO $pdo): void
     {
@@ -833,62 +757,6 @@ class GareService
             error_log('GareService ensureGaraColumns progress: ' . $e->getMessage());
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     // Metodo rimosso: usa ExtractionFormatter::displayNameForExtractionType
 
