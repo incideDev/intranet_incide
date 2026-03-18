@@ -781,7 +781,18 @@ window.initTableFilters = function initTableFilters(tableId, tableSource = null,
 
     // ========== MODALITÀ LOCALE (CLIENT-SIDE) - CODICE ESISTENTE ==========
 
-    const headerRow = thead.rows[0];
+    // Trova la riga header effettiva, skippando righe decorative (es. th-groups)
+    function getHeaderRow(thead) {
+        for (let i = 0; i < thead.rows.length; i++) {
+            if (!thead.rows[i].classList.contains('th-groups') &&
+                !thead.rows[i].classList.contains('filter-row')) {
+                return thead.rows[i];
+            }
+        }
+        return thead.rows[0]; // fallback
+    }
+
+    const headerRow = getHeaderRow(thead);
 
     for (let i = 0; i < headerRow.cells.length - 1; i++) {
         headerRow.cells[i].classList.add('th-bordered-right');
@@ -791,7 +802,8 @@ window.initTableFilters = function initTableFilters(tableId, tableSource = null,
     let inputToCol = [];
 
     if (!thead.querySelector('.filter-row')) {
-        const filterRow = thead.insertRow(1);
+        const headerRowIndex = Array.from(thead.rows).indexOf(headerRow);
+        const filterRow = thead.insertRow(headerRowIndex + 1);
         filterRow.className = 'filter-row';
 
         // Mappa e inputIdx
@@ -1025,7 +1037,15 @@ function initRemoteTable(table, thead, tbody) {
     }
 
     // Verifica e allinea il numero di celle nell'header con il numero di colonne
-    const headerRow = thead.rows[0];
+    // Trova la riga header effettiva, skippando righe decorative (es. th-groups)
+    let headerRow = thead.rows[0];
+    for (let i = 0; i < thead.rows.length; i++) {
+        if (!thead.rows[i].classList.contains('th-groups') &&
+            !thead.rows[i].classList.contains('filter-row')) {
+            headerRow = thead.rows[i];
+            break;
+        }
+    }
     if (!headerRow) {
         console.error('Header row non trovato');
         return;
@@ -1081,7 +1101,8 @@ function initRemoteTable(table, thead, tbody) {
     }
 
     if (!filterRow) {
-        filterRow = thead.insertRow(1);
+        const headerRowIndex = Array.from(thead.rows).indexOf(headerRow);
+        filterRow = thead.insertRow(headerRowIndex + 1);
         filterRow.className = 'filter-row';
 
         columns.forEach((col, idx) => {
@@ -1528,7 +1549,15 @@ window.initClientSidePagination = function initClientSidePagination(table) {
         if (paginationMapping) return paginationMapping;
         const thead = table.querySelector('thead');
         if (!thead) return [];
-        const headerRow = thead.rows[0];
+        // Trova la riga header effettiva, skippando righe decorative (es. th-groups)
+        let headerRow = thead.rows[0];
+        for (let i = 0; i < thead.rows.length; i++) {
+            if (!thead.rows[i].classList.contains('th-groups') &&
+                !thead.rows[i].classList.contains('filter-row')) {
+                headerRow = thead.rows[i];
+                break;
+            }
+        }
         const filterRow = thead.querySelector('.filter-row');
         if (!filterRow) return [];
 

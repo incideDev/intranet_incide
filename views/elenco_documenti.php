@@ -58,58 +58,48 @@ if (!$_ed_embedded) {
             </h1>
             <span class="ed-project-badge" id="projectBadge">Caricamento...</span>
         </div>
-        <div class="ed-header-right">
-            <div class="ed-stats">
-                <div class="ed-stat">
-                    <span class="ed-stat-value" id="tot-count">0</span>
-                    <span class="ed-stat-label">Documenti</span>
-                </div>
-                <div class="ed-stat">
-                    <span class="ed-stat-value" id="avg-prog">0%</span>
-                    <span class="ed-stat-label">Avanzamento</span>
-                </div>
-                <div class="ed-stat">
-                    <span class="ed-stat-value" id="issued-count">0</span>
-                    <span class="ed-stat-label">Emessi</span>
-                </div>
-            </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="ed-stat-cards">
+        <div class="ed-stat-card ed-stat-red">
+            <div class="ed-stat-value" id="tot-count">0</div>
+            <div class="ed-stat-label">Documenti totali</div>
+            <div class="ed-stat-sub" id="stat-sub-docs">&mdash;</div>
+        </div>
+        <div class="ed-stat-card ed-stat-green">
+            <div class="ed-stat-value" id="avg-prog">0%</div>
+            <div class="ed-stat-label">Avanzamento medio</div>
+            <div class="ed-stat-sub" id="stat-sub-issued">&mdash;</div>
+        </div>
+        <div class="ed-stat-card ed-stat-yellow">
+            <div class="ed-stat-value" id="stat-submittal-count">0</div>
+            <div class="ed-stat-label">Submittal</div>
+            <div class="ed-stat-sub" id="stat-sub-submittal">&mdash;</div>
         </div>
     </div>
 
     <!-- Toolbar -->
     <div class="ed-toolbar">
         <div class="ed-toolbar-left">
-            <div class="ed-filter-group">
-                <div class="ed-filter-item">
-                    <label>Stato</label>
-                    <select id="filter-stato" class="ed-select">
-                        <option value="">Tutti</option>
-                        <option value="PIANIFICATO">Pianificato</option>
-                        <option value="IN CORSO">In Corso</option>
-                        <option value="EMESSO">Emesso</option>
-                        <option value="IN REVISIONE">In Revisione</option>
-                    </select>
-                </div>
-                <div class="ed-filter-item">
-                    <label>Disciplina</label>
-                    <select id="filter-disc" class="ed-select">
-                        <option value="">Tutte</option>
-                    </select>
-                </div>
-                <div class="ed-filter-item">
-                    <label>Responsabile</label>
-                    <select id="filter-resp" class="ed-select">
-                        <option value="">Tutti</option>
-                    </select>
-                </div>
-                <div class="ed-filter-item search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" id="filter-text" placeholder="Cerca documenti...">
-                </div>
-            </div>
+            <?php if (userHasPermission('edit_commessa')): ?>
+            <button class="btn btn-secondary ed-btn" id="btnConfigTemplate" title="Configura Template">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                </svg>
+                Template
+            </button>
+            <?php endif; ?>
+            <span class="ed-tpl-chip" id="tplChipName">&mdash;</span>
+            <button class="btn btn-secondary ed-btn" id="btnExport" title="Esporta Excel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Esporta
+            </button>
         </div>
         <div class="ed-toolbar-right">
             <button class="btn btn-secondary ed-btn" id="btnSubmittalMgr" title="Gestione Submittal">
@@ -255,10 +245,10 @@ if (!$_ed_embedded) {
                     <div class="ed-form-group">
                         <label>Scopo *</label>
                         <select id="sub-scopo" class="ed-select">
-                            <option>Per approvazione</option>
-                            <option>Per informazione</option>
-                            <option>Per commenti</option>
-                            <option>Emissione definitiva</option>
+                            <option value="Per approvazione">Per approvazione</option>
+                            <option value="Per informazione">Per informazione</option>
+                            <option value="Per commenti">Per commenti</option>
+                            <option value="Emissione definitiva">Emissione definitiva</option>
                         </select>
                     </div>
                 </div>
@@ -272,10 +262,10 @@ if (!$_ed_embedded) {
                     <div class="ed-form-group">
                         <label>Modalità</label>
                         <select id="sub-modalita" class="ed-select">
-                            <option>E-mail</option>
-                            <option>PEC</option>
-                            <option>Portale committente</option>
-                            <option>Consegna fisica</option>
+                            <option value="E-mail">E-mail</option>
+                            <option value="PEC">PEC</option>
+                            <option value="Portale committente">Portale committente</option>
+                            <option value="Consegna fisica">Consegna fisica</option>
                         </select>
                     </div>
                 </div>
@@ -445,6 +435,20 @@ if (!$_ed_embedded) {
             <button class="btn btn-primary" id="ncb-attach-btn" disabled onclick="ElencoDoc.attachNcFileFromBrowser()">Allega selezionati</button>
         </div>
     </div>
+</div>
+
+<!-- Template Panel (list + editor) -->
+<div class="ed-tpl-panel" id="tplPanel">
+    <div class="ed-tpl-header" id="tplHeader">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+        </svg>
+        <h2 id="tplPanelTitle">Gestione Template</h2>
+        <button class="ed-close-btn" onclick="ElencoDoc.closeTemplatePanel()">&times;</button>
+    </div>
+    <!-- Dynamic content: list view or editor view rendered by JS -->
+    <div class="ed-tpl-content" id="tplContent"></div>
 </div>
 
 <!-- Hidden project ID for JS -->

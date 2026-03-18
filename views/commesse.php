@@ -15,7 +15,10 @@ if (!$tabella) {
 global $database;
 
 $res = $database->query(
-    "SELECT id, titolo, nome_commessa, responsabile_id FROM commesse_bacheche WHERE tabella = :t LIMIT 1",
+    "SELECT b.id, b.titolo, b.tabella, c.oggetto AS nome_commessa, c.responsabile_commessa
+     FROM commesse_bacheche b
+     LEFT JOIN elenco_commesse c ON LOWER(c.codice) = LOWER(b.tabella)
+     WHERE b.tabella = :t LIMIT 1",
     [':t' => $tabella],
     __FILE__
 );
@@ -27,7 +30,16 @@ $row = $res->fetch();
 $commessaId = (int)$row['id'];
 $titolo = $row['titolo'] ?? 'Bacheca';
 $nome_commessa = $row['nome_commessa'] ?? '';
-$responsabileId = $row['responsabile_id'] ?? null;
+// responsabile_commessa può essere un nome o un user_id
+$responsabileId = $row['responsabile_commessa'] ?? null;
+if (!empty($responsabileId) && !is_numeric($responsabileId)) {
+    $responsabileId = $database->query(
+        "SELECT user_id FROM personale WHERE LOWER(Nominativo) = LOWER(?) LIMIT 1",
+        [trim($responsabileId)],
+        __FILE__
+    )->fetchColumn() ?: null;
+}
+$responsabileId = $responsabileId ? (int)$responsabileId : null;
 $utenteId = $_SESSION['user_id'] ?? null;
 
 $isResponsabile = ($utenteId && $responsabileId && (int)$utenteId === (int)$responsabileId);
@@ -39,7 +51,7 @@ if ($utenteId) {
         __FILE__
     )->fetchColumn() ? true : false;
 }
-if (!$isResponsabile && !$isMembro) {
+if (!isAdmin() && !$isResponsabile && !$isMembro) {
     echo "<div class='no-commesse-msg' style='padding:32px;text-align:center;font-size:1.15em;color:#b12d1c;background:#fff3f1;border-radius:10px;margin:40px auto;max-width:500px;'>
         <b>Non hai commesse assegnate.</b><br>
         Contatta l’amministratore per essere aggiunto a un gruppo di lavoro.
@@ -157,7 +169,7 @@ if ($responsabileId) {
     <?php
     $_GET['tabella'] = $tabella;
     $_GET['titolo'] = $titolo;
-    // Il render custom viene usato automaticamente dal template se definito
+    $kanbanType = 'commesse';
     include 'components/kanban_template.php';
     ?>
 </div>

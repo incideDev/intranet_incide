@@ -1,0 +1,212 @@
+/* Repository Docs — layout e stili */
+
+.repo-container {
+    padding: 0;
+}
+
+.repo-layout {
+    display: flex;
+    border: 1px solid #e2e4e8;
+    border-radius: 6px;
+    background: #fff;
+    min-height: 400px;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.repo-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid #e2e4e8;
+    display: flex;
+    flex-direction: column;
+    background: #fafbfc;
+}
+.repo-sidebar-header {
+    padding: 10px 14px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    border-bottom: 1px solid #e2e4e8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.repo-folder-count {
+    background: #e2e4e8;
+    color: #6b7280;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+.repo-folder-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+.repo-folder-item {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f1f4;
+    transition: background 0.1s;
+    border-left: 3px solid transparent;
+}
+.repo-folder-item:hover { background: #f0f1f5; }
+.repo-folder-item.active { background: #e8eafe; border-left-color: #6366f1; }
+.repo-folder-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a1d23;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.repo-folder-code {
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-top: 1px;
+}
+
+/* Content */
+.repo-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.repo-content-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid #e2e4e8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.repo-content-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a1d23;
+}
+.repo-content-actions {
+    display: flex;
+    gap: 6px;
+}
+.repo-upload-btn {
+    cursor: pointer;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    padding: 4px 10px;
+}
+
+.repo-file-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* File item */
+.repo-file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f0f1f4;
+    transition: background 0.1s;
+    cursor: pointer;
+}
+.repo-file-item:hover { background: #f8f9ff; }
+.repo-file-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+.repo-file-info {
+    flex: 1;
+    min-width: 0;
+}
+.repo-file-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a1d23;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.repo-file-meta {
+    font-size: 9px;
+    color: #6b7280;
+    margin-top: 1px;
+}
+.repo-file-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.repo-file-item:hover .repo-file-actions { opacity: 1; }
+.repo-file-action {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 12px;
+    transition: all 0.1s;
+    text-decoration: none;
+}
+.repo-file-action:hover { background: #e2e4e8; color: #1a1d23; }
+.repo-file-action.danger:hover { background: rgba(205,33,29,.1); color: #cd211d; }
+
+/* Move dropdown */
+.repo-move-dropdown {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #e2e4e8;
+    border-radius: 6px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.14);
+    z-index: 300;
+    min-width: 200px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+.repo-move-item {
+    padding: 6px 12px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.repo-move-item:hover { background: #f0f1f5; }
+.repo-move-header {
+    padding: 6px 12px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b7280;
+    border-bottom: 1px solid #e2e4e8;
+    background: #fafbfc;
+    border-radius: 6px 6px 0 0;
+}
+
+/* Empty / loading */
+.repo-empty, .repo-loading {
+    padding: 40px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 11px;
+}

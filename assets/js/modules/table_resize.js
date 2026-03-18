@@ -10,6 +10,22 @@
     const EXPIRY_DAYS = 365; // Persistenza estesa a 1 anno
 
     /**
+     * Trova la riga header effettiva nel thead, skippando righe decorative (th-groups)
+     * e righe filtro (filter-row). Fallback a prima riga.
+     */
+    function getDataHeaderRow(table) {
+        const thead = table.querySelector('thead');
+        if (!thead) return null;
+        for (let i = 0; i < thead.rows.length; i++) {
+            const row = thead.rows[i];
+            if (!row.classList.contains('th-groups') && !row.classList.contains('filter-row')) {
+                return row;
+            }
+        }
+        return thead.rows[0] || null;
+    }
+
+    /**
      * Genera una chiave univoca per la tabella basata su ID o URL + posizione
      */
     function getTableKey(table) {
@@ -268,7 +284,7 @@
      * Applica le larghezze salvate alla tabella
      */
     function applySavedWidths(table, widths) {
-        const headerRow = table.querySelector('thead tr');
+        const headerRow = getDataHeaderRow(table);
         if (!headerRow) return;
 
         Array.from(headerRow.cells).forEach((cell, index) => {
@@ -307,7 +323,7 @@
      * Ottiene le larghezze attuali delle colonne
      */
     function getCurrentWidths(table) {
-        const headerRow = table.querySelector('thead tr');
+        const headerRow = getDataHeaderRow(table);
         if (!headerRow) return [];
 
         return Array.from(headerRow.cells).map(cell => {
@@ -319,7 +335,7 @@
      * Crea un handle di resize per una colonna
      */
     function createResizeHandle(table, columnIndex) {
-        const headerRow = table.querySelector('thead tr');
+        const headerRow = getDataHeaderRow(table);
         if (!headerRow || !headerRow.cells[columnIndex]) return null;
 
         const cell = headerRow.cells[columnIndex];
@@ -452,7 +468,7 @@
      * Questa funzione viene chiamata il prima possibile per evitare il flash visivo
      */
     function applySavedWidthsEarly(table) {
-        const headerRow = table.querySelector('thead tr');
+        const headerRow = getDataHeaderRow(table);
         if (!headerRow) return false;
 
         const tableKey = getTableKey(table);
@@ -559,7 +575,7 @@
             return;
         }
 
-        const headerRow = table.querySelector('thead tr');
+        const headerRow = getDataHeaderRow(table);
         if (!headerRow) return;
 
         // NUOVO: Controlla se le colonne hanno già larghezze CSS definite (percentuali)
@@ -748,7 +764,7 @@
             applyAutoColumnSizing(table);
         }
 
-        const headerRow = table.querySelector('thead tr');
+        const headerRow = getDataHeaderRow(table);
         if (!headerRow) return;
 
         // Preparazione UI per resize manuale
@@ -906,7 +922,7 @@
         } catch (e) { }
 
         // Rimuove stili width attuali
-        const headerRow = table.querySelector('thead tr');
+        const headerRow = getDataHeaderRow(table);
         if (headerRow) {
             Array.from(headerRow.cells).forEach(cell => {
                 cell.style.width = '';

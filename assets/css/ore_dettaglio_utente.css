@@ -140,10 +140,144 @@
     }
 }
 
+/* ── CHARTS ROW (3 colonne) ────────────────────────────────── */
+.oreuser-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+}
+
+/* ── PIE CHART ─────────────────────────────────────────────── */
+.orebu-pie-container {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 200px;
+}
+.oreuser-pie-compact {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 12px;
+    min-height: 0;
+}
+.oreuser-pie-compact .orebu-pie-wrap {
+    align-self: center;
+}
+.orebu-pie-wrap {
+    flex-shrink: 0;
+    width: 150px;
+    height: 150px;
+}
+.orebu-pie {
+    width: 100%;
+    height: 100%;
+}
+.orebu-pie-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+}
+.orebu-pie-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+}
+.orebu-pie-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.orebu-pie-legend-label {
+    flex: 1;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.orebu-pie-legend-value {
+    font-weight: 600;
+    color: #475569;
+}
+.orebu-pie-legend-pct {
+    width: 36px;
+    text-align: right;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+/* ── TREND SVG ─────────────────────────────────────────────── */
+.orebu-trend-wrap {
+    width: 100%;
+    height: 220px;
+    position: relative;
+}
+.orebu-trend {
+    width: 100%;
+    height: 100%;
+}
+.orebu-trend-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.orebu-trend-area {
+    opacity: 0.15;
+}
+.orebu-trend-dot {
+    r: 4;
+    cursor: pointer;
+    transition: r .15s;
+}
+.orebu-trend-dot:hover {
+    r: 6;
+}
+.orebu-trend-axis {
+    stroke: #e2e8f0;
+    stroke-width: 1;
+}
+.orebu-trend-label {
+    font-size: 11px;
+    fill: #94a3b8;
+}
+.orebu-trend-grid {
+    stroke: #f1f5f9;
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+}
+
 /* ── FILTER BAR INPUT DATE ──────────────────────────────────── */
 .dboard-input[type="date"] {
     width: 140px;
     padding-right: 8px;
+}
+
+/* ── RESPONSIVE CHARTS ROW ─────────────────────────────────── */
+@media (max-width: 1200px) {
+    .oreuser-charts-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .oreuser-charts-row > .dboard-card:last-child {
+        grid-column: 1 / -1;
+    }
+}
+@media (max-width: 768px) {
+    .oreuser-charts-row {
+        grid-template-columns: 1fr;
+    }
+    .oreuser-pie-compact {
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+    }
+    .orebu-pie-wrap {
+        width: 140px;
+        height: 140px;
+    }
 }
 
 /* ── RESPONSIVE USER CHIP ───────────────────────────────────── */

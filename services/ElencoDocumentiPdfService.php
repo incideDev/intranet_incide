@@ -16,6 +16,10 @@ class ElencoDocumentiPdfService
      *
      * @param array $input  Deve contenere: submittalId, idProject
      */
+    /**
+     * Genera il PDF della lettera di trasmissione e lo invia come download.
+     * Chiamato direttamente da service_router — esce con output binario.
+     */
     public static function streamPdf(array $input): void
     {
         if (!userHasPermission('view_commesse')) {
@@ -23,8 +27,6 @@ class ElencoDocumentiPdfService
             echo 'Permesso negato';
             exit;
         }
-
-        global $database;
 
         $submittalId = filter_var($input['submittalId'] ?? 0, FILTER_VALIDATE_INT);
         $idProject   = filter_var($input['idProject']   ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -35,6 +37,49 @@ class ElencoDocumentiPdfService
             exit;
         }
 
+        $result = self::renderPdf($submittalId, $idProject);
+        if (!$result) {
+            http_response_code(404);
+            echo 'Submittal non trovato';
+            exit;
+        }
+
+        // Pulisce qualsiasi output precedente
+        while (ob_get_level()) ob_end_clean();
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $result['filename'] . '"');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+
+        echo $result['bytes'];
+        exit;
+    }
+
+    /**
+     * Genera il PDF e restituisce i bytes (per allegato email).
+     * Restituisce null se i parametri non sono validi o il submittal non esiste.
+     */
+    public static function generatePdfBytes(array $input): ?string
+    {
+        $submittalId = filter_var($input['submittalId'] ?? 0, FILTER_VALIDATE_INT);
+        $idProject   = filter_var($input['idProject']   ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        if (!$submittalId || !$idProject) {
+            return null;
+        }
+
+        $result = self::renderPdf($submittalId, $idProject);
+        return $result ? $result['bytes'] : null;
+    }
+
+    /**
+     * Logica condivisa: carica dati e genera PDF.
+     * Restituisce ['bytes' => string, 'filename' => string] o null.
+     */
+    private static function renderPdf(int $submittalId, string $idProject): ?array
+    {
+        global $database;
+
         // ── Carica submittal ──────────────────────────────────────
         $sub = $database->query(
             "SELECT * FROM elenco_doc_submittals WHERE id = ? AND id_project = ? LIMIT 1",
@@ -43,9 +88,7 @@ class ElencoDocumentiPdfService
         )->fetch(\PDO::FETCH_ASSOC);
 
         if (!$sub) {
-            http_response_code(404);
-            echo 'Submittal non trovato';
-            exit;
+            return null;
         }
 
         // ── Carica documenti del submittal ────────────────────────
@@ -77,8 +120,13 @@ class ElencoDocumentiPdfService
             if ($row) $destNome = $row['Nominativo'];
         }
 
+        // ── Carica template categories per codice documento ────────
+        $tplResult = ElencoDocumentiService::getTemplate($idProject);
+        $tplCategories = ($tplResult['success'] && !empty($tplResult['data']['categories']))
+            ? $tplResult['data']['categories'] : [];
+
         // ── Costruisce HTML lettera ───────────────────────────────
-        $html = self::buildHtml($sub, $docs, $commessa, $destNome);
+        $html = self::buildHtml($sub, $docs, $commessa, $destNome, $tplCategories);
 
         // ── Genera PDF con DomPDF ─────────────────────────────────
         $options = new Options();
@@ -93,22 +141,14 @@ class ElencoDocumentiPdfService
 
         $filename = 'Trasmissione_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $sub['codice']) . '.pdf';
 
-        // Pulisce qualsiasi output precedente
-        while (ob_get_level()) ob_end_clean();
-
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Cache-Control: private, max-age=0, must-revalidate');
-
-        echo $dompdf->output();
-        exit;
+        return ['bytes' => $dompdf->output(), 'filename' => $filename];
     }
 
     // ─────────────────────────────────────────────────────────────
     // HTML della lettera
     // ─────────────────────────────────────────────────────────────
 
-    private static function buildHtml(array $sub, array $docs, ?array $commessa, string $destNome): string
+    private static function buildHtml(array $sub, array $docs, ?array $commessa, string $destNome, array $categories = []): string
     {
         $codice    = htmlspecialchars($sub['codice']      ?? '', ENT_QUOTES, 'UTF-8');
         $oggetto   = htmlspecialchars($sub['oggetto']     ?? '', ENT_QUOTES, 'UTF-8');
@@ -125,7 +165,7 @@ class ElencoDocumentiPdfService
         $rows = '';
         foreach ($docs as $i => $d) {
             $num  = $i + 1;
-            $code = htmlspecialchars(self::codeStr($d), ENT_QUOTES, 'UTF-8');
+            $code = htmlspecialchars(self::codeStr($d, $categories), ENT_QUOTES, 'UTF-8');
             $titolo = htmlspecialchars($d['titolo'] ?? '', ENT_QUOTES, 'UTF-8');
             $rev    = htmlspecialchars($d['revisione'] ?? '', ENT_QUOTES, 'UTF-8');
             $rows .= "
@@ -291,17 +331,22 @@ HTML;
 
     /**
      * Ricostruisce il codice documento dal record DB.
+     * Supports dynamic segments from template categories.
      */
-    private static function codeStr(array $d): string
+    private static function codeStr(array $d, array $categories = []): string
     {
-        $parts = array_filter([
-            $d['seg_fase'] ?? '',
-            $d['seg_zona'] ?? '',
-            $d['seg_disc'] ?? '',
-            $d['seg_tipo'] ?? '',
-            $d['seg_numero'] ? str_pad((string)(int)$d['seg_numero'], 4, '0', STR_PAD_LEFT) : '',
-            $d['revisione'] ?? '',
-        ]);
+        // If we have dynamic segments and categories, use them
+        $segments = !empty($d['segments'])
+            ? (is_string($d['segments']) ? (json_decode($d['segments'], true) ?: []) : $d['segments'])
+            : [];
+
+        $parts = [];
+        foreach ($categories as $cat) {
+            $val = $segments[$cat['key']] ?? '';
+            if ($val !== '') $parts[] = $val;
+        }
+        if ($d['seg_numero']) $parts[] = str_pad((string)(int)$d['seg_numero'], 4, '0', STR_PAD_LEFT);
+        if (!empty($d['revisione'])) $parts[] = $d['revisione'];
         return implode('-', $parts);
     }
 }

@@ -398,6 +398,11 @@ switch ($Page) {
         include 'views/includes/commesse/commessa.php';
         break;
 
+    case 'commessa_kanban':
+        $titolo_principale = 'Bacheca Commessa';
+        include 'views/commesse.php';
+        break;
+
     case 'commessa_crono':
         $titolo_principale = 'Cronoprogramma Commessa';
         include 'views/commessa_crono.php';

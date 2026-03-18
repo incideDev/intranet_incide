@@ -382,6 +382,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // ——— COMMESSA KANBAN: il "+" apre la modale nuova task ———
+    else if (currentPage === 'commessa_kanban') {
+        const modalNuovaTask = document.getElementById('modal-nuova-task');
+        if (modalNuovaTask) {
+            addButton.classList.remove("disabled");
+            addButton.replaceWith(addButton.cloneNode(true));
+            document.getElementById("addButton").addEventListener("click", () => {
+                const form = document.getElementById('form-nuova-task');
+                if (form) form.reset();
+                toggleModal('modal-nuova-task', 'open');
+            });
+        }
+    }
+
     // ——— COMMESSA (dashboard): il "+" abilita subito 'gestione_cantiere' e aggiunge la card ———
     else if (currentPage === 'commessa' && !urlParams.get('view')) {
         const grid = document.querySelector('.commessa-grid');

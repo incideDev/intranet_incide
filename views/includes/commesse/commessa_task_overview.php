@@ -59,7 +59,7 @@ function getPriorityBadgeClass($priority) {
             <div class="commessa-card-title">Task Recenti</div>
             <div class="commessa-card-subtitle"><?= count($tasks) ?> task visualizzate</div>
         </div>
-        <a href="index.php?section=commesse&page=commessa_task&tabella=<?= urlencode($tabella) ?>"
+        <a href="index.php?section=commesse&page=commessa_kanban&tabella=<?= urlencode($tabella) ?>"
            class="commessa-cta">
             <img src="/assets/icons/kanban.png" alt="" class="commessa-cta-icon">
             Apri Kanban
@@ -120,7 +120,7 @@ function getPriorityBadgeClass($priority) {
 
         <!-- Footer con link -->
         <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e9ecef;">
-            <a href="index.php?section=commesse&page=commessa_task&tabella=<?= urlencode($tabella) ?>"
+            <a href="index.php?section=commesse&page=commessa_kanban&tabella=<?= urlencode($tabella) ?>"
                class="commessa-cta secondary">
                 Vedi tutte le task
             </a>
@@ -131,7 +131,7 @@ function getPriorityBadgeClass($priority) {
         <div class="commessa-empty">
             <h3>Nessuna task presente</h3>
             <p>Inizia creando la prima task per questa commessa.</p>
-            <a href="index.php?section=commesse&page=commessa_task&tabella=<?= urlencode($tabella) ?>"
+            <a href="index.php?section=commesse&page=commessa_kanban&tabella=<?= urlencode($tabella) ?>"
                class="commessa-cta">
                 <img src="/assets/icons/plus.png" alt="" class="commessa-cta-icon">
                 Crea prima task

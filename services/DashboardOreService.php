@@ -1849,7 +1849,8 @@ class DashboardOreService
         $userInfo = [
             'id' => $resourceCode,
             'name' => $resolvedNominativo ?: $resourceCode,
-            'role' => $resolvedRuolo ?: ''
+            'role' => $resolvedRuolo ?: '',
+            'profile_picture' => $resolvedNominativo ? getProfileImage($resolvedNominativo, 'nominativo') : null
         ];
 
         // Se non abbiamo nominativo da personale, prova project_time
@@ -2056,6 +2057,98 @@ class DashboardOreService
         return [
             'success' => true,
             'data' => $trend,
+        ];
+    }
+
+    /**
+     * getCommessaOreSummary - Riepilogo ore per una singola commessa (widget leggero).
+     * Restituisce: ore totali, budget, residue, percentuale + breakdown per risorsa.
+     * Non richiede filtri data: aggrega TUTTE le ore della commessa.
+     *
+     * @param string $codiceCommessa Codice commessa (idProject in project_time)
+     * @return array ['success' => bool, 'data' => [...]]
+     */
+    public static function getCommessaOreSummary(string $codiceCommessa): array
+    {
+        global $database;
+
+        if ($codiceCommessa === '') {
+            return ['success' => false, 'message' => 'Codice commessa mancante'];
+        }
+
+        // 1. Ore totali consumate
+        $totalResult = $database->query(
+            "SELECT
+                COALESCE(SUM(pt.totalHours), 0) AS totalHours,
+                COALESCE(SUM(pt.travelHours), 0) AS travelHours,
+                COUNT(DISTINCT pt.idHResource) AS resourceCount
+             FROM project_time pt
+             WHERE BINARY pt.idProject = ?",
+            [$codiceCommessa],
+            __FILE__
+        )->fetch(\PDO::FETCH_ASSOC);
+
+        $consumate = round(floatval($totalResult['totalHours']), 1);
+        $travelHours = round(floatval($totalResult['travelHours']), 1);
+        $resourceCount = intval($totalResult['resourceCount']);
+
+        // 2. Budget (da project_time_budget se esiste)
+        $budgetTotale = 0;
+        try {
+            $budgetResult = $database->query(
+                "SELECT COALESCE(SUM(b.budgetTotalHours), 0) AS budgetHours
+                 FROM project_time_budget b
+                 WHERE BINARY b.idProject = ?",
+                [$codiceCommessa],
+                __FILE__
+            )->fetch(\PDO::FETCH_ASSOC);
+            $budgetTotale = round(floatval($budgetResult['budgetHours']), 1);
+        } catch (\Exception $e) {
+            // Tabella budget non esiste - budget resta 0
+        }
+
+        // Calcoli derivati
+        $residue = $budgetTotale > 0 ? round($budgetTotale - $consumate, 1) : 0;
+        $percentuale = $budgetTotale > 0 ? round(($consumate / $budgetTotale) * 100, 0) : 0;
+
+        // 3. Breakdown per risorsa (top 10)
+        $risorseResult = $database->query(
+            "SELECT
+                pt.idHResource,
+                pt.resourceDesc,
+                SUM(pt.totalHours) AS totalHours,
+                SUM(pt.travelHours) AS travelHours
+             FROM project_time pt
+             WHERE BINARY pt.idProject = ?
+             GROUP BY pt.idHResource, pt.resourceDesc
+             ORDER BY totalHours DESC
+             LIMIT 10",
+            [$codiceCommessa],
+            __FILE__
+        )->fetchAll(\PDO::FETCH_ASSOC);
+
+        $risorse = array_map(function ($r) use ($budgetTotale, $consumate) {
+            $ore = round(floatval($r['totalHours']), 1);
+            return [
+                'idResource' => $r['idHResource'],
+                'nome' => $r['resourceDesc'] ?: $r['idHResource'],
+                'ore' => $ore,
+                'percentualeSuTotale' => $consumate > 0 ? round(($ore / $consumate) * 100, 0) : 0,
+            ];
+        }, $risorseResult);
+
+        return [
+            'success' => true,
+            'data' => [
+                'consumate' => $consumate,
+                'budget' => $budgetTotale,
+                'residue' => $residue,
+                'percentuale' => $percentuale,
+                'hasBudget' => $budgetTotale > 0,
+                'travelHours' => $travelHours,
+                'resourceCount' => $resourceCount,
+                'risorse' => $risorse,
+            ],
         ];
     }
 }

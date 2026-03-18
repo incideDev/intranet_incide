@@ -22,6 +22,36 @@ class ElencoDocumentiService
      * Main action router for elenco_documenti section
      * Follows project pattern: handleAction($action, $input)
      */
+    /**
+     * Decodes the categories from a template row.
+     * Reads from the `categories` JSON column.
+     */
+    private static function decodeCategories(array $template): array
+    {
+        if (!empty($template['categories'])) {
+            $cats = json_decode($template['categories'], true);
+            if (is_array($cats)) {
+                return $cats;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Builds a dynamic document code from segments + categories order.
+     */
+    private static function buildCodeFromSegments(string $idProject, array $segments, array $categories, int $num, string $rev): string
+    {
+        $parts = [$idProject];
+        foreach ($categories as $cat) {
+            $parts[] = $segments[$cat['key']] ?? '';
+        }
+        $parts[] = str_pad($num, 4, '0', STR_PAD_LEFT);
+        $parts[] = $rev;
+        return implode('-', $parts);
+    }
+
     public static function handleAction($action, $input)
     {
         switch ($action) {
@@ -34,10 +64,24 @@ class ElencoDocumentiService
 
             case 'getTemplate':
                 $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-                return self::getTemplate($idProject);
+                $templateId = isset($input['templateId']) ? (int)$input['templateId'] : null;
+                return self::getTemplate($idProject, $templateId);
 
             case 'saveTemplate':
                 return self::saveTemplate($input);
+
+            case 'getTemplateList':
+                $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+                return self::getTemplateList($idProject);
+
+            case 'applyTemplate':
+                return self::applyTemplate($input);
+
+            case 'duplicateTemplate':
+                return self::duplicateTemplate($input);
+
+            case 'deleteTemplate':
+                return self::deleteTemplate($input);
 
             case 'getSections':
                 $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -72,6 +116,9 @@ class ElencoDocumentiService
             case 'sendMail':
                 return self::sendMail($input);
 
+            case 'exportExcel':
+                return self::exportExcel($input);
+
             // ── Nextcloud ──────────────────────────────────────────
             case 'listNcFolder':
                 $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -88,6 +135,25 @@ class ElencoDocumentiService
 
             case 'deleteNcFile':
                 return self::deleteNcFile($input);
+
+            // ── Repository ──────────────────────────────────────────
+            case 'listRepoFolders':
+                $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+                return self::listRepoFolders($idProject);
+
+            case 'listRepoFiles':
+                $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+                $folder = filter_var($input['folder'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+                return self::listRepoFiles($idProject, $folder);
+
+            case 'moveRepoFile':
+                return self::moveRepoFile($input);
+
+            case 'deleteRepoFile':
+                return self::deleteRepoFile($input);
+
+            case 'uploadRepoFile':
+                return self::uploadRepoFile($input);
 
             default:
                 return ['success' => false, 'message' => "Action '{$action}' non riconosciuta"];
@@ -173,9 +239,11 @@ class ElencoDocumentiService
     // ─────────────────────────────────────────────────────────────
 
     /**
-     * Restituisce il template attivo per la commessa (o il globale se non esiste).
+     * Returns the active template for a project.
+     * If $templateId is given, fetches that specific template (for editor).
+     * Otherwise looks up the project's assigned template, falling back to global.
      */
-    public static function getTemplate(string $idProject): array
+    public static function getTemplate(string $idProject, ?int $templateId = null): array
     {
         global $database;
 
@@ -183,42 +251,62 @@ class ElencoDocumentiService
             return ['success' => false, 'message' => 'Permesso negato'];
         }
 
-        // Prima cerca template specifico per commessa
-        $sql = "SELECT * FROM elenco_doc_commessa WHERE id_project = ? AND is_global = 0 LIMIT 1";
-        $stmt = $database->query($sql, [$idProject], __FILE__);
-        $template = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        // Se non esiste, usa il globale
-        if (!$template) {
-            $sql = "SELECT * FROM elenco_doc_commessa WHERE is_global = 1 LIMIT 1";
-            $stmt = $database->query($sql, [], __FILE__);
+        if ($templateId) {
+            // Fetch specific template by ID (for editing)
+            $sql = "SELECT * FROM elenco_doc_commessa WHERE id = ? LIMIT 1";
+            $stmt = $database->query($sql, [$templateId], __FILE__);
             $template = $stmt->fetch(\PDO::FETCH_ASSOC);
+        } else {
+            // Look up project's assigned template
+            $sql = "
+                SELECT t.* FROM elenco_doc_commessa t
+                INNER JOIN elenco_doc_project_template pt ON pt.template_id = t.id
+                WHERE pt.id_project = ?
+                LIMIT 1
+            ";
+            $stmt = $database->query($sql, [$idProject], __FILE__);
+            $template = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            // Fallback: global template
+            if (!$template) {
+                $sql = "SELECT * FROM elenco_doc_commessa WHERE is_global = 1 ORDER BY id LIMIT 1";
+                $stmt = $database->query($sql, [], __FILE__);
+                $template = $stmt->fetch(\PDO::FETCH_ASSOC);
+            }
         }
 
         if (!$template) {
-            // Restituisci template vuoto di default
+            $defaultCategories = [
+                ['key' => 'fase', 'label' => 'Fase', 'items' => [
+                    ['cod' => 'PP', 'desc' => 'PP'], ['cod' => 'PD', 'desc' => 'PD'],
+                    ['cod' => 'PE', 'desc' => 'PE'], ['cod' => 'ES', 'desc' => 'ES']
+                ]],
+                ['key' => 'zona', 'label' => 'Zona', 'items' => [
+                    ['cod' => 'GG', 'desc' => 'GG'], ['cod' => '00', 'desc' => '00'],
+                    ['cod' => '01', 'desc' => '01'], ['cod' => '02', 'desc' => '02']
+                ]],
+                ['key' => 'disc', 'label' => 'Disciplina', 'items' => [
+                    ['cod' => 'GE', 'desc' => 'GE'], ['cod' => 'AR', 'desc' => 'AR'],
+                    ['cod' => 'SA', 'desc' => 'SA'], ['cod' => 'EE', 'desc' => 'EE'], ['cod' => 'MA', 'desc' => 'MA']
+                ]],
+                ['key' => 'tipo', 'label' => 'Tipo', 'items' => [
+                    ['cod' => 'RT', 'desc' => 'Relazione tecnica'],
+                    ['cod' => 'E1', 'desc' => 'Piante'],
+                    ['cod' => 'E2', 'desc' => 'Sezioni']
+                ]]
+            ];
             return [
                 'success' => true,
                 'data' => [
                     'id' => null,
-                    'nome_template' => 'Nuovo Template',
-                    'fasi' => ['PP', 'PD', 'PE', 'ES'],
-                    'zone' => ['GG', '00', '01', '02'],
-                    'discipline' => ['GE', 'AR', 'SA', 'EE', 'MA'],
-                    'tipi_documento' => [
-                        ['cod' => 'RT', 'desc' => 'Relazione tecnica', 'tipo' => 'Report'],
-                        ['cod' => 'E1', 'desc' => 'Piante', 'tipo' => 'Disegno'],
-                        ['cod' => 'E2', 'desc' => 'Sezioni', 'tipo' => 'Disegno']
-                    ]
+                    'nome_template' => 'Nessun Template',
+                    'categories' => $defaultCategories
                 ]
             ];
         }
 
-        // Decodifica JSON
-        $template['fasi'] = json_decode($template['fasi'] ?? '[]', true) ?: [];
-        $template['zone'] = json_decode($template['zone'] ?? '[]', true) ?: [];
-        $template['discipline'] = json_decode($template['discipline'] ?? '[]', true) ?: [];
-        $template['tipi_documento'] = json_decode($template['tipi_documento'] ?? '[]', true) ?: [];
+        // Decode categories (new format or fallback to old columns)
+        $template['categories'] = self::decodeCategories($template);
 
         return ['success' => true, 'data' => $template];
     }
@@ -237,10 +325,35 @@ class ElencoDocumentiService
         $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $nomeTemplate = filter_var($input['nomeTemplate'] ?? 'Template', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $isGlobal = !empty($input['isGlobal']) ? 1 : 0;
-        $fasi = json_encode($input['fasi'] ?? []);
-        $zone = json_encode($input['zone'] ?? []);
-        $discipline = json_encode($input['discipline'] ?? []);
-        $tipiDocumento = json_encode($input['tipiDocumento'] ?? []);
+
+        // Accept categories array (new dynamic format)
+        $categoriesRaw = $input['categories'] ?? [];
+        // Sanitize category keys and labels
+        $categories = [];
+        foreach ($categoriesRaw as $cat) {
+            $key = preg_replace('/[^a-z0-9_]/', '', strtolower($cat['key'] ?? ''));
+            if (empty($key)) continue;
+            $categories[] = [
+                'key' => $key,
+                'label' => filter_var($cat['label'] ?? $key, FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'items' => array_map(function ($item) {
+                    return [
+                        'cod' => filter_var($item['cod'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                        'desc' => filter_var($item['desc'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                    ];
+                }, $cat['items'] ?? [])
+            ];
+        }
+        // Validate unique keys
+        $seenKeys = [];
+        foreach ($categories as $cat) {
+            if (in_array($cat['key'], $seenKeys)) {
+                return ['success' => false, 'message' => 'Chiave categoria duplicata: ' . $cat['key']];
+            }
+            $seenKeys[] = $cat['key'];
+        }
+
+        $categoriesJson = json_encode($categories, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         if (!$idProject && !$isGlobal) {
             return ['success' => false, 'message' => 'idProject obbligatorio per template non globale'];
@@ -252,25 +365,176 @@ class ElencoDocumentiService
             // UPDATE
             $sql = "
                 UPDATE elenco_doc_commessa
-                SET nome_template = ?, fasi = ?, zone = ?, discipline = ?, tipi_documento = ?, updated_at = NOW()
+                SET nome_template = ?, categories = ?, updated_at = NOW()
                 WHERE id = ?
             ";
-            $database->query($sql, [$nomeTemplate, $fasi, $zone, $discipline, $tipiDocumento, $templateId], __FILE__);
+            $database->query($sql, [$nomeTemplate, $categoriesJson, $templateId], __FILE__);
         } else {
-            // INSERT
+            // INSERT — new templates are always global/shared
             $sql = "
                 INSERT INTO elenco_doc_commessa
-                    (id_project, nome_template, is_global, fasi, zone, discipline, tipi_documento)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                    (id_project, nome_template, is_global, categories)
+                VALUES ('GLOBAL', ?, 1, ?)
             ";
             $database->query($sql, [
-                $isGlobal ? 'GLOBAL' : $idProject,
-                $nomeTemplate, $isGlobal, $fasi, $zone, $discipline, $tipiDocumento
+                $nomeTemplate, $categoriesJson
             ], __FILE__);
             $templateId = $database->lastInsertId();
         }
 
-        return ['success' => true, 'templateId' => $templateId];
+        // Return full updated template data
+        return self::getTemplate('', (int)$templateId);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 3b. TEMPLATE MANAGEMENT (list, apply, duplicate, delete)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Returns all templates with in_use flag and used_by_count for the given project.
+     */
+    public static function getTemplateList(string $idProject): array
+    {
+        global $database;
+
+        if (!userHasPermission('view_commesse')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        // Get all templates with usage count
+        $sql = "
+            SELECT t.*,
+                   COUNT(pt.id_project) AS used_by_count
+            FROM elenco_doc_commessa t
+            LEFT JOIN elenco_doc_project_template pt ON pt.template_id = t.id
+            GROUP BY t.id
+            ORDER BY t.is_global DESC, t.nome_template ASC
+        ";
+        $stmt = $database->query($sql, [], __FILE__);
+        $templates = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Get active template for this project
+        $sqlActive = "SELECT template_id FROM elenco_doc_project_template WHERE id_project = ? LIMIT 1";
+        $stmtActive = $database->query($sqlActive, [$idProject], __FILE__);
+        $activeRow = $stmtActive->fetch(\PDO::FETCH_ASSOC);
+        $activeId = $activeRow ? (int)$activeRow['template_id'] : null;
+
+        // Decode categories and add flags
+        foreach ($templates as &$t) {
+            $t['categories'] = self::decodeCategories($t);
+            $t['in_use'] = ((int)$t['id'] === $activeId);
+            $t['used_by_count'] = (int)$t['used_by_count'];
+        }
+
+        return ['success' => true, 'data' => $templates];
+    }
+
+    /**
+     * Associates a template to a project (upsert).
+     */
+    public static function applyTemplate(array $input): array
+    {
+        global $database;
+
+        if (!userHasPermission('edit_commessa')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $templateId = isset($input['templateId']) ? (int)$input['templateId'] : null;
+
+        if (!$idProject || !$templateId) {
+            return ['success' => false, 'message' => 'idProject e templateId obbligatori'];
+        }
+
+        // Verify template exists
+        $sql = "SELECT id FROM elenco_doc_commessa WHERE id = ? LIMIT 1";
+        $stmt = $database->query($sql, [$templateId], __FILE__);
+        if (!$stmt->fetch()) {
+            return ['success' => false, 'message' => 'Template non trovato'];
+        }
+
+        // Upsert association
+        $sql = "
+            INSERT INTO elenco_doc_project_template (id_project, template_id, assigned_at)
+            VALUES (?, ?, NOW())
+            ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), assigned_at = NOW()
+        ";
+        $database->query($sql, [$idProject, $templateId], __FILE__);
+
+        return ['success' => true];
+    }
+
+    /**
+     * Duplicates a template with a new name.
+     */
+    public static function duplicateTemplate(array $input): array
+    {
+        global $database;
+
+        if (!userHasPermission('edit_commessa')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $templateId = isset($input['templateId']) ? (int)$input['templateId'] : null;
+        if (!$templateId) {
+            return ['success' => false, 'message' => 'templateId obbligatorio'];
+        }
+
+        // Fetch source template
+        $sql = "SELECT * FROM elenco_doc_commessa WHERE id = ? LIMIT 1";
+        $stmt = $database->query($sql, [$templateId], __FILE__);
+        $source = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$source) {
+            return ['success' => false, 'message' => 'Template sorgente non trovato'];
+        }
+
+        $newName = filter_var(
+            $input['nomeTemplate'] ?? ('Copia di ' . $source['nome_template']),
+            FILTER_SANITIZE_FULL_SPECIAL_CHARS
+        );
+
+        // Insert clone as global
+        $sql = "
+            INSERT INTO elenco_doc_commessa
+                (id_project, nome_template, is_global, categories)
+            VALUES ('GLOBAL', ?, 1, ?)
+        ";
+        $database->query($sql, [
+            $newName, $source['categories']
+        ], __FILE__);
+        $newId = $database->lastInsertId();
+
+        return ['success' => true, 'data' => ['id' => $newId, 'nome_template' => $newName]];
+    }
+
+    /**
+     * Deletes a template if not used by any project.
+     */
+    public static function deleteTemplate(array $input): array
+    {
+        global $database;
+
+        if (!userHasPermission('edit_commessa')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $templateId = isset($input['templateId']) ? (int)$input['templateId'] : null;
+        if (!$templateId) {
+            return ['success' => false, 'message' => 'templateId obbligatorio'];
+        }
+
+        // Check usage
+        $sql = "SELECT COUNT(*) AS cnt FROM elenco_doc_project_template WHERE template_id = ?";
+        $stmt = $database->query($sql, [$templateId], __FILE__);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if ((int)($row['cnt'] ?? 0) > 0) {
+            return ['success' => false, 'message' => 'Impossibile eliminare: template in uso da ' . $row['cnt'] . ' commesse'];
+        }
+
+        $database->query("DELETE FROM elenco_doc_commessa WHERE id = ?", [$templateId], __FILE__);
+
+        return ['success' => true];
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -422,24 +686,22 @@ class ElencoDocumentiService
             ];
         }
 
-        // Ottieni template lookups
+        // Ottieni template lookups (dynamic categories)
         $templateResult = self::getTemplate($idProject);
-        $lookups = [];
+        $categories = [];
+        $templateName = '';
         if ($templateResult['success'] && !empty($templateResult['data'])) {
             $t = $templateResult['data'];
-            $lookups = [
-                'fasi' => $t['fasi'] ?? [],
-                'zone' => $t['zone'] ?? [],
-                'discipline' => $t['discipline'] ?? [],
-                'tipi_documento' => $t['tipi_documento'] ?? []
-            ];
+            $categories = $t['categories'] ?? [];
+            $templateName = $t['nome_template'] ?? '';
         }
 
         return [
             'success' => true,
             'data' => [
                 'sections' => $result,
-                'lookups' => $lookups
+                'categories' => $categories,
+                'template_name' => $templateName
             ]
         ];
     }
@@ -458,10 +720,16 @@ class ElencoDocumentiService
         $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $docId = filter_var($input['docId'] ?? null, FILTER_VALIDATE_INT) ?: null;
         $idSection = filter_var($input['idSection'] ?? null, FILTER_VALIDATE_INT);
-        $segFase = filter_var($input['segFase'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $segZona = filter_var($input['segZona'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $segDisc = filter_var($input['segDisc'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $segTipo = filter_var($input['segTipo'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        // Dynamic segments (new format)
+        $segmentsRaw = $input['segments'] ?? [];
+        $segments = [];
+        foreach ($segmentsRaw as $k => $v) {
+            $key = preg_replace('/[^a-z0-9_]/', '', strtolower($k));
+            $segments[$key] = filter_var($v, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        }
+        $segmentsJson = json_encode($segments, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
         $segNumero = filter_var($input['segNumero'] ?? 1, FILTER_VALIDATE_INT) ?: 1;
         $titolo = filter_var($input['titolo'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $tipoDocumento = filter_var($input['tipoDocumento'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -482,11 +750,21 @@ class ElencoDocumentiService
             return ['success' => false, 'message' => 'Campi obbligatori mancanti'];
         }
 
+        // Capture old doc data BEFORE update for NC folder rename
+        $oldDocData = null;
+        if ($docId) {
+            $oldDocStmt = $database->query(
+                "SELECT segments, seg_numero, revisione, titolo FROM elenco_doc_documents WHERE id = ?",
+                [$docId], __FILE__
+            );
+            $oldDocData = !empty($oldDocStmt[0]) ? $oldDocStmt[0] : null;
+        }
+
         if ($docId) {
             // UPDATE
             $sql = "
                 UPDATE elenco_doc_documents SET
-                    id_section = ?, seg_fase = ?, seg_zona = ?, seg_disc = ?, seg_tipo = ?, seg_numero = ?,
+                    id_section = ?, segments = ?, seg_numero = ?,
                     titolo = ?, tipo_documento = ?, responsabile = ?, output_software = ?,
                     avanzamento_pct = ?, stato = ?, revisione = ?,
                     data_inizio = ?, data_fine_prev = ?, data_emissione = ?,
@@ -494,7 +772,7 @@ class ElencoDocumentiService
                 WHERE id = ? AND id_project = ?
             ";
             $database->query($sql, [
-                $idSection, $segFase, $segZona, $segDisc, $segTipo, $segNumero,
+                $idSection, $segmentsJson, $segNumero,
                 $titolo, $tipoDocumento, $responsabile, $outputSoftware,
                 $avanzamentoPct, $stato, $revisione,
                 $dataInizio, $dataFinePrev, $dataEmissione,
@@ -504,15 +782,15 @@ class ElencoDocumentiService
             // INSERT
             $sql = "
                 INSERT INTO elenco_doc_documents
-                    (id_project, id_section, seg_fase, seg_zona, seg_disc, seg_tipo, seg_numero,
+                    (id_project, id_section, segments, seg_numero,
                      titolo, tipo_documento, responsabile, output_software,
                      avanzamento_pct, stato, revisione,
                      data_inizio, data_fine_prev, data_emissione,
                      id_submittal, nc_files, note)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $database->query($sql, [
-                $idProject, $idSection, $segFase, $segZona, $segDisc, $segTipo, $segNumero,
+                $idProject, $idSection, $segmentsJson, $segNumero,
                 $titolo, $tipoDocumento, $responsabile, $outputSoftware,
                 $avanzamentoPct, $stato, $revisione,
                 $dataInizio, $dataFinePrev, $dataEmissione,
@@ -521,7 +799,66 @@ class ElencoDocumentiService
             $docId = $database->lastInsertId();
         }
 
-        return ['success' => true, 'docId' => (int)$docId];
+        // Auto-creazione/rename cartella Nextcloud
+        $ncWarning = null;
+        // Load template categories for folder name building
+        $tplResult = self::getTemplate($idProject);
+        $tplCategories = ($tplResult['success'] && !empty($tplResult['data']['categories']))
+            ? $tplResult['data']['categories'] : [];
+        try {
+            $newFolderName = self::buildNcFolderName($idProject, $segments, $tplCategories, $segNumero, $revisione, $titolo);
+            $ncBasePath = self::NC_ROOT . $idProject . '/';
+
+            if (!empty($input['docId']) && $oldDocData) {
+                // UPDATE: controlla se il codice è cambiato e rinomina
+                // Uses $oldDocData captured BEFORE the UPDATE
+                $od = $oldDocData;
+                $oldSegments = !empty($od['segments'])
+                    ? (json_decode($od['segments'], true) ?: [])
+                    : [];
+                $oldFolderName = self::buildNcFolderName($idProject, $oldSegments, $tplCategories, $od['seg_numero'], $od['revisione'], $od['titolo']);
+                if ($oldFolderName !== $newFolderName) {
+                    try {
+                        \Services\Nextcloud\NextcloudService::movePath(
+                            $ncBasePath . $oldFolderName,
+                            $ncBasePath . $newFolderName
+                        );
+                    } catch (\Exception $e) {
+                        // Se il move fallisce, prova a creare la nuova cartella
+                        try {
+                            \Services\Nextcloud\NextcloudService::ensureFolderExists($ncBasePath . $newFolderName . '/');
+                        } catch (\Exception $e2) {
+                            $ncWarning = 'Impossibile rinominare/creare cartella Nextcloud: ' . $e2->getMessage();
+                        }
+                    }
+                }
+            } else {
+                // INSERT: crea cartella
+                try {
+                    \Services\Nextcloud\NextcloudService::ensureFolderExists($ncBasePath);
+                    \Services\Nextcloud\NextcloudService::ensureFolderExists($ncBasePath . $newFolderName . '/');
+                } catch (\Exception $e) {
+                    $ncWarning = 'Impossibile creare cartella Nextcloud: ' . $e->getMessage();
+                }
+            }
+        } catch (\Exception $e) {
+            $ncWarning = 'Errore Nextcloud: ' . $e->getMessage();
+        }
+
+        $response = ['success' => true, 'docId' => (int)$docId];
+        if ($ncWarning) $response['nc_warning'] = $ncWarning;
+        return $response;
+    }
+
+    /**
+     * Costruisce il nome cartella Nextcloud per un documento.
+     * Supports dynamic segments from template categories.
+     */
+    private static function buildNcFolderName($idProject, $segments, $categories, $num, $rev, $titolo)
+    {
+        $code = self::buildCodeFromSegments($idProject, $segments, $categories, (int)$num, $rev);
+        $safeName = preg_replace('/[<>:"\/\\\\|?*]/', '_', $code . ' - ' . $titolo);
+        return trim($safeName);
     }
 
     /**
@@ -595,15 +932,15 @@ class ElencoDocumentiService
         // Crea nuovo documento IN REVISIONE con stessi dati
         $sql = "
             INSERT INTO elenco_doc_documents
-                (id_project, id_section, seg_fase, seg_zona, seg_disc, seg_tipo, seg_numero,
+                (id_project, id_section, segments, seg_numero,
                  titolo, tipo_documento, responsabile, output_software,
                  avanzamento_pct, stato, revisione,
                  data_inizio, data_fine_prev, nc_files, note)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'IN REVISIONE', ?, NULL, NULL, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'IN REVISIONE', ?, NULL, NULL, ?, ?)
         ";
         $database->query($sql, [
             $doc['id_project'], $doc['id_section'],
-            $doc['seg_fase'], $doc['seg_zona'], $doc['seg_disc'], $doc['seg_tipo'], $doc['seg_numero'],
+            $doc['segments'], $doc['seg_numero'],
             $doc['titolo'], $doc['tipo_documento'], $doc['responsabile'], $doc['output_software'],
             $newRev, $doc['nc_files'], $doc['note']
         ], __FILE__);
@@ -680,7 +1017,8 @@ class ElencoDocumentiService
         $oggetto = filter_var($input['oggetto'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $destinatario = filter_var($input['destinatario'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $cc = filter_var($input['cc'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $scopo = in_array($input['scopo'] ?? '', ['email', 'PEC', 'portale']) ? $input['scopo'] : 'email';
+        $scopo = filter_var($input['scopo'] ?? 'Per approvazione', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $modalita = filter_var($input['modalita'] ?? 'E-mail', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $riferimentoRup = filter_var($input['riferimentoRup'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $riferimentoImp = filter_var($input['riferimentoImp'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $dataConsegna = $input['dataConsegna'] ?: null;
@@ -697,14 +1035,14 @@ class ElencoDocumentiService
             $sql = "
                 UPDATE elenco_doc_submittals SET
                     codice = ?, seg_tipo = ?, seg_lettera = ?, oggetto = ?,
-                    destinatario = ?, cc = ?, scopo = ?,
+                    destinatario = ?, cc = ?, scopo = ?, modalita = ?,
                     riferimento_rup = ?, riferimento_imp = ?,
                     data_consegna = ?, stato = ?, note = ?, updated_at = NOW()
                 WHERE id = ? AND id_project = ?
             ";
             $database->query($sql, [
                 $codice, $segTipo, $segLettera, $oggetto,
-                $destinatario, $cc, $scopo,
+                $destinatario, $cc, $scopo, $modalita,
                 $riferimentoRup, $riferimentoImp,
                 $dataConsegna, $stato, $note, $subId, $idProject
             ], __FILE__);
@@ -713,13 +1051,13 @@ class ElencoDocumentiService
             $sql = "
                 INSERT INTO elenco_doc_submittals
                     (id_project, codice, seg_tipo, seg_lettera, oggetto,
-                     destinatario, cc, scopo, riferimento_rup, riferimento_imp,
+                     destinatario, cc, scopo, modalita, riferimento_rup, riferimento_imp,
                      data_consegna, stato, note)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $database->query($sql, [
                 $idProject, $codice, $segTipo, $segLettera, $oggetto,
-                $destinatario, $cc, $scopo, $riferimentoRup, $riferimentoImp,
+                $destinatario, $cc, $scopo, $modalita, $riferimentoRup, $riferimentoImp,
                 $dataConsegna, $stato, $note
             ], __FILE__);
             $subId = $database->lastInsertId();
@@ -767,8 +1105,8 @@ class ElencoDocumentiService
         $ccRaw = $input['cc'] ?? '';
         $subject = filter_var($input['subject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $body = $input['body'] ?? '';
-        $pdfB64 = $input['pdfB64'] ?? null;
-        $subCode = filter_var($input['subCode'] ?? 'submittal', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $submittalId = filter_var($input['submittalId'] ?? 0, FILTER_VALIDATE_INT);
+        $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
         if (!$to || !$subject) {
             return ['success' => false, 'message' => 'Destinatario e oggetto obbligatori'];
@@ -823,10 +1161,18 @@ class ElencoDocumentiService
                 $mail->addCC($addr);
             }
 
-            // Add PDF attachment if provided
-            if ($pdfB64) {
-                $pdfBytes = base64_decode($pdfB64);
-                if ($pdfBytes !== false) {
+            // Generate and attach PDF from submittal
+            if ($submittalId && $idProject) {
+                $pdfBytes = ElencoDocumentiPdfService::generatePdfBytes([
+                    'submittalId' => $submittalId,
+                    'idProject'   => $idProject
+                ]);
+                if ($pdfBytes) {
+                    $sub = $database->query(
+                        "SELECT codice FROM elenco_doc_submittals WHERE id = ? LIMIT 1",
+                        [$submittalId], __FILE__
+                    )->fetch(\PDO::FETCH_ASSOC);
+                    $subCode = preg_replace('/[^A-Za-z0-9_\-]/', '_', $sub['codice'] ?? 'submittal');
                     $filename = "Trasmissione_{$subCode}.pdf";
                     $mail->addStringAttachment($pdfBytes, $filename, 'base64', 'application/pdf');
                 }
@@ -1048,5 +1394,277 @@ class ElencoDocumentiService
         }
 
         return ['success' => true];
+    }
+
+    // ── Export Excel ──────────────────────────────────────────
+
+    private static function exportExcel($input)
+    {
+        global $database;
+
+        if (!userHasPermission('view_commesse')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if (empty($idProject)) {
+            return ['success' => false, 'message' => 'idProject obbligatorio'];
+        }
+
+        $docs = $database->query(
+            "SELECT d.*, s.nome as section_name
+             FROM elenco_doc_documents d
+             LEFT JOIN elenco_doc_sections s ON s.id = d.id_section
+             WHERE d.id_project = ?
+             ORDER BY s.ordine, s.id, d.seg_numero",
+            [$idProject], __FILE__
+        );
+
+        // Get template categories for dynamic columns
+        $tplResult = self::getTemplate($idProject);
+        $tplCategories = ($tplResult['success'] && !empty($tplResult['data']['categories']))
+            ? $tplResult['data']['categories'] : [];
+
+        // Build dynamic header: Sezione + [category labels] + Numero + Rev + Codice + ...
+        $header = ['<b>Sezione</b>'];
+        foreach ($tplCategories as $cat) {
+            $header[] = '<b>' . htmlspecialchars($cat['label']) . '</b>';
+        }
+        $header = array_merge($header, [
+            '<b>Numero</b>','<b>Rev</b>','<b>Codice</b>','<b>Titolo</b>',
+            '<b>Tipo Documento</b>','<b>Resp.</b>','<b>Output</b>',
+            '<b>Stato</b>','<b>Avanzamento %</b>',
+            '<b>Data Inizio</b>','<b>Data Fine Prev.</b>','<b>Data Emissione</b>'
+        ]);
+
+        $rows = [$header];
+        foreach ($docs as $d) {
+            // Decode segments
+            $segs = !empty($d['segments'])
+                ? (json_decode($d['segments'], true) ?: [])
+                : [];
+
+            $code = self::buildCodeFromSegments($idProject, $segs, $tplCategories, (int)($d['seg_numero'] ?? 0), $d['revisione'] ?? '');
+
+            $row = [$d['section_name'] ?? ''];
+            foreach ($tplCategories as $cat) {
+                $row[] = $segs[$cat['key']] ?? '';
+            }
+            $row = array_merge($row, [
+                $d['seg_numero'] ?? '', $d['revisione'] ?? '',
+                $code, $d['titolo'] ?? '', $d['tipo_documento'] ?? '',
+                $d['responsabile'] ?? '', $d['output_software'] ?? '',
+                $d['stato'] ?? '', $d['avanzamento_pct'] ?? 0,
+                $d['data_inizio'] ?? '', $d['data_fine_prev'] ?? '',
+                $d['data_emissione'] ?? ''
+            ]);
+            $rows[] = $row;
+        }
+
+        require_once __DIR__ . '/../IntLibs/SimpleXLSXGen/SimpleXLSXGen.php';
+        $xlsx = \Shuchkin\SimpleXLSXGen::fromArray($rows);
+        $filename = 'Elenco_Documenti_' . $idProject . '_' . date('Ymd') . '.xlsx';
+        $xlsx->downloadAs($filename);
+        exit;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 12. REPOSITORY — Navigazione cartelle/file per la tab Repository
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Lista le sottocartelle nella directory del progetto su Nextcloud.
+     * Parsa il nome cartella: "{CODICE} - {TITOLO}" → codice + titolo separati.
+     */
+    private static function listRepoFolders(string $idProject): array
+    {
+        if (!userHasPermission('view_commesse')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+        if (!$idProject) {
+            return ['success' => false, 'message' => 'idProject mancante'];
+        }
+
+        try {
+            \Services\Nextcloud\NextcloudService::init();
+            $basePath = self::NC_ROOT . $idProject . '/';
+            \Services\Nextcloud\NextcloudService::ensureFolderExists($basePath);
+            $items = \Services\Nextcloud\NextcloudService::listFolder($basePath);
+
+            $folders = [];
+            foreach ($items as $item) {
+                if (!($item['is_dir'] ?? false)) continue;
+                $name = $item['name'] ?? '';
+                if ($name === '' || $name === $idProject) continue;
+
+                // Parse: "PRJ-FASE-ZONA-DISC-TIPO-NUM-REV - Titolo"
+                $parts = explode(' - ', $name, 2);
+                $code = $parts[0] ?? $name;
+                $title = $parts[1] ?? '';
+
+                // Codice breve: rimuovi prefisso progetto
+                $shortCode = $code;
+                if (str_starts_with($code, $idProject . '-')) {
+                    $shortCode = substr($code, strlen($idProject) + 1);
+                }
+
+                $folders[] = [
+                    'name' => $name,
+                    'code' => $code,
+                    'shortCode' => $shortCode,
+                    'title' => $title,
+                    'path' => $basePath . $name . '/',
+                ];
+            }
+
+            usort($folders, fn($a, $b) => strcmp($a['code'], $b['code']));
+
+            return ['success' => true, 'data' => $folders];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Lista i file dentro una specifica sottocartella del progetto.
+     */
+    private static function listRepoFiles(string $idProject, string $folder): array
+    {
+        if (!userHasPermission('view_commesse')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+        if (!$idProject || !$folder) {
+            return ['success' => false, 'message' => 'idProject e folder obbligatori'];
+        }
+        if (strpos($folder, '..') !== false) {
+            return ['success' => false, 'message' => 'Nome cartella non valido'];
+        }
+
+        try {
+            \Services\Nextcloud\NextcloudService::init();
+            $folderPath = self::NC_ROOT . $idProject . '/' . $folder . '/';
+            $items = \Services\Nextcloud\NextcloudService::listFolder($folderPath);
+
+            $files = [];
+            foreach ($items as $item) {
+                if ($item['is_dir'] ?? false) continue;
+                $files[] = [
+                    'name' => $item['name'] ?? '',
+                    'path' => $item['path'] ?? '',
+                    'size' => $item['size'] ?? 0,
+                    'mime' => $item['mime'] ?? '',
+                    'lastModified' => $item['last_modified'] ?? '',
+                    'fileUrl' => 'ajax.php?section=nextcloud&action=file&path=' . urlencode($item['path'] ?? ''),
+                ];
+            }
+
+            return ['success' => true, 'data' => $files, 'folder' => $folder];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Sposta un file da una cartella a un'altra dentro il progetto.
+     */
+    private static function moveRepoFile(array $input): array
+    {
+        if (!userHasPermission('edit_commessa')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $fromPath = $input['fromPath'] ?? '';
+        $toFolder = filter_var($input['toFolder'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        if (!$idProject || !$fromPath || !$toFolder) {
+            return ['success' => false, 'message' => 'Parametri mancanti'];
+        }
+
+        $projectRoot = self::NC_ROOT . $idProject . '/';
+        if (strpos($fromPath, $projectRoot) !== 0) {
+            return ['success' => false, 'message' => 'Path non valido'];
+        }
+        if (strpos($toFolder, '..') !== false) {
+            return ['success' => false, 'message' => 'Cartella destinazione non valida'];
+        }
+
+        $fileName = basename($fromPath);
+        $toPath = $projectRoot . $toFolder . '/' . $fileName;
+
+        try {
+            \Services\Nextcloud\NextcloudService::init();
+            \Services\Nextcloud\NextcloudService::movePath($fromPath, $toPath);
+            return ['success' => true];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Errore spostamento: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Elimina un file da Nextcloud.
+     */
+    private static function deleteRepoFile(array $input): array
+    {
+        if (!userHasPermission('edit_commessa')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $filePath = $input['filePath'] ?? '';
+
+        if (!$idProject || !$filePath) {
+            return ['success' => false, 'message' => 'Parametri mancanti'];
+        }
+
+        $projectRoot = self::NC_ROOT . $idProject . '/';
+        if (strpos($filePath, $projectRoot) !== 0) {
+            return ['success' => false, 'message' => 'Path non valido'];
+        }
+
+        try {
+            \Services\Nextcloud\NextcloudService::init();
+            \Services\Nextcloud\NextcloudService::deletePath($filePath);
+            return ['success' => true];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Errore eliminazione: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Carica un file in una specifica sottocartella del progetto.
+     */
+    private static function uploadRepoFile(array $input): array
+    {
+        if (!userHasPermission('edit_commessa')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $idProject = filter_var($input['idProject'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $folder = filter_var($input['folder'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        if (!$idProject || !$folder) {
+            return ['success' => false, 'message' => 'idProject e folder obbligatori'];
+        }
+        if (strpos($folder, '..') !== false) {
+            return ['success' => false, 'message' => 'Nome cartella non valido'];
+        }
+
+        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            return ['success' => false, 'message' => 'File non ricevuto'];
+        }
+
+        $tmpPath = $_FILES['file']['tmp_name'];
+        $origName = basename($_FILES['file']['name']);
+        $safeName = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $origName);
+        $remotePath = self::NC_ROOT . $idProject . '/' . $folder . '/' . $safeName;
+
+        try {
+            \Services\Nextcloud\NextcloudService::init();
+            \Services\Nextcloud\NextcloudService::uploadFile($tmpPath, $remotePath);
+            return ['success' => true, 'data' => ['name' => $safeName, 'path' => $remotePath]];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Errore upload: ' . $e->getMessage()];
+        }
     }
 }

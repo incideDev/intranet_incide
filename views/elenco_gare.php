@@ -47,29 +47,56 @@ if (!checkPermissionOrWarn('view_gare'))
 .gare-filter-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     flex-wrap: wrap;
     margin-bottom: 14px;
-    padding: 12px 14px;
+    padding: 8px 12px;
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e1e4e8;
 }
-.gare-filter-bar label { font-size: 12px; font-weight: 600; color: #586069; white-space: nowrap; }
+.gare-filter-bar label { font-size: 11px; font-weight: 600; color: #586069; white-space: nowrap; margin-left: 6px; }
+.gare-filter-bar label:first-child { margin-left: 0; }
 .gare-filter-bar select,
 .gare-filter-bar input[type="text"] {
-    padding: 6px 10px; border: 1px solid #d1d5da; border-radius: 6px;
-    font-size: 13px; background: #fff; color: #24292e; min-width: 120px;
+    padding: 5px 8px; border: 1px solid #d1d5da; border-radius: 6px;
+    font-size: 12px; background: #fff; color: #24292e; min-width: 0; max-width: 160px;
 }
+.gare-filter-bar select { width: auto; }
+.gare-filter-bar input[type="text"] { width: 130px; }
 .gare-filter-bar select:focus, .gare-filter-bar input:focus { outline: none; border-color: #0366d6; }
 .gare-filter-bar .gf-reset-btn {
-    padding: 6px 14px; border: 1px solid #d1d5da; border-radius: 6px;
-    background: #fff; font-size: 13px; cursor: pointer; color: #586069;
+    padding: 5px 10px; border: 1px solid #d1d5da; border-radius: 6px;
+    background: #fff; font-size: 12px; cursor: pointer; color: #586069; margin-left: auto;
 }
 .gare-filter-bar .gf-reset-btn:hover { background: #f1f3f4; }
 .gare-filter-active-count {
-    font-size: 11px; color: #0366d6; font-weight: 600; margin-left: auto;
+    font-size: 11px; color: #0366d6; font-weight: 600;
 }
+/* Gare table column widths */
+.gare-table { table-layout: fixed; width: 100%; }
+.gare-table th.gara-number,
+.gare-table td.gara-number { width: 90px; white-space: nowrap; font-weight: 600; }
+.gare-table th:nth-child(2),
+.gare-table td:nth-child(2) { width: 15%; } /* Ente */
+.gare-table th:nth-child(3),
+.gare-table td:nth-child(3) { width: auto; } /* Titolo — prende il restante */
+.gare-table th:nth-child(4),
+.gare-table td:nth-child(4) { width: 10%; } /* Settore */
+.gare-table th:nth-child(5),
+.gare-table td:nth-child(5) { width: 10%; } /* Tipologia */
+.gare-table th:nth-child(6),
+.gare-table td:nth-child(6) { width: 9%; } /* Luogo */
+.gare-table th:nth-child(7),
+.gare-table td:nth-child(7),
+.gare-table th:nth-child(8),
+.gare-table td:nth-child(8) { width: 90px; white-space: nowrap; } /* Date */
+.gare-table th:nth-child(9),
+.gare-table td:nth-child(9) { width: 130px; } /* Stato */
+.gare-table td { overflow: hidden; text-overflow: ellipsis; }
+.gare-table .gare-status-cell { padding: 4px 6px; }
+.gare-table .gare-status-select { width: 100%; font-size: 12px; padding: 4px 6px; }
+.gare-table-wrapper { overflow-x: auto; }
 </style>
 
 <div class="main-container page-gare">
@@ -136,7 +163,7 @@ if (!checkPermissionOrWarn('view_gare'))
     </div>
 
     <!-- VISTA TABELLA -->
-    <div id="table-view" class="">
+    <div id="table-view">
         <div class="gare-table-wrapper">
             <table class="table table-filterable gare-table" id="gare-table" data-remote="0" data-page-size="10">
                 <thead>

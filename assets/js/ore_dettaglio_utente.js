@@ -239,12 +239,33 @@ document.addEventListener('DOMContentLoaded', function () {
         if (userName) userName.textContent = info.name || CONFIG.currentUserName || '';
         if (userRole) userRole.textContent = info.role || CONFIG.currentUserRole || '';
 
-        if (userAvatar && info.name) {
-            const parts = info.name.split(' ');
-            const initials = parts.length >= 2
-                ? (parts[0][0] + parts[1][0]).toUpperCase()
-                : (info.name.substring(0, 2).toUpperCase());
-            userAvatar.textContent = initials;
+        if (userAvatar) {
+            const pic = info.profile_picture;
+            const defaultPic = 'assets/images/default_profile.png';
+            if (pic && pic !== defaultPic) {
+                userAvatar.innerHTML = '';
+                userAvatar.style.padding = '0';
+                userAvatar.style.background = 'none';
+                const img = document.createElement('img');
+                img.src = '/' + pic;
+                img.alt = info.name || '';
+                img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;';
+                img.onerror = function() {
+                    this.remove();
+                    userAvatar.style.cssText = '';
+                    const parts = (info.name || '').split(' ');
+                    userAvatar.textContent = parts.length >= 2
+                        ? (parts[0][0] + parts[1][0]).toUpperCase()
+                        : ((info.name || '??').substring(0, 2).toUpperCase());
+                };
+                userAvatar.appendChild(img);
+            } else if (info.name) {
+                const parts = info.name.split(' ');
+                const initials = parts.length >= 2
+                    ? (parts[0][0] + parts[1][0]).toUpperCase()
+                    : (info.name.substring(0, 2).toUpperCase());
+                userAvatar.textContent = initials;
+            }
         }
     }
 
@@ -423,18 +444,22 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const cx = 100, cy = 100, r = 80;
+        const cx = 100, cy = 100, outerR = 80, innerR = 50;
         let startAngle = -90;
         let paths = '';
+        const total = slices.reduce((sum, s) => sum + s.value, 0);
 
         slices.forEach((s, i) => {
             const angle = (s.pct / 100) * 360;
             const endAngle = startAngle + angle;
-            const path = describeArc(cx, cy, r, startAngle, endAngle);
+            const path = describeDonut(cx, cy, outerR, innerR, startAngle, endAngle);
             const tooltip = `${s.label}: ${formatNum(s.value)}h (${s.pct}%)`;
             paths += `<path d="${path}" fill="${s.color}" data-tooltip="${htmlEsc(tooltip)}" style="cursor:pointer"><title>${htmlEsc(tooltip)}</title></path>`;
             startAngle = endAngle;
         });
+
+        paths += `<text x="${cx}" y="${cy - 6}" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="400">TOT</text>`;
+        paths += `<text x="${cx}" y="${cy + 14}" text-anchor="middle" fill="#1e293b" font-size="18" font-weight="700">${formatNum(total)}</text>`;
 
         svg.innerHTML = paths;
 
@@ -448,14 +473,18 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     }
 
-    function describeArc(cx, cy, r, startAngle, endAngle) {
+    function describeDonut(cx, cy, outerR, innerR, startAngle, endAngle) {
         if (endAngle - startAngle >= 360) {
-            return `M ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy}`;
+            return `M ${cx - outerR} ${cy} A ${outerR} ${outerR} 0 1 1 ${cx + outerR} ${cy} A ${outerR} ${outerR} 0 1 1 ${cx - outerR} ${cy} `
+                 + `M ${cx - innerR} ${cy} A ${innerR} ${innerR} 0 1 0 ${cx + innerR} ${cy} A ${innerR} ${innerR} 0 1 0 ${cx - innerR} ${cy}`;
         }
-        const start = polarToCartesian(cx, cy, r, endAngle);
-        const end = polarToCartesian(cx, cy, r, startAngle);
+        const oStart = polarToCartesian(cx, cy, outerR, endAngle);
+        const oEnd   = polarToCartesian(cx, cy, outerR, startAngle);
+        const iStart = polarToCartesian(cx, cy, innerR, endAngle);
+        const iEnd   = polarToCartesian(cx, cy, innerR, startAngle);
         const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
-        return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+        return `M ${oStart.x} ${oStart.y} A ${outerR} ${outerR} 0 ${largeArc} 0 ${oEnd.x} ${oEnd.y} `
+             + `L ${iEnd.x} ${iEnd.y} A ${innerR} ${innerR} 0 ${largeArc} 1 ${iStart.x} ${iStart.y} Z`;
     }
 
     function polarToCartesian(cx, cy, r, angle) {

@@ -12,11 +12,8 @@ const ElencoDoc = (function() {
     let idProject = null;
     let sections = [];
     let submittals = [];
+    let categories = []; // Dynamic categories from template
     let lookups = {
-        fase: [],
-        zona: [],
-        disc: [],
-        tipo: [],
         resp: [],
         output: []
     };
@@ -90,7 +87,8 @@ const ElencoDoc = (function() {
 
     function codeStr(doc) {
         const projCode = document.getElementById('projectBadge')?.textContent || 'PRJ';
-        return `${projCode}-${doc.fase}-${doc.zona}-${doc.disc}-${doc.tipo}-${fmtNum(doc.num)}-${doc.rev}`;
+        const segs = categories.map(cat => (doc.segments || {})[cat.key] || '').join('-');
+        return `${projCode}-${segs}-${fmtNum(doc.num)}-${doc.rev}`;
     }
 
     function escapeHtml(text) {
@@ -146,13 +144,18 @@ const ElencoDoc = (function() {
 
     // Convert backend doc fields (snake_case) → JS fields (camelCase short)
     function normalizeDoc(d) {
+        // Dynamic segments from `segments` JSON column
+        let segs = d.segments;
+        if (typeof segs === 'string') {
+            try { segs = JSON.parse(segs); } catch(e) { segs = null; }
+        }
+        if (!segs || typeof segs !== 'object') {
+            segs = {};
+        }
         return {
             id: parseInt(d.id),
             idSection: parseInt(d.id_section),
-            fase: d.seg_fase || '',
-            zona: d.seg_zona || '',
-            disc: d.seg_disc || '',
-            tipo: d.seg_tipo || '',
+            segments: segs,
             num: d.seg_numero || 1,
             title: d.titolo || '',
             sub: d.tipo_documento || '',
@@ -171,15 +174,14 @@ const ElencoDoc = (function() {
     }
 
     // Convert backend lookups format → JS lookups format
-    function normalizeLookups(l) {
-        return {
-            fase: (l.fasi || []).map(f => ({ c: f, d: f })),
-            zona: (l.zone || []).map(z => ({ c: z, d: z })),
-            disc: (l.discipline || []).map(d => ({ c: d, d: d })),
-            tipo: (l.tipi_documento || []).map(t => ({ c: t.cod, d: t.desc || t.cod })),
-            resp: lookups.resp || [],   // loaded separately via getRisorse
-            output: ['Word', 'Revit', 'AutoCAD', 'Excel', 'PDF', 'InDesign', 'Primus'].map(s => ({ c: s, d: s }))
-        };
+    function normalizeLookups(cats) {
+        const lk = {};
+        (cats || []).forEach(cat => {
+            lk[cat.key] = (cat.items || []).map(i => ({ c: i.cod, d: i.desc || i.cod }));
+        });
+        lk.resp = lookups.resp || [];
+        lk.output = ['Word', 'Revit', 'AutoCAD', 'Excel', 'PDF', 'InDesign', 'Primus'].map(s => ({ c: s, d: s }));
+        return lk;
     }
 
     // Convert JS doc → backend payload for saveDocumento
@@ -188,10 +190,7 @@ const ElencoDoc = (function() {
             idProject,
             docId: !isTempId(doc.id) ? doc.id : null,
             idSection: secId || doc.idSection,
-            segFase: doc.fase,
-            segZona: doc.zona,
-            segDisc: doc.disc,
-            segTipo: doc.tipo,
+            segments: doc.segments || {},
             segNumero: doc.num,
             titolo: doc.title,
             tipoDocumento: doc.sub,
@@ -265,10 +264,16 @@ const ElencoDoc = (function() {
                 rangeTo: item.section.range_num_a,
                 docs: (item.docs || []).map(normalizeDoc)
             }));
-            // Normalize lookups
+            // Normalize categories + lookups
+            categories = result.data.categories || [];
             const prevResp = lookups.resp;
-            lookups = normalizeLookups(result.data.lookups || {});
+            lookups = normalizeLookups(categories);
             lookups.resp = prevResp; // keep already-loaded risorse
+            // Update template chip
+            const tplChip = document.getElementById('tplChipName');
+            if (tplChip && result.data.template_name) {
+                tplChip.textContent = result.data.template_name;
+            }
             populateFilterDropdowns();
             renderSections();
             updateStats();
@@ -288,7 +293,8 @@ const ElencoDoc = (function() {
             oggetto: s.oggetto || '',
             dest: s.destinatario || '',
             cc: s.cc || '',
-            scopo: s.scopo || 'email',
+            scopo: s.scopo || 'Per approvazione',
+            modalita: s.modalita || 'E-mail',
             dataConsegna: s.data_consegna || '',
             date: s.data_consegna || '',          // alias for rendering
             status: s.stato || 'Pianificato',
@@ -308,22 +314,7 @@ const ElencoDoc = (function() {
     }
 
     function populateFilterDropdowns() {
-        const discSelect = document.getElementById('filter-disc');
-        if (discSelect && lookups.disc?.length) {
-            discSelect.innerHTML = '<option value="">Tutte</option>';
-            lookups.disc.forEach(d => {
-                discSelect.innerHTML += `<option value="${d.c}">${d.c} — ${d.d}</option>`;
-            });
-        }
-
-        const respSelect = document.getElementById('filter-resp');
-        if (respSelect && lookups.resp?.length) {
-            respSelect.innerHTML = '<option value="">Tutti</option>';
-            lookups.resp.forEach(r => {
-                respSelect.innerHTML += `<option value="${r.c}">${escapeHtml(r.d)}</option>`;
-            });
-        }
-
+        // Popola il dropdown destinatario del pannello submittal
         const destSelect = document.getElementById('sub-dest');
         if (destSelect && lookups.resp?.length) {
             destSelect.innerHTML = '<option value="">— Seleziona —</option>';
@@ -346,22 +337,10 @@ const ElencoDoc = (function() {
             return;
         }
 
-        const fStato = document.getElementById('filter-stato')?.value || '';
-        const fDisc = document.getElementById('filter-disc')?.value || '';
-        const fResp = document.getElementById('filter-resp')?.value || '';
-        const fText = (document.getElementById('filter-text')?.value || '').toLowerCase();
+        const canEdit = window.userHasPermission && window.userHasPermission('edit_commessa');
 
         sections.forEach(sec => {
-            const filtDocs = (sec.docs || []).filter(d => {
-                if (fStato && d.status !== fStato) return false;
-                if (fDisc && d.disc !== fDisc) return false;
-                if (fResp && d.resp !== fResp) return false;
-                if (fText && !d.title.toLowerCase().includes(fText) && !codeStr(d).toLowerCase().includes(fText)) return false;
-                return true;
-            });
-
-            if (filtDocs.length === 0 && (fStato || fDisc || fResp || fText)) return;
-
+            const docs = sec.docs || [];
             const secDiv = document.createElement('div');
             secDiv.className = 'ed-section';
             secDiv.innerHTML = `
@@ -371,8 +350,8 @@ const ElencoDoc = (function() {
                     </svg>
                     <span class="ed-section-title">${escapeHtml(sec.name)}</span>
                     <span class="ed-section-badge" onclick="event.stopPropagation();ElencoDoc.openRangePicker(event,'${sec.id}')">${sec.rangeFrom || 0}–${sec.rangeTo || 999}</span>
-                    <span class="ed-section-count">${filtDocs.length} documenti</span>
-                    ${window.userHasPermission && window.userHasPermission('edit_commessa') ? `
+                    <span class="ed-section-count">${docs.length} documenti</span>
+                    ${canEdit ? `
                     <div class="ed-section-actions">
                         <button class="ed-section-btn" onclick="event.stopPropagation();ElencoDoc.renameSection('${sec.id}')" title="Rinomina">✏</button>
                         <button class="ed-section-btn" onclick="event.stopPropagation();ElencoDoc.deleteSectionConfirm('${sec.id}')" title="Elimina">🗑</button>
@@ -380,24 +359,39 @@ const ElencoDoc = (function() {
                     ` : ''}
                 </div>
                 <div class="ed-section-body" id="body-${sec.id}">
-                    <table class="ed-table">
+                    <table class="table table-filterable" id="tbl-${sec.id}" data-no-pagination="true" data-table-key="ed-sec-${sec.id}">
                         <thead>
+                            <tr class="th-groups">
+                                <th colspan="${categories.length + 3}" class="grp-code">Codice Documento</th>
+                                <th colspan="4" class="grp-info">Informazioni</th>
+                                <th colspan="2" class="grp-state">Stato</th>
+                                <th colspan="4" class="grp-plan">Pianificazione</th>
+                                <th colspan="2"></th>
+                            </tr>
                             <tr>
-                                <th style="width:180px">Codice</th>
-                                <th>Titolo</th>
-                                <th style="width:100px">Stato</th>
-                                <th style="width:60px">Rev</th>
-                                <th style="width:80px">%</th>
-                                <th style="width:80px">Emissione</th>
-                                <th style="width:80px">Resp.</th>
-                                <th style="width:60px"></th>
+                                ${categories.map(cat => `<th class="ed-col-seg">${escapeHtml(cat.label)}</th>`).join('')}
+                                <th class="ed-col-num">Num</th>
+                                <th class="ed-col-rev">Rev</th>
+                                <th class="ed-col-code">Codice</th>
+                                <th class="ed-col-title">Titolo</th>
+                                <th class="ed-col-tipodoc">Tipo doc</th>
+                                <th class="ed-col-resp">Resp.</th>
+                                <th class="ed-col-resp">Output</th>
+                                <th class="ed-col-stato">Stato</th>
+                                <th class="ed-col-avanz">Avanz.</th>
+                                <th class="ed-col-date">Inizio</th>
+                                <th class="ed-col-date">Fine prev.</th>
+                                <th class="ed-col-date">Emissione</th>
+                                <th class="ed-col-sub">Submittal</th>
+                                <th class="ed-col-file">File</th>
+                                <th class="ed-col-azioni azioni-colonna"></th>
                             </tr>
                         </thead>
                         <tbody id="tb-${sec.id}">
-                            ${filtDocs.map(d => buildRowHtml(d)).join('')}
-                            ${window.userHasPermission && window.userHasPermission('edit_commessa') ? `
+                            ${docs.map(d => buildRowHtml(d, canEdit)).join('')}
+                            ${canEdit ? `
                             <tr class="ed-add-row">
-                                <td colspan="8">
+                                <td colspan="${categories.length + 15}">
                                     <button class="ed-add-btn" onclick="ElencoDoc.addDocToSection('${sec.id}')">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
                                             <line x1="12" y1="5" x2="12" y2="19"/>
@@ -413,47 +407,100 @@ const ElencoDoc = (function() {
                 </div>
             `;
             cont.appendChild(secDiv);
+
+            // Inizializza table-filterable su questa tabella
+            if (window.initTableFilters) {
+                window.initTableFilters('tbl-' + sec.id);
+            }
         });
     }
 
-    function buildRowHtml(doc) {
+    function buildRowHtml(doc, canEdit) {
+        if (canEdit === undefined) canEdit = window.userHasPermission && window.userHasPermission('edit_commessa');
         const cfg = STATUS_CFG[doc.status] || STATUS_CFG['PIANIFICATO'];
         const today = new Date();
-        const emDate = doc.dateEmission ? new Date(doc.dateEmission) : null;
-        const dateCls = !emDate ? 'empty' : (emDate < today ? 'late' : 'ok');
-        const canEdit = window.userHasPermission && window.userHasPermission('edit_commessa');
+        const code = codeStr(doc);
+
+        const fmtDate = (iso) => isoToDisp(iso);
+        const dateCls = (iso) => {
+            if (!iso || iso === '—') return 'empty';
+            return new Date(iso) < today ? 'late' : 'ok';
+        };
+
+        // Tipo label from lookup (use last category as 'tipo' equivalent, or find 'tipo' key)
+        const tipoKey = categories.find(c => c.key === 'tipo')?.key;
+        const tipoVal = tipoKey ? (doc.segments || {})[tipoKey] : '';
+        const tipoLkp = tipoKey ? (lookups[tipoKey] || []).find(t => t.c === tipoVal) : null;
+        const tipoLabel = tipoLkp ? tipoLkp.d : (tipoVal || '');
+
+        // File count
+        const fileCount = (doc.files || []).length;
+
+        // Submittal info
+        const sub = submittals.find(s => (s.docIds || []).includes(doc.id));
+        const subHtml = sub
+            ? `<span class="ed-sub-chip" onclick="event.stopPropagation();ElencoDoc.openSmgr()" title="${escapeHtml(sub.code)}">${escapeHtml(sub.code)}</span>`
+            : '<span class="ed-cell-empty">—</span>';
+
+        const ec = canEdit ? 'ed-cell-edit' : '';
+
+        // Dynamic segment cells from categories
+        const segCells = categories.map(cat => {
+            const val = (doc.segments || {})[cat.key] || '';
+            return `<td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openSegDrop(event,this,'${cat.key}','${doc.id}')"` : ''}>
+                    <span class="ed-seg">${escapeHtml(val)}</span>
+                </td>`;
+        }).join('');
 
         return `
             <tr data-id="${doc.id}">
-                <td class="ed-code-cell" id="codetd-${doc.id}" title="${codeStr(doc)}">${codeStr(doc)}</td>
+                ${segCells}
+                <td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openNumEdit(event,this,'${doc.id}')"` : ''}>
+                    <span class="ed-num">${fmtNum(doc.num)}</span>
+                </td>
+                <td><span class="ed-rev-badge">${doc.rev || '—'}</span></td>
+                <td><span class="ed-full-code" title="${code}">${code}</span></td>
                 <td class="ed-title-cell" onclick="ElencoDoc.openProps('${doc.id}')" style="cursor:pointer">
                     <div class="ed-doc-title">${escapeHtml(doc.title)}</div>
-                    <div class="ed-doc-sub">${escapeHtml(doc.sub || '')}</div>
+                    ${doc.sub ? `<div class="ed-doc-sub">${escapeHtml(doc.sub)}</div>` : ''}
                 </td>
-                <td class="ed-status-cell">
-                    <span class="ed-status-badge ${cfg.cls}" onclick="ElencoDoc.openStatusPop(event, this, '${doc.id}')">
+                <td><span class="ed-tipo-label">${escapeHtml(tipoLabel)}</span></td>
+                <td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openSegDrop(event,this,'resp','${doc.id}')"` : ''}>
+                    <span class="ed-badge-resp">${respDisplay(doc.resp)}</span>
+                </td>
+                <td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openSegDrop(event,this,'output','${doc.id}')"` : ''}>
+                    <span class="ed-badge-out">${escapeHtml(doc.output || '—')}</span>
+                </td>
+                <td>
+                    <span class="ed-status-badge ${cfg.cls}" ${canEdit ? `onclick="ElencoDoc.openStatusPop(event, this, '${doc.id}')"` : ''}>
                         <span class="ed-status-dot" style="background:${cfg.dot}"></span>
                         ${doc.status}
                     </span>
                 </td>
-                <td><span class="ed-rev-badge">${doc.rev || '—'}</span></td>
-                <td class="ed-progress-cell" onclick="ElencoDoc.openProg(event, this, '${doc.id}')">
+                <td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openProg(event, this, '${doc.id}')"` : ''}>
                     <div class="ed-progress-bar">
                         <div class="ed-progress-fill ${pc(doc.prog || 0)}" id="pf-${doc.id}" style="width:${doc.prog || 0}%"></div>
                     </div>
                     <div class="ed-progress-label" id="pl-${doc.id}">${doc.prog || 0}%</div>
                 </td>
-                <td class="ed-date-cell" onclick="ElencoDoc.openDatePop(event, this, '${doc.id}', 'dateEmission')">
-                    <span class="ed-date-display ${dateCls}" id="dateEmissiond-${doc.id}">${isoToDisp(doc.dateEmission)}</span>
+                <td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openDatePop(event, this, '${doc.id}', 'dateStart')"` : ''}>
+                    <span class="ed-date-display ${dateCls(doc.dateStart)}">${fmtDate(doc.dateStart)}</span>
                 </td>
-                <td class="ed-resp-cell">${respDisplay(doc.resp)}</td>
+                <td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openDatePop(event, this, '${doc.id}', 'dateEnd')"` : ''}>
+                    <span class="ed-date-display ${dateCls(doc.dateEnd)}">${fmtDate(doc.dateEnd)}</span>
+                </td>
+                <td class="${ec}" ${canEdit ? `onclick="ElencoDoc.openDatePop(event, this, '${doc.id}', 'dateEmission')"` : ''}>
+                    <span class="ed-date-display ${dateCls(doc.dateEmission)}">${fmtDate(doc.dateEmission)}</span>
+                </td>
+                <td>${subHtml}</td>
+                <td style="position:relative">
+                    <button class="ed-file-btn" onclick="event.stopPropagation();ElencoDoc.openFilePopover(event,this,'${doc.id}')" title="File allegati">
+                        ${fileCount > 0 ? fileCount + ' file' : '—'}
+                    </button>
+                </td>
                 <td class="ed-actions-cell">
-                    ${canEdit && doc.status === 'EMESSO' ? `
-                    <button class="ed-action-btn dup" onclick="ElencoDoc.dupRevision('${doc.id}')" title="Nuova revisione">↻</button>
-                    ` : ''}
-                    ${canEdit ? `
-                    <button class="ed-action-btn danger" onclick="ElencoDoc.deleteDoc('${doc.id}')" title="Elimina">×</button>
-                    ` : ''}
+                    ${canEdit && doc.status === 'EMESSO' ? `<button class="ed-action-btn dup" onclick="event.stopPropagation();ElencoDoc.dupRevision('${doc.id}')" title="Nuova revisione">↻</button>` : ''}
+                    ${canEdit ? `<button class="ed-action-btn danger" onclick="event.stopPropagation();ElencoDoc.deleteDoc('${doc.id}')" title="Elimina">×</button>` : ''}
                 </td>
             </tr>
         `;
@@ -461,11 +508,46 @@ const ElencoDoc = (function() {
 
     function updateStats() {
         const docs = allDocs();
-        document.getElementById('tot-count').textContent = docs.length;
+        const el = (id) => document.getElementById(id);
+
+        // Card 1: Documenti totali
+        const totEl = el('tot-count');
+        if (totEl) totEl.textContent = docs.length;
+        const nSec = sections.length;
+        // Count unique values for first category (or 'disc' if present)
+        const statCat = categories.find(c => c.key === 'disc') || categories[0];
+        const nCatValues = statCat ? new Set(docs.map(d => (d.segments || {})[statCat.key]).filter(Boolean)).size : 0;
+        const catLabel = statCat ? statCat.label.toLowerCase() : 'categorie';
+        const subDocs = el('stat-sub-docs');
+        if (subDocs) subDocs.textContent = `${nSec} sezioni · ${nCatValues} ${catLabel}`;
+
+        // Card 2: Avanzamento medio
         const avg = docs.length ? Math.round(docs.reduce((a, d) => a + (d.prog || 0), 0) / docs.length) : 0;
-        document.getElementById('avg-prog').textContent = avg + '%';
+        const avgEl = el('avg-prog');
+        if (avgEl) avgEl.textContent = avg + '%';
         const iss = docs.filter(d => d.status === 'EMESSO').length;
-        document.getElementById('issued-count').textContent = iss;
+        const subIss = el('stat-sub-issued');
+        if (subIss) subIss.textContent = `${iss} emessi su ${docs.length}`;
+
+        // Card 3: Submittal
+        const subCountEl = el('stat-submittal-count');
+        if (subCountEl) subCountEl.textContent = submittals.length;
+        const subSub = el('stat-sub-submittal');
+        if (subSub) {
+            const planned = submittals.filter(s => s.status === 'Pianificato');
+            if (planned.length > 0) {
+                const next = planned.sort((a, b) => (a.date || '').localeCompare(b.date || ''))[0];
+                subSub.textContent = `Prossimo: ${isoToDisp(next.date)}`;
+            } else {
+                subSub.textContent = submittals.length > 0 ? 'Tutti emessi' : 'Nessun submittal';
+            }
+        }
+
+        // Legacy submittal badge
+        const smgrTot = el('smgrTot');
+        if (smgrTot) smgrTot.textContent = submittals.length;
+        const submittalCount = el('submittalCount');
+        if (submittalCount) submittalCount.textContent = submittals.length;
     }
 
     // ================================
@@ -688,13 +770,16 @@ const ElencoDoc = (function() {
             if (nextNum > (sec.rangeTo || 999)) nextNum = sec.rangeTo || 999;
         }
 
+        // Build dynamic segments from categories
+        const newSegments = {};
+        categories.forEach(cat => {
+            newSegments[cat.key] = lastDoc?.segments?.[cat.key] || (lookups[cat.key]?.[0]?.c || '');
+        });
+
         const newDoc = {
             id: genId(),
             idSection: sec.id,
-            fase: lastDoc?.fase || (lookups.fase[0]?.c || 'PD'),
-            zona: lastDoc?.zona || (lookups.zona[0]?.c || '00'),
-            disc: lastDoc?.disc || (lookups.disc[0]?.c || 'GE'),
-            tipo: lastDoc?.tipo || (lookups.tipo[0]?.c || 'RT'),
+            segments: newSegments,
             num: nextNum,
             title: 'NUOVO DOCUMENTO',
             sub: lastDoc?.sub || '',
@@ -829,9 +914,10 @@ const ElencoDoc = (function() {
     function reRenderRow(docId) {
         const doc = findDoc(docId);
         if (!doc) return;
+        const canEdit = window.userHasPermission && window.userHasPermission('edit_commessa');
         const row = document.querySelector(`tr[data-id="${docId}"]`);
         if (!row) return;
-        row.outerHTML = buildRowHtml(doc);
+        row.outerHTML = buildRowHtml(doc, canEdit);
     }
 
     function toggleSec(id, hd) {
@@ -862,15 +948,19 @@ const ElencoDoc = (function() {
         const canEdit = window.userHasPermission && window.userHasPermission('edit_commessa');
         const disabled = canEdit ? '' : 'disabled';
 
+        // Build dynamic segment selects from categories
+        const segSelectsHtml = categories.map(cat => {
+            const items = lookups[cat.key] || [];
+            const docVal = (doc.segments || {})[cat.key] || '';
+            return `<div class="ed-form-group"><label>${escapeHtml(cat.label)}</label><select class="ed-select" id="pp-seg-${cat.key}" ${disabled}>${items.map(x => `<option value="${escapeHtml(x.c)}"${x.c === docVal ? ' selected' : ''}>${escapeHtml(x.c)}${x.d !== x.c ? ' — ' + escapeHtml(x.d) : ''}</option>`).join('')}</select></div>`;
+        }).join('');
+
         document.getElementById('pp-body').innerHTML = `
             <div class="ed-pp-section">Codice documento</div>
             <div class="ed-pprow c3">
-                <div class="ed-form-group"><label>Fase</label><select class="ed-select" id="pp-fase" ${disabled}>${(lookups.fase || []).map(x => `<option${x.c === doc.fase ? ' selected' : ''}>${x.c}</option>`).join('')}</select></div>
-                <div class="ed-form-group"><label>Zona</label><select class="ed-select" id="pp-zona" ${disabled}>${(lookups.zona || []).map(x => `<option${x.c === doc.zona ? ' selected' : ''}>${x.c}</option>`).join('')}</select></div>
-                <div class="ed-form-group"><label>Disciplina</label><select class="ed-select" id="pp-disc" ${disabled}>${(lookups.disc || []).map(x => `<option${x.c === doc.disc ? ' selected' : ''}>${x.c}</option>`).join('')}</select></div>
+                ${segSelectsHtml}
             </div>
             <div class="ed-pprow c3">
-                <div class="ed-form-group"><label>Tipo doc</label><select class="ed-select" id="pp-tipo" ${disabled}>${(lookups.tipo || []).map(x => `<option${x.c === doc.tipo ? ' selected' : ''}>${x.c} — ${x.d}</option>`).join('')}</select></div>
                 <div class="ed-form-group"><label>Numero</label><input type="number" class="ed-input" id="pp-num" value="${doc.num}" min="0" max="9999" ${disabled}></div>
                 <div class="ed-form-group"><label>Revisione</label><input type="text" class="ed-input ro" id="pp-rev" value="${doc.rev}" readonly></div>
             </div>
@@ -924,8 +1014,9 @@ const ElencoDoc = (function() {
             });
         }
 
-        // Live code preview
-        ['pp-fase', 'pp-zona', 'pp-disc', 'pp-tipo', 'pp-num'].forEach(id => {
+        // Live code preview - dynamic segment selects + num
+        const ppIds = categories.map(cat => 'pp-seg-' + cat.key).concat(['pp-num']);
+        ppIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', updatePPCode);
@@ -937,14 +1028,14 @@ const ElencoDoc = (function() {
     }
 
     function updatePPCode() {
-        const f = document.getElementById('pp-fase')?.value || 'PD';
-        const z = document.getElementById('pp-zona')?.value || '00';
-        const d = document.getElementById('pp-disc')?.value || 'GE';
-        const t = (document.getElementById('pp-tipo')?.value || 'RT').split(' ')[0];
+        const segs = categories.map(cat => {
+            const val = document.getElementById('pp-seg-' + cat.key)?.value || '';
+            return val.split(' ')[0]; // Strip description after space if present
+        }).join('-');
         const n = fmtNum(parseInt(document.getElementById('pp-num')?.value) || 0);
         const doc = findDoc(propDocId);
         const projCode = document.getElementById('projectBadge')?.textContent || 'PRJ';
-        document.getElementById('pp-code-disp').textContent = `${projCode}-${f}-${z}-${d}-${t}-${n}-${doc?.rev || 'RA'}`;
+        document.getElementById('pp-code-disp').textContent = `${projCode}-${segs}-${n}-${doc?.rev || 'RA'}`;
     }
 
     function closeProps() {
@@ -955,10 +1046,12 @@ const ElencoDoc = (function() {
 
     function _applyPropsToDoc(doc) {
         if (!doc) return;
-        doc.fase = document.getElementById('pp-fase')?.value || doc.fase;
-        doc.zona = document.getElementById('pp-zona')?.value || doc.zona;
-        doc.disc = document.getElementById('pp-disc')?.value || doc.disc;
-        doc.tipo = (document.getElementById('pp-tipo')?.value || doc.tipo).split(' ')[0];
+        // Apply dynamic segments from categories
+        if (!doc.segments) doc.segments = {};
+        categories.forEach(cat => {
+            const val = document.getElementById('pp-seg-' + cat.key)?.value;
+            if (val !== undefined) doc.segments[cat.key] = val.split(' ')[0];
+        });
         doc.num = parseInt(document.getElementById('pp-num')?.value) || doc.num;
         doc.title = document.getElementById('pp-title')?.value || doc.title;
         doc.sub = document.getElementById('pp-sub')?.value || doc.sub;
@@ -1189,16 +1282,15 @@ const ElencoDoc = (function() {
             dataConsegna: date,
             stato: emit ? 'Emesso' : 'Pianificato',
             destinatario: document.getElementById('sub-dest')?.value || '',
-            scopo: document.getElementById('sub-scopo')?.value === 'PEC' ? 'PEC'
-                   : document.getElementById('sub-scopo')?.value === 'Portale committente' ? 'portale'
-                   : 'email',
+            scopo: document.getElementById('sub-scopo')?.value || 'Per approvazione',
+            modalita: document.getElementById('sub-modalita')?.value || 'E-mail',
             oggetto: document.getElementById('sub-oggetto')?.value || '',
             note: document.getElementById('sub-note')?.value || '',
             docIds: [...subSel]
         };
 
         if (editSubId) {
-            submittalData.id = editSubId;
+            submittalData.subId = editSubId;
         }
 
         const result = await sendRequest('saveSubmittal', submittalData);
@@ -1239,7 +1331,7 @@ const ElencoDoc = (function() {
                     <div class="ed-smgr-item-title">${escapeHtml(sub.oggetto || 'Trasmissione')}</div>
                     <div class="ed-smgr-item-meta">${isoToDisp(sub.date)} · ${respDisplay(sub.dest)} · ${sub.docIds?.length || 0} doc</div>
                 </div>
-                <span class="ed-smgr-item-status ${sub.status}">${sub.status}</span>
+                <span class="ed-smgr-item-status ${(sub.status || '').toLowerCase()}">${sub.status}</span>
             </div>
         `).join('');
     }
@@ -1248,7 +1340,7 @@ const ElencoDoc = (function() {
     // TRANSMISSION LETTER
     // ================================
     function openLtr(subId) {
-        const sub = submittals.find(s => s.id === subId);
+        const sub = submittals.find(s => Number(s.id) === Number(subId));
         if (!sub) return;
 
         currentLtrSubId = subId;
@@ -1333,7 +1425,7 @@ const ElencoDoc = (function() {
     // MAIL
     // ================================
     function sendSubmittalMail() {
-        const sub = submittals.find(s => s.id === currentLtrSubId);
+        const sub = submittals.find(s => Number(s.id) === Number(currentLtrSubId));
         if (!sub) return;
 
         document.getElementById('mailTo').value = '';
@@ -1486,13 +1578,12 @@ const ElencoDoc = (function() {
         // Setup event listeners
         document.addEventListener('click', closeAP);
 
-        document.getElementById('filter-stato')?.addEventListener('change', renderSections);
-        document.getElementById('filter-disc')?.addEventListener('change', renderSections);
-        document.getElementById('filter-resp')?.addEventListener('change', renderSections);
-        document.getElementById('filter-text')?.addEventListener('input', debounce(renderSections, 300));
+        // Filtri ora gestiti da table-filterable automaticamente
 
         document.getElementById('btnSubmittalMgr')?.addEventListener('click', openSmgr);
         document.getElementById('btnAddSection')?.addEventListener('click', addSection);
+        document.getElementById('btnConfigTemplate')?.addEventListener('click', openTemplatePanel);
+        document.getElementById('btnExport')?.addEventListener('click', exportExcel);
 
         // Close panels on overlay click
         document.getElementById('subPanel')?.addEventListener('click', e => {
@@ -1518,48 +1609,591 @@ const ElencoDoc = (function() {
     }
 
     // ================================
-    // PUBLIC API
+    // INLINE EDITING — SEGMENT DROPDOWNS
     // ================================
-    return {
-        init,
-        openProps,
-        closeProps,
-        saveProps,
-        openRevDialog,
-        closeRevDialog,
-        confirmRevision,
-        toggleSec,
-        openStatusPop,
-        openProg,
-        openDatePop,
-        openRangePicker,
-        saveRange,
-        addDocToSection,
-        dupRevision,
-        deleteDoc,
-        deleteSectionConfirm,
-        renameSection,
-        openSub,
-        closeSub,
-        saveSub,
-        updateSubCode,
-        removeSubDoc,
-        openSmgr,
-        closeSmgr,
-        openLtr,
-        closeLtr,
-        sendSubmittalMail,
-        closeMailPanel,
-        dispatchMail,
-        downloadLtrPdf,
-        closeAP,
-        saveDocumenti,
-        uploadNcFiles,
-        openNcBrowser,
-        closeNcBrowser,
-        attachNcFileFromBrowser,
-        detachNcFile
-    };
+
+    function openSegDrop(e, cell, seg, docId) {
+        e.stopPropagation();
+        closeAP();
+        const doc = findDoc(docId);
+        if (!doc) return;
+
+        cell.style.position = 'relative';
+
+        const items = lookups[seg] || [];
+        // Get current value: dynamic segments or fixed fields (resp, output)
+        const isSegment = categories.some(c => c.key === seg);
+        const currentVal = isSegment ? ((doc.segments || {})[seg] || '') : (doc[seg] || '');
+        const catDef = categories.find(c => c.key === seg);
+        const headerLabel = catDef ? catDef.label : seg.toUpperCase();
+
+        const dd = document.createElement('div');
+        dd.className = 'ed-popup ed-seg-dropdown';
+
+        dd.innerHTML = `
+            <div class="ed-seg-dd-header">${escapeHtml(headerLabel)}</div>
+            <div class="ed-seg-dd-list">
+                ${items.map(item => `
+                    <div class="ed-seg-dd-item ${item.c === String(currentVal) ? 'active' : ''}" data-val="${escapeHtml(item.c)}">
+                        <span class="ed-seg-dd-code">${escapeHtml(item.c)}</span>
+                        ${item.d !== item.c ? `<span class="ed-seg-dd-desc">${escapeHtml(item.d)}</span>` : ''}
+                    </div>
+                `).join('')}
+                ${items.length === 0 ? '<div style="padding:10px;color:#6b7280;font-size:11px;text-align:center">Nessun valore. Configura il template.</div>' : ''}
+            </div>
+        `;
+
+        cell.appendChild(dd);
+        activePopup = dd;
+
+        dd.querySelectorAll('.ed-seg-dd-item').forEach(opt => {
+            opt.addEventListener('click', async () => {
+                const val = opt.dataset.val;
+                if (isSegment) {
+                    if (!doc.segments) doc.segments = {};
+                    doc.segments[seg] = val;
+                } else {
+                    doc[seg] = val;
+                }
+                reRenderRow(docId);
+                closeAP();
+                flashSave();
+                updateStats();
+                await saveOneDoc(doc, doc.idSection);
+            });
+        });
+
+        dd.addEventListener('click', ev => ev.stopPropagation());
+    }
+
+    function openNumEdit(e, cell, docId) {
+        e.stopPropagation();
+        closeAP();
+        const doc = findDoc(docId);
+        if (!doc) return;
+
+        cell.style.position = 'relative';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'ed-num-input';
+        input.value = fmtNum(doc.num);
+        input.maxLength = 4;
+
+        cell.innerHTML = '';
+        cell.appendChild(input);
+        input.focus();
+        input.select();
+
+        const save = async () => {
+            const val = parseInt(input.value) || doc.num;
+            doc.num = val;
+            reRenderRow(docId);
+            flashSave();
+            await saveOneDoc(doc, doc.idSection);
+        };
+
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+            if (ev.key === 'Escape') { reRenderRow(docId); closeAP(); }
+        });
+    }
+
+    // ── FILE POPOVER ──
+    function openFilePopover(e, btn, docId) {
+        e.stopPropagation();
+        closeAP();
+        const doc = findDoc(docId);
+        if (!doc) return;
+
+        const files = doc.files || [];
+        const canEdit = window.userHasPermission && window.userHasPermission('edit_commessa');
+
+        const cell = btn.parentElement;
+        cell.style.position = 'relative';
+
+        const pop = document.createElement('div');
+        pop.className = 'ed-popup ed-file-popover';
+
+        let html = '<div class="ed-file-pop-header">File allegati</div>';
+        if (files.length === 0) {
+            html += '<div class="ed-file-pop-empty">Nessun file allegato</div>';
+        } else {
+            html += '<div class="ed-file-pop-list">';
+            files.forEach((f) => {
+                const name = f.name || (f.path ? f.path.split('/').pop() : 'file');
+                const url = f.path ? ('ajax.php?section=nextcloud&action=file&path=' + encodeURIComponent(f.path)) : '#';
+                html += `<div class="ed-file-pop-item">
+                    <span class="ed-file-pop-icon">${fileIcon(f.mime)}</span>
+                    <span class="ed-file-pop-name" onclick="event.stopPropagation();if(typeof window.showMediaViewer==='function'){window.showMediaViewer('${escapeHtml(url)}',{title:'${escapeHtml(name)}'})}else{window.open('${escapeHtml(url)}','_blank')}" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+                    <a class="ed-file-pop-dl" href="${url}" target="_blank" onclick="event.stopPropagation()" title="Download">↓</a>
+                    ${canEdit ? `<button class="ed-file-pop-rm" onclick="event.stopPropagation();ElencoDoc.detachAndRefresh('${docId}','${escapeHtml(f.path)}')" title="Rimuovi">×</button>` : ''}
+                </div>`;
+            });
+            html += '</div>';
+        }
+
+        if (canEdit) {
+            html += `<div class="ed-file-pop-footer">
+                <label class="ed-file-pop-upload">
+                    + Carica file
+                    <input type="file" multiple style="display:none" onchange="ElencoDoc.uploadFromPopover(this,'${docId}')">
+                </label>
+            </div>`;
+        }
+
+        pop.innerHTML = html;
+        cell.appendChild(pop);
+        activePopup = pop;
+        pop.addEventListener('click', ev => ev.stopPropagation());
+    }
+
+    async function detachAndRefresh(docId, path) {
+        const doc = findDoc(docId);
+        if (!doc) return;
+        const result = await sendRequest('detachNcFile', { idProject, docId: doc.id, path });
+        if (result.success) {
+            doc.files = result.data;
+            closeAP();
+            reRenderRow(docId);
+        }
+    }
+
+    async function uploadFromPopover(input, docId) {
+        const doc = findDoc(docId);
+        if (!doc || !input.files.length) return;
+
+        for (const file of input.files) {
+            const formData = new FormData();
+            formData.append('section', 'elenco_documenti');
+            formData.append('action', 'uploadNcFile');
+            formData.append('idProject', idProject);
+            formData.append('docId', String(doc.id));
+            formData.append('file', file);
+            const csrf = document.querySelector('meta[name="token-csrf"]')?.content || '';
+            try {
+                const resp = await fetch('/ajax.php', {
+                    method: 'POST',
+                    headers: { 'X-Csrf-Token': csrf },
+                    body: formData
+                });
+                const result = await resp.json();
+                if (result.success) doc.files = result.data;
+            } catch (e) { /* silenzioso */ }
+        }
+        input.value = '';
+        closeAP();
+        reRenderRow(docId);
+    }
+
+    // ================================
+    // TEMPLATE PANEL
+    // ================================
+
+    let _tplList = [];
+    let _tplData = null;
+    let _tplEditId = null;
+    let _tplView = 'list';
+    let _tplActiveIdx = 0; // Index into _tplData.categories
+    let _tplDragIdx = null; // For drag & drop reordering
+
+    async function openTemplatePanel() {
+        const result = await sendRequest('getTemplateList', { idProject });
+        if (!result.success) { alert(result.message || 'Errore'); return; }
+        _tplList = result.data || [];
+        _tplView = 'list';
+        renderTplPanel();
+        document.getElementById('tplPanel')?.classList.add('on');
+    }
+
+    function closeTemplatePanel() {
+        document.getElementById('tplPanel')?.classList.remove('on');
+    }
+
+    function renderTplPanel() {
+        const content = document.getElementById('tplContent');
+        const title = document.getElementById('tplPanelTitle');
+        if (!content) return;
+
+        if (_tplView === 'list') {
+            if (title) title.textContent = 'Gestione Template';
+            renderTplList(content);
+        } else {
+            if (title) title.textContent = _tplEditId ? 'Modifica Template' : 'Nuovo Template';
+            renderTplEditor(content);
+        }
+    }
+
+    function renderTplList(container) {
+        let html = '<div class="ed-tpl-list">';
+
+        if (_tplList.length === 0) {
+            html += '<div class="ed-tpl-empty">Nessun template disponibile.<br>Crea il primo template per iniziare.</div>';
+        } else {
+            _tplList.forEach(t => {
+                const inUse = t.in_use;
+                const usedBy = t.used_by_count || 0;
+                const canDelete = usedBy === 0;
+                html += `
+                <div class="ed-tpl-card ${inUse ? 'active' : ''}" data-tpl-id="${t.id}">
+                    <div class="ed-tpl-card-info">
+                        <div class="ed-tpl-card-name">${escapeHtml(t.nome_template)}</div>
+                        <div class="ed-tpl-card-meta">${t.is_global ? 'Globale' : 'Progetto'} &middot; Usato da ${usedBy} commess${usedBy === 1 ? 'a' : 'e'}</div>
+                    </div>
+                    ${inUse ? '<span class="ed-tpl-card-badge">In uso</span>' : ''}
+                    <div class="ed-tpl-card-actions">
+                        ${!inUse ? `<button class="ed-tpl-action-btn apply-btn" onclick="ElencoDoc.tplApply(${t.id})" title="Applica a questa commessa">\u2713</button>` : ''}
+                        <button class="ed-tpl-action-btn" onclick="ElencoDoc.tplEdit(${t.id})" title="Modifica">\u270E</button>
+                        <button class="ed-tpl-action-btn" onclick="ElencoDoc.tplDuplicate(${t.id})" title="Duplica">\u2398</button>
+                        <button class="ed-tpl-action-btn" onclick="ElencoDoc.tplDelete(${t.id})" title="Elimina" ${!canDelete ? 'disabled' : ''}>\u2715</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        html += '</div>';
+        html += `<div class="ed-tpl-list-footer">
+            <button class="btn btn-primary" onclick="ElencoDoc.tplNew()" style="width:100%">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nuovo Template
+            </button>
+        </div>`;
+
+        container.innerHTML = html;
+    }
+
+    function renderTplEditor(container) {
+        const cats = _tplData?.categories || [];
+        if (_tplActiveIdx >= cats.length) _tplActiveIdx = Math.max(0, cats.length - 1);
+        const activeCat = cats[_tplActiveIdx] || null;
+        const items = activeCat ? (activeCat.items || []) : [];
+
+        let tableHtml = '';
+        if (activeCat) {
+            tableHtml = `<table class="ed-tpl-table"><thead><tr>
+                <th style="width:60px">Codice</th>
+                <th>Descrizione</th>
+                <th style="width:30px"></th>
+            </tr></thead><tbody>`;
+
+            items.forEach((item, idx) => {
+                tableHtml += `<tr>
+                    <td class="code-col"><input type="text" value="${escapeHtml(item.cod || '')}" data-idx="${idx}" data-field="cod" maxlength="6" onchange="ElencoDoc.tplFieldChange(this)"></td>
+                    <td><input type="text" value="${escapeHtml(item.desc || '')}" data-idx="${idx}" data-field="desc" onchange="ElencoDoc.tplFieldChange(this)"></td>
+                    <td><button class="ed-tpl-del-btn" onclick="ElencoDoc.tplRemoveRow(${idx})" title="Elimina">&times;</button></td>
+                </tr>`;
+            });
+
+            tableHtml += `</tbody></table>
+                <button class="ed-tpl-add-btn" onclick="ElencoDoc.tplAddRow()">+ Aggiungi</button>`;
+        } else {
+            tableHtml = '<div style="padding:24px;text-align:center;color:#6b7280;font-size:13px">Aggiungi una categoria per iniziare.</div>';
+        }
+
+        // Build tabs dynamically from categories
+        const tabsHtml = cats.map((cat, idx) => `
+            <div class="ed-tpl-tab ${idx === _tplActiveIdx ? 'active' : ''}"
+                 draggable="true"
+                 data-cat-idx="${idx}"
+                 onclick="ElencoDoc.switchTplTab(null, ${idx})">
+                <span class="ed-tpl-tab-label" ondblclick="ElencoDoc.tplRenameCategory(${idx})">${escapeHtml(cat.label)}</span>
+                <button class="ed-tpl-tab-remove" onclick="event.stopPropagation();ElencoDoc.tplRemoveCategory(${idx})" title="Rimuovi categoria">&times;</button>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="ed-tpl-name-row">
+                <input type="text" class="ed-tpl-name-input" id="tplNameInput" value="${escapeHtml(_tplData?.nome_template || '')}" placeholder="Nome del template...">
+            </div>
+            <div class="ed-tpl-tabs" id="tplTabsBar">
+                ${tabsHtml}
+                <button class="ed-tpl-add-cat" onclick="ElencoDoc.tplAddCategory()" title="Aggiungi categoria">+</button>
+            </div>
+            <div class="ed-tpl-body">${tableHtml}</div>
+            <div class="ed-tpl-footer">
+                <button class="btn btn-secondary" onclick="ElencoDoc.tplBackToList()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Indietro
+                </button>
+                <div style="flex:1"></div>
+                <button class="btn btn-primary" onclick="ElencoDoc.saveTemplate()">Salva Template</button>
+            </div>`;
+
+        // Attach drag & drop handlers to tabs
+        initTplTabDrag();
+    }
+
+    function switchTplTab(btn, idx) {
+        _tplActiveIdx = idx;
+        renderTplPanel();
+    }
+
+    function tplFieldChange(input) {
+        const idx = parseInt(input.dataset.idx);
+        const field = input.dataset.field;
+        const cat = (_tplData?.categories || [])[_tplActiveIdx];
+        if (!cat || !cat.items[idx]) return;
+
+        if (field === 'cod') cat.items[idx].cod = input.value.trim();
+        else if (field === 'desc') cat.items[idx].desc = input.value.trim();
+    }
+
+    function tplAddRow() {
+        const cat = (_tplData?.categories || [])[_tplActiveIdx];
+        if (!cat) return;
+        cat.items.push({ cod: '', desc: '' });
+        renderTplPanel();
+        const inputs = document.querySelectorAll('.ed-tpl-table input[data-field="cod"]');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+    }
+
+    function tplRemoveRow(idx) {
+        const cat = (_tplData?.categories || [])[_tplActiveIdx];
+        if (!cat) return;
+        const item = cat.items[idx];
+        const code = item?.cod || '';
+
+        // Guard: check if used by existing docs
+        const docs = allDocs();
+        const segKey = cat.key;
+        const used = docs.some(d => (d.segments || {})[segKey] === code);
+        if (used) {
+            alert(`Impossibile eliminare "${code}": utilizzato da documenti esistenti.`);
+            return;
+        }
+
+        cat.items.splice(idx, 1);
+        renderTplPanel();
+    }
+
+    // ─── Category management ───────────────────────────────────
+
+    function tplAddCategory() {
+        const label = prompt('Nome della nuova categoria:');
+        if (!label || !label.trim()) return;
+        const key = label.trim().toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        if (!key) { alert('Nome non valido'); return; }
+
+        // Check uniqueness
+        if ((_tplData?.categories || []).some(c => c.key === key)) {
+            alert(`Categoria "${key}" esiste già.`);
+            return;
+        }
+
+        _tplData.categories.push({ key, label: label.trim(), items: [] });
+        _tplActiveIdx = _tplData.categories.length - 1;
+        renderTplPanel();
+    }
+
+    function tplRemoveCategory(idx) {
+        const cat = (_tplData?.categories || [])[idx];
+        if (!cat) return;
+
+        // Guard: check if any doc uses this category
+        const docs = allDocs();
+        const used = docs.some(d => (d.segments || {})[cat.key]);
+        if (used) {
+            alert(`Impossibile rimuovere "${cat.label}": utilizzata da documenti esistenti.`);
+            return;
+        }
+
+        if (!confirm(`Rimuovere la categoria "${cat.label}"?`)) return;
+        _tplData.categories.splice(idx, 1);
+        if (_tplActiveIdx >= _tplData.categories.length) {
+            _tplActiveIdx = Math.max(0, _tplData.categories.length - 1);
+        }
+        renderTplPanel();
+    }
+
+    function tplRenameCategory(idx) {
+        const cat = (_tplData?.categories || [])[idx];
+        if (!cat) return;
+        const newLabel = prompt('Nuovo nome per la categoria:', cat.label);
+        if (!newLabel || !newLabel.trim() || newLabel.trim() === cat.label) return;
+        cat.label = newLabel.trim();
+        renderTplPanel();
+    }
+
+    // ─── Tab drag & drop ───────────────────────────────────────
+
+    function initTplTabDrag() {
+        const tabs = document.querySelectorAll('.ed-tpl-tab[draggable]');
+        tabs.forEach(tab => {
+            tab.addEventListener('dragstart', (e) => {
+                _tplDragIdx = parseInt(tab.dataset.catIdx);
+                tab.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            tab.addEventListener('dragend', () => {
+                tab.classList.remove('dragging');
+                document.querySelectorAll('.ed-tpl-tab').forEach(t => t.classList.remove('drag-over'));
+                _tplDragIdx = null;
+            });
+            tab.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                document.querySelectorAll('.ed-tpl-tab').forEach(t => t.classList.remove('drag-over'));
+                tab.classList.add('drag-over');
+            });
+            tab.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const fromIdx = _tplDragIdx;
+                const toIdx = parseInt(tab.dataset.catIdx);
+                if (fromIdx === null || fromIdx === toIdx) return;
+
+                // Reorder categories array
+                const cats = _tplData.categories;
+                const [moved] = cats.splice(fromIdx, 1);
+                cats.splice(toIdx, 0, moved);
+
+                // Adjust active index
+                if (_tplActiveIdx === fromIdx) _tplActiveIdx = toIdx;
+                else if (fromIdx < _tplActiveIdx && toIdx >= _tplActiveIdx) _tplActiveIdx--;
+                else if (fromIdx > _tplActiveIdx && toIdx <= _tplActiveIdx) _tplActiveIdx++;
+
+                _tplDragIdx = null;
+                renderTplPanel();
+            });
+        });
+    }
+
+    async function tplApply(templateId) {
+        const result = await sendRequest('applyTemplate', { idProject, templateId });
+        if (!result.success) { alert(result.message || 'Errore'); return; }
+        // Refresh lookups from the applied template's categories
+        const tpl = _tplList.find(t => t.id == templateId);
+        if (tpl) {
+            categories = tpl.categories || [];
+            const prevResp = lookups.resp;
+            lookups = normalizeLookups(categories);
+            lookups.resp = prevResp;
+            document.getElementById('tplChipName').textContent = tpl.nome_template;
+        }
+        // Update in_use flags locally
+        _tplList.forEach(t => { t.in_use = (t.id == templateId); });
+        renderTplPanel();
+        renderSections(); // Re-render table with new column headers
+        flashSave();
+    }
+
+    function tplEdit(templateId) {
+        const tpl = _tplList.find(t => t.id == templateId);
+        if (!tpl) return;
+        _tplData = JSON.parse(JSON.stringify(tpl));
+        _tplEditId = templateId;
+        _tplActiveIdx = 0;
+        _tplView = 'editor';
+        renderTplPanel();
+    }
+
+    function tplNew() {
+        _tplData = { nome_template: '', categories: [] };
+        _tplEditId = null;
+        _tplActiveIdx = 0;
+        _tplView = 'editor';
+        renderTplPanel();
+    }
+
+    async function tplDuplicate(templateId) {
+        const tpl = _tplList.find(t => t.id == templateId);
+        const newName = 'Copia di ' + (tpl?.nome_template || 'Template');
+        const result = await sendRequest('duplicateTemplate', { templateId, nomeTemplate: newName });
+        if (!result.success) { alert(result.message || 'Errore'); return; }
+        const listResult = await sendRequest('getTemplateList', { idProject });
+        if (listResult.success) _tplList = listResult.data || [];
+        renderTplPanel();
+        flashSave();
+    }
+
+    async function tplDelete(templateId) {
+        const tpl = _tplList.find(t => t.id == templateId);
+        if (!confirm(`Eliminare il template "${tpl?.nome_template || ''}"?`)) return;
+        const result = await sendRequest('deleteTemplate', { templateId });
+        if (!result.success) { alert(result.message || 'Errore'); return; }
+        _tplList = _tplList.filter(t => t.id != templateId);
+        renderTplPanel();
+    }
+
+    function tplBackToList() {
+        _tplView = 'list';
+        _tplData = null;
+        _tplEditId = null;
+        renderTplPanel();
+    }
+
+    async function saveTemplateData() {
+        const nameInput = document.getElementById('tplNameInput');
+        const nomeTemplate = (nameInput?.value || '').trim() || 'Template';
+
+        const payload = {
+            idProject,
+            templateId: _tplEditId,
+            nomeTemplate,
+            categories: _tplData.categories || []
+        };
+
+        const result = await sendRequest('saveTemplate', payload);
+        if (!result.success) {
+            alert(result.message || 'Errore salvataggio template');
+            return;
+        }
+
+        // Refresh list
+        const listResult = await sendRequest('getTemplateList', { idProject });
+        if (listResult.success) _tplList = listResult.data || [];
+
+        // If we edited the active template, refresh lookups + chip + table headers
+        const activeTpl = _tplList.find(t => t.in_use);
+        if (activeTpl && activeTpl.id == _tplEditId) {
+            categories = activeTpl.categories || [];
+            const prevResp = lookups.resp;
+            lookups = normalizeLookups(categories);
+            lookups.resp = prevResp;
+            document.getElementById('tplChipName').textContent = activeTpl.nome_template;
+            renderSections(); // Re-render with updated columns
+        }
+
+        _tplView = 'list';
+        _tplData = null;
+        _tplEditId = null;
+        renderTplPanel();
+        flashSave();
+    }
+
+    // ================================
+    // EXPORT EXCEL
+    // ================================
+
+    function exportExcel() {
+        const csrf = document.querySelector('meta[name="token-csrf"]')?.content || '';
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/service_router.php';
+        form.style.display = 'none';
+
+        const fields = {
+            section: 'elenco_documenti',
+            action: 'exportExcel',
+            idProject: idProject,
+            csrf_token: csrf
+        };
+
+        Object.entries(fields).forEach(([k, v]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = k;
+            input.value = v;
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+    }
 
     // ================================
     // NEXTCLOUD
@@ -1727,6 +2361,76 @@ const ElencoDoc = (function() {
         if (filesList) filesList.innerHTML = renderFileList(doc.files || []);
         closeNcBrowser();
     }
+
+    // ================================
+    // PUBLIC API
+    // ================================
+    return {
+        init,
+        openProps,
+        closeProps,
+        saveProps,
+        openRevDialog,
+        closeRevDialog,
+        confirmRevision,
+        toggleSec,
+        openStatusPop,
+        openProg,
+        openDatePop,
+        openRangePicker,
+        saveRange,
+        addDocToSection,
+        dupRevision,
+        deleteDoc,
+        deleteSectionConfirm,
+        renameSection,
+        openSub,
+        closeSub,
+        saveSub,
+        updateSubCode,
+        removeSubDoc,
+        openSmgr,
+        closeSmgr,
+        openLtr,
+        closeLtr,
+        sendSubmittalMail,
+        closeMailPanel,
+        dispatchMail,
+        downloadLtrPdf,
+        closeAP,
+        saveDocumenti,
+        uploadNcFiles,
+        openNcBrowser,
+        closeNcBrowser,
+        attachNcFileFromBrowser,
+        detachNcFile,
+        // Inline editing
+        openSegDrop,
+        openNumEdit,
+        // File popover
+        openFilePopover,
+        detachAndRefresh,
+        uploadFromPopover,
+        // Template panel
+        openTemplatePanel,
+        closeTemplatePanel,
+        switchTplTab,
+        tplFieldChange,
+        tplAddRow,
+        tplRemoveRow,
+        tplAddCategory,
+        tplRemoveCategory,
+        tplRenameCategory,
+        saveTemplate: saveTemplateData,
+        tplApply,
+        tplEdit,
+        tplNew,
+        tplDuplicate,
+        tplDelete,
+        tplBackToList,
+        // Export
+        exportExcel
+    };
 
 })();
 

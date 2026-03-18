@@ -165,6 +165,8 @@ ksort($uniquePM);
                 ?>
                 <tr class="table-row-clickable"
                     data-href="<?= htmlspecialchars($detailUrl) ?>"
+                    data-has-workspace="<?= $hasBacheca ? '1' : '0' ?>"
+                    data-codice="<?= htmlspecialchars($c['codice']) ?>"
                     data-scadenza="<?= htmlspecialchars($dataFinePrevRaw) ?>"
                     data-valore="<?= htmlspecialchars($valoreRaw) ?>"
                     data-bu="<?= htmlspecialchars($bu) ?>"
@@ -193,7 +195,11 @@ ksort($uniquePM);
                         <?php endif; ?>
                     </td>
                     <td class="col-code">
-                        <a href="<?= htmlspecialchars($detailUrl) ?>" class="table-link"><?= htmlspecialchars($c['codice'] ?? '') ?></a>
+                        <?php if ($hasBacheca): ?>
+                            <a href="<?= htmlspecialchars($detailUrl) ?>" class="table-link"><?= htmlspecialchars($c['codice'] ?? '') ?></a>
+                        <?php else: ?>
+                            <a href="#" class="table-link" onclick="event.preventDefault();event.stopPropagation();avviaCommessa('<?= htmlspecialchars($c['codice']) ?>')"><?= htmlspecialchars($c['codice'] ?? '') ?></a>
+                        <?php endif; ?>
                     </td>
                     <td class="col-description">
                         <div class="cell-stack">
@@ -252,7 +258,7 @@ ksort($uniquePM);
         }, { allowHtml: true });
     }
 
-    // Click riga -> naviga via data-href (pattern unico)
+    // Click riga -> naviga via data-href, oppure chiedi conferma avvio workspace
     document.addEventListener('DOMContentLoaded', function() {
         const table = document.getElementById('elencoCommesseTable');
         if (!table) return;
@@ -262,6 +268,13 @@ ksort($uniquePM);
 
             const row = e.target.closest('tr.table-row-clickable');
             if (!row) return;
+
+            // Se la workspace non esiste, chiedi conferma per avviarla
+            if (row.dataset.hasWorkspace === '0') {
+                const codice = row.dataset.codice;
+                if (codice) avviaCommessa(codice);
+                return;
+            }
 
             const href = row.dataset.href;
             if (href) {

@@ -1729,14 +1729,19 @@ hr {
   display: flex;
   flex-direction: column;
   margin: 0;
-  margin-right: 30px;
-  margin-left: 250px;
-  margin-top: 90px;
+  /* Margini compensati per zoom 0.85: valore / 0.85 */
+  margin-right: 35px;   /* 30 / 0.85 ≈ 35 */
+  margin-left: 294px;   /* 250 / 0.85 ≈ 294 */
+  margin-top: 106px;    /* 90 / 0.85 ≈ 106 */
   padding: 10px;
   flex-grow: 1;
   box-sizing: border-box;
   transition: margin-left 0.4s ease;
   /*text-transform: capitalize;*/
+  /* ── Global scale-down ~15% ──
+     Scales EVERYTHING inside main-container: text, inputs, buttons, padding, icons.
+     Change 0.85 to adjust — then update margins above accordingly (value / zoom). */
+  zoom: 0.85;
 }
 
 .main-container {
@@ -1744,7 +1749,7 @@ hr {
 }
 
 .main-container.sidebar-closed {
-  margin-left: 40px;
+  margin-left: 47px;   /* 40 / 0.85 ≈ 47 */
   /* Larghezza della sidebar chiusa */
 }
 
@@ -1811,7 +1816,7 @@ hr {
   }
 
   .main-container.open-sidebar {
-    margin-left: 40px;
+    margin-left: 47px; /* 40 / 0.85 */
   }
 }
 

@@ -21,6 +21,9 @@ $currentUserInitials = '';
 if (!empty($_SESSION['nome']) && !empty($_SESSION['cognome'])) {
     $currentUserInitials = strtoupper(substr($_SESSION['nome'], 0, 1) . substr($_SESSION['cognome'], 0, 1));
 }
+$currentProfilePic = $Session->userinfo['profile_picture'] ?? null;
+$defaultPic = 'assets/images/default_profile.png';
+$hasProfilePic = $currentProfilePic && $currentProfilePic !== $defaultPic;
 ?>
 <link rel="stylesheet" href="assets/css/dashboard_ore.css">
 <link rel="stylesheet" href="assets/css/ore_dettaglio_utente.css">
@@ -35,7 +38,7 @@ if (!empty($_SESSION['nome']) && !empty($_SESSION['cognome'])) {
         </div>
         <div class="dboard-page-header__right">
             <div class="oreuser-user-chip" id="userChip">
-                <span class="oreuser-avatar" id="userAvatar"><?php echo htmlspecialchars($currentUserInitials); ?></span>
+                <span class="oreuser-avatar" id="userAvatar"><?php if ($hasProfilePic): ?><img src="/<?= htmlspecialchars($currentProfilePic) ?>" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"><?php else: ?><?= htmlspecialchars($currentUserInitials) ?><?php endif; ?></span>
                 <div class="oreuser-user-info">
                     <span class="oreuser-user-name" id="userName"><?php echo htmlspecialchars($currentUserName); ?></span>
                     <span class="oreuser-user-role" id="userRole"><?php echo htmlspecialchars($currentUserRole); ?></span>
@@ -201,8 +204,8 @@ if (!empty($_SESSION['nome']) && !empty($_SESSION['cognome'])) {
             </div>
         </div>
 
-        <!-- PIE CHARTS ROW -->
-        <div class="dboard-grid-2 dboard-mb-24">
+        <!-- CHARTS ROW (3 colonne: 2 pie + trend) -->
+        <div class="oreuser-charts-row dboard-mb-24">
             <!-- PIE: Budget per commessa -->
             <div class="dboard-card">
                 <div class="dboard-card__head">
@@ -214,7 +217,7 @@ if (!empty($_SESSION['nome']) && !empty($_SESSION['cognome'])) {
                         <span class="muted" id="pieTot1">0h totali</span>
                     </div>
                 </div>
-                <div class="dboard-card__body orebu-pie-container">
+                <div class="dboard-card__body orebu-pie-container oreuser-pie-compact">
                     <div class="orebu-pie-wrap">
                         <svg id="svgBudget" viewBox="0 0 200 200" class="orebu-pie"></svg>
                     </div>
@@ -233,32 +236,32 @@ if (!empty($_SESSION['nome']) && !empty($_SESSION['cognome'])) {
                         <span class="muted" id="pieTot2">0h totali</span>
                     </div>
                 </div>
-                <div class="dboard-card__body orebu-pie-container">
+                <div class="dboard-card__body orebu-pie-container oreuser-pie-compact">
                     <div class="orebu-pie-wrap">
                         <svg id="svgSpese" viewBox="0 0 200 200" class="orebu-pie"></svg>
                     </div>
                     <div class="orebu-pie-legend" id="legSpese"></div>
                 </div>
             </div>
-        </div>
 
-        <!-- TREND MENSILE -->
-        <div class="dboard-card dboard-mb-24">
-            <div class="dboard-card__head">
-                <div>
-                    <span class="dboard-card__title">Trend Mensile</span>
-                    <p class="dboard-card__sub" id="trendLabel">Anno corrente</p>
-                </div>
-                <div class="dboard-card__head-right">
-                    <div class="dboard-chart-legend" id="trendLegend">
-                        <span class="dboard-leg-item"><span class="dboard-leg-dot" style="background:#2563eb"></span>Ore imputate</span>
-                        <span class="dboard-leg-item"><span class="dboard-leg-dot" style="background:#10b981"></span>Ore budget</span>
+            <!-- TREND MENSILE -->
+            <div class="dboard-card">
+                <div class="dboard-card__head">
+                    <div>
+                        <span class="dboard-card__title">Trend Mensile</span>
+                        <p class="dboard-card__sub" id="trendLabel">Anno corrente</p>
+                    </div>
+                    <div class="dboard-card__head-right">
+                        <div class="dboard-chart-legend" id="trendLegend">
+                            <span class="dboard-leg-item"><span class="dboard-leg-dot" style="background:#2563eb"></span>Imputate</span>
+                            <span class="dboard-leg-item"><span class="dboard-leg-dot" style="background:#10b981"></span>Budget</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="dboard-card__body">
-                <div class="orebu-trend-wrap">
-                    <svg id="svgTrend" class="orebu-trend"></svg>
+                <div class="dboard-card__body">
+                    <div class="orebu-trend-wrap">
+                        <svg id="svgTrend" class="orebu-trend"></svg>
+                    </div>
                 </div>
             </div>
         </div>

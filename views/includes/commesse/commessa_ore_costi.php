@@ -3,73 +3,102 @@ if (!defined('accessofileinterni')) {
     die('Accesso diretto non consentito');
 }
 
+use Services\DashboardOreService;
+
 // Link CSS overview
 echo '<link rel="stylesheet" href="/assets/css/commesse_detail_overview.css">';
 
-// Dati placeholder (in futuro da ProjectTime / Akeron / DB)
-$budgetOre = [
-    'totali' => 230,
-    'consumate' => 184,
-    'residue' => 46,
-    'percentuale' => 80
-];
+// Carica dati reali da project_time
+$oreSummary = DashboardOreService::getCommessaOreSummary($tabella);
+$hasData = $oreSummary['success'] && ($oreSummary['data']['consumate'] > 0 || $oreSummary['data']['budget'] > 0);
 
-$risorse = [
-    ['nome' => 'Mario Rossi', 'ore_consumate' => 74, 'ore_totali' => 92, 'percentuale' => 80],
-    ['nome' => 'Laura Bianchi', 'ore_consumate' => 56, 'ore_totali' => 70, 'percentuale' => 80],
-    ['nome' => 'Luca Verdi', 'ore_consumate' => 32, 'ore_totali' => 40, 'percentuale' => 80],
-    ['nome' => 'Anna Neri', 'ore_consumate' => 22, 'ore_totali' => 28, 'percentuale' => 79],
-];
+if ($hasData) {
+    $dati = $oreSummary['data'];
+    $consumate = $dati['consumate'];
+    $budget = $dati['budget'];
+    $residue = $dati['residue'];
+    $percentuale = $dati['percentuale'];
+    $hasBudget = $dati['hasBudget'];
+    $risorse = $dati['risorse'];
+} else {
+    $consumate = 0;
+    $budget = 0;
+    $residue = 0;
+    $percentuale = 0;
+    $hasBudget = false;
+    $risorse = [];
+}
 
 // Helper per classe progress bar
-function getProgressClass($perc) {
+function getProgressClassOreCosti($perc) {
     if ($perc >= 90) return 'danger';
     if ($perc >= 75) return 'warning';
     return '';
 }
 ?>
 
+<?php if (!$hasData): ?>
+<div class="commessa-overview-grid" style="grid-template-columns: 1fr;">
+    <div class="commessa-card" style="text-align: center; padding: 48px 24px;">
+        <div style="font-size: 2.5em; margin-bottom: 12px; opacity: 0.3;">⏱</div>
+        <div style="font-size: 1.1em; font-weight: 600; color: #495057; margin-bottom: 8px;">Nessuna ora registrata</div>
+        <div style="font-size: 0.9em; color: #6c757d;">Non risultano ore imputate su questa commessa in ProjectTime.</div>
+    </div>
+</div>
+<?php else: ?>
 <div class="commessa-overview-grid">
     <!-- Card 1: Budget Ore -->
     <div class="commessa-card">
         <div class="commessa-card-header">
             <div>
-                <div class="commessa-card-title">Budget Ore</div>
-                <div class="commessa-card-subtitle">Avanzamento complessivo</div>
+                <div class="commessa-card-title"><?= $hasBudget ? 'Budget Ore' : 'Ore Lavorate' ?></div>
+                <div class="commessa-card-subtitle"><?= $hasBudget ? 'Avanzamento complessivo' : 'Totale ore imputate' ?></div>
             </div>
         </div>
 
         <!-- Numero grande -->
         <div style="text-align: center; margin-bottom: 24px;">
             <div style="font-size: 2.5em; font-weight: 700; color: #212529;">
-                <?= $budgetOre['consumate'] ?>h <span style="color: #6c757d; font-size: 0.6em;">/ <?= $budgetOre['totali'] ?>h</span>
+                <?= number_format($consumate, 0, ',', '.') ?>h
+                <?php if ($hasBudget): ?>
+                    <span style="color: #6c757d; font-size: 0.6em;">/ <?= number_format($budget, 0, ',', '.') ?>h</span>
+                <?php endif; ?>
             </div>
         </div>
 
-        <!-- Progress bar -->
+        <?php if ($hasBudget): ?>
+        <!-- Progress bar (solo se c'è budget) -->
         <div class="commessa-progress">
-            <div class="commessa-progress-bar <?= getProgressClass($budgetOre['percentuale']) ?>"
-                 style="width: <?= $budgetOre['percentuale'] ?>%;"></div>
+            <div class="commessa-progress-bar <?= getProgressClassOreCosti($percentuale) ?>"
+                 style="width: <?= min($percentuale, 100) ?>%;"></div>
         </div>
         <div class="commessa-progress-label">
-            <span><?= $budgetOre['percentuale'] ?>% utilizzato</span>
+            <span><?= $percentuale ?>% utilizzato</span>
         </div>
+        <?php endif; ?>
 
         <!-- Mini cards -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px;">
+            <?php if ($hasBudget): ?>
             <div class="commessa-mini-card">
-                <div class="commessa-mini-card-value"><?= $budgetOre['residue'] ?>h</div>
+                <div class="commessa-mini-card-value"><?= number_format($residue, 0, ',', '.') ?>h</div>
                 <div class="commessa-mini-card-label">Ore Residue</div>
             </div>
+            <?php else: ?>
             <div class="commessa-mini-card">
-                <div class="commessa-mini-card-value"><?= $budgetOre['consumate'] ?>h</div>
-                <div class="commessa-mini-card-label">Ore Consumate</div>
+                <div class="commessa-mini-card-value"><?= number_format($dati['travelHours'], 0, ',', '.') ?>h</div>
+                <div class="commessa-mini-card-label">di cui Trasferta</div>
+            </div>
+            <?php endif; ?>
+            <div class="commessa-mini-card">
+                <div class="commessa-mini-card-value"><?= $dati['resourceCount'] ?></div>
+                <div class="commessa-mini-card-label">Risorse Coinvolte</div>
             </div>
         </div>
 
         <!-- Footer -->
         <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e9ecef; font-size: 0.8em; color: #6c757d; text-align: center;">
-            Sorgente: <strong>ProjectTime</strong> · <strong>Akeron</strong> · <em>Dati simulati</em>
+            Sorgente: <strong>ProjectTime</strong><?= $hasBudget ? ' · <strong>Budget</strong>' : '' ?>
         </div>
     </div>
 
@@ -78,10 +107,11 @@ function getProgressClass($perc) {
         <div class="commessa-card-header">
             <div>
                 <div class="commessa-card-title">Ore per Risorsa</div>
-                <div class="commessa-card-subtitle">Simulazione</div>
+                <div class="commessa-card-subtitle">Top <?= count($risorse) ?> risorse per ore imputate</div>
             </div>
         </div>
 
+        <?php if (!empty($risorse)): ?>
         <!-- Lista risorse -->
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <?php foreach ($risorse as $r): ?>
@@ -98,23 +128,29 @@ function getProgressClass($perc) {
                                 <?= htmlspecialchars($r['nome']) ?>
                             </span>
                             <span style="font-size: 0.85em; font-weight: 600; color: #495057;">
-                                <?= $r['ore_consumate'] ?> / <?= $r['ore_totali'] ?>h
+                                <?= number_format($r['ore'], 0, ',', '.') ?>h
+                                <span style="color: #adb5bd; font-weight: 400;">(<?= $r['percentualeSuTotale'] ?>%)</span>
                             </span>
                         </div>
                         <div class="commessa-progress" style="height: 8px;">
-                            <div class="commessa-progress-bar <?= getProgressClass($r['percentuale']) ?>"
-                                 style="width: <?= $r['percentuale'] ?>%;"></div>
+                            <div class="commessa-progress-bar"
+                                 style="width: <?= $r['percentualeSuTotale'] ?>%;"></div>
                         </div>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
+        <?php else: ?>
+        <p style="color: #6c757d; text-align: center;">Nessuna risorsa trovata</p>
+        <?php endif; ?>
 
         <!-- CTA -->
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e9ecef; text-align: right;">
-            <a href="#" class="commessa-cta secondary small" data-tooltip="Dashboard ore non ancora implementata">
+            <a href="/index.php?section=dashboard_ore&projectId=<?= urlencode($tabella) ?>"
+               class="commessa-cta secondary small">
                 Apri dashboard ore
             </a>
         </div>
     </div>
 </div>
+<?php endif; ?>
