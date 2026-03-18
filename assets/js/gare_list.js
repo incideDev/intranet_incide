@@ -85,10 +85,12 @@
   let currentFiles = [];
   let isUploadingForm = false;
 
-  const POLL_INTERVAL = 4000;
+  const POLL_INTERVAL_MIN = 2000;
+  const POLL_INTERVAL_MAX = 15000;
   let isLoading = false;
   let currentRows = [];
   const pollingJobs = new Map();
+  const pollingIntervals = new Map(); // jobId → current interval ms
   const blacklistedJobs = new Set();
 
   function openModal() {
@@ -718,6 +720,7 @@
       clearTimeout(timer);
     }
     pollingJobs.delete(jobId);
+    pollingIntervals.delete(jobId);
   }
 
   function stopAllPolling() {
@@ -725,6 +728,7 @@
       if (timer) clearTimeout(timer);
     });
     pollingJobs.clear();
+    pollingIntervals.clear();
   }
 
   async function pollJob(jobId) {
@@ -755,7 +759,11 @@
       applyJobUpdate(jobId, res);
 
       if (res && (res.estrazione || res.status) && isJobInProgress({ estrazione: res.estrazione || res.status })) {
-        const timer = setTimeout(() => pollJob(jobId), POLL_INTERVAL);
+        // Adaptive polling: start fast, slow down over time
+        const currentInterval = pollingIntervals.get(jobId) || POLL_INTERVAL_MIN;
+        const nextInterval = Math.min(currentInterval * 1.5, POLL_INTERVAL_MAX);
+        pollingIntervals.set(jobId, nextInterval);
+        const timer = setTimeout(() => pollJob(jobId), Math.round(currentInterval));
         pollingJobs.set(jobId, timer);
       } else {
         stopJobPolling(jobId);
