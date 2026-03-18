@@ -70,7 +70,7 @@ if (
         exit('Permesso negato');
     }
 
-    \Services\GareService::downloadHighlightedPdf($_GET);
+    \Services\ExtractionService::downloadHighlightedPdf($_GET);
     exit;
 }
 // ── FINE EARLY-EXIT PDF ──────────────────────────────────────────

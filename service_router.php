@@ -49,6 +49,7 @@ use Services\NotificationService;
 use Services\SidebarService;
 use Services\CommesseService;
 use Services\GareService;
+use Services\ExtractionService;
 use Services\RequisitiService;
 use Services\ProtocolloEmailService;
 use Services\ImportManagerService;
@@ -1420,7 +1421,7 @@ switch ($section) {
                         }
                     }
 
-                    $result = \Services\GareService::upload($_POST, $_FILES);
+                    $result = \Services\ExtractionService::upload($_POST, $_FILES);
                     // Normalizza la risposta: GareService::upload() restituisce ['ok' => true, 'jobs' => [...]]
                     // ma potrebbe anche restituire ['success' => false, 'message' => ...] in caso di errore
                     if (isset($result['success']) && !$result['success']) {
@@ -1445,7 +1446,7 @@ switch ($section) {
                     break;
                 }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
-                sendJsonResponse(\Services\GareService::jobPull($jobId), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::jobPull($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'jobResults':
@@ -1455,7 +1456,7 @@ switch ($section) {
                     break;
                 }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
-                sendJsonResponse(\Services\GareService::jobResults($jobId), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::jobResults($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'jobShow':
@@ -1466,7 +1467,7 @@ switch ($section) {
                     break;
                 }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
-                sendJsonResponse(\Services\GareService::jobShow($jobId), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::jobShow($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'listJobsByGara':
@@ -1477,7 +1478,7 @@ switch ($section) {
                 }
                 // Ora accetta job_id (gara_id = job_id per retrocompatibilità)
                 $jobId = (int) ($input['job_id'] ?? $input['gara_id'] ?? 0);
-                sendJsonResponse(\Services\GareService::listJobsByGara($jobId), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::listJobsByGara($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'getEstrazioniGara':
@@ -1489,7 +1490,7 @@ switch ($section) {
                 }
                 // Ora accetta job_id (id_gara = job_id per retrocompatibilità)
                 $jobId = (int) ($input['job_id'] ?? $input['id_gara'] ?? $input['gara_id'] ?? 0);
-                echo json_encode(\Services\GareService::getEstrazioniGara($jobId), JSON_UNESCAPED_UNICODE);
+                echo json_encode(\Services\ExtractionService::getEstrazioniGara($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'getNormalizedDocs':
@@ -1499,7 +1500,7 @@ switch ($section) {
                     break;
                 }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
-                echo json_encode(\Services\GareService::getNormalizedDocs($jobId), JSON_UNESCAPED_UNICODE);
+                echo json_encode(\Services\ExtractionService::getNormalizedDocs($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'getNormalizedEcon':
@@ -1509,7 +1510,7 @@ switch ($section) {
                     break;
                 }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
-                echo json_encode(\Services\GareService::getNormalizedEcon($jobId), JSON_UNESCAPED_UNICODE);
+                echo json_encode(\Services\ExtractionService::getNormalizedEcon($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'normalizeGara':
@@ -1537,7 +1538,7 @@ switch ($section) {
                     break;
                 }
                 $jobId = (int) ($input['job_id'] ?? $input['id'] ?? 0);
-                echo json_encode(\Services\GareService::getNormalizedRoles($jobId), JSON_UNESCAPED_UNICODE);
+                echo json_encode(\Services\ExtractionService::getNormalizedRoles($jobId), JSON_UNESCAPED_UNICODE);
                 break;
 
             // Funzioni rimosse: consumeDraft, stashDraft (non più utilizzate)
@@ -1721,7 +1722,7 @@ switch ($section) {
                     sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
                     break;
                 }
-                sendJsonResponse(\Services\GareService::checkQuota($input), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::checkQuota($input), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'getExtractionTypes':
@@ -1730,7 +1731,7 @@ switch ($section) {
                     sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
                     break;
                 }
-                sendJsonResponse(\Services\GareService::getExtractionTypes(), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::getExtractionTypes(), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'apiHealth':
@@ -1739,7 +1740,7 @@ switch ($section) {
                     sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
                     break;
                 }
-                sendJsonResponse(\Services\GareService::apiHealth(), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::apiHealth(), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'getQuota':
@@ -1748,7 +1749,7 @@ switch ($section) {
                     sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
                     break;
                 }
-                $env = \Services\GareService::expandEnvPlaceholders(\Services\GareService::loadEnvConfig());
+                $env = \Services\ExtractionService::expandEnvPlaceholders(\Services\ExtractionService::loadEnvConfig());
                 $client = new \Services\AIextraction\ExternalApiClient($env);
                 sendJsonResponse($client->getQuota(), JSON_UNESCAPED_UNICODE);
                 break;
@@ -1759,7 +1760,7 @@ switch ($section) {
                     sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
                     break;
                 }
-                sendJsonResponse(\Services\GareService::getBatchUsageAction($input), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::getBatchUsageAction($input), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'listBatches':
@@ -1768,7 +1769,7 @@ switch ($section) {
                     sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
                     break;
                 }
-                sendJsonResponse(\Services\GareService::listBatchesAction($input), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::listBatchesAction($input), JSON_UNESCAPED_UNICODE);
                 break;
 
             case 'deleteRemoteJob':
@@ -1778,7 +1779,7 @@ switch ($section) {
                     sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
                     break;
                 }
-                sendJsonResponse(\Services\GareService::deleteRemoteJob($input), JSON_UNESCAPED_UNICODE);
+                sendJsonResponse(\Services\ExtractionService::deleteRemoteJob($input), JSON_UNESCAPED_UNICODE);
                 break;
 
             default:

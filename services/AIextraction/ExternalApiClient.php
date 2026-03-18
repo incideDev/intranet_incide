@@ -20,7 +20,7 @@ class ExternalApiClient
     {
         if (empty($config)) {
             // Usa la stessa pipeline di GareService per uniformità
-            $env = \Services\GareService::expandEnvPlaceholders(\Services\GareService::loadEnvConfig());
+            $env = \Services\ExtractionService::expandEnvPlaceholders(\Services\ExtractionService::loadEnvConfig());
             $this->config = $env;
         } else {
             $this->config = $config;

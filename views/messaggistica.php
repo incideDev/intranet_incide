@@ -1,6 +1,6 @@
 <?php
 // Leggi URL WebSocket da env (default: localhost:8080 per retrocompatibilità)
-$env = \Services\GareService::expandEnvPlaceholders(\Services\GareService::loadEnvConfig());
+$env = \Services\ExtractionService::expandEnvPlaceholders(\Services\ExtractionService::loadEnvConfig());
 $wsUrl = $env['WEBSOCKET_URL'] ?? 'ws://localhost:8080';
 ?>
 <div class="main-container" data-user-id="<?php echo $_SESSION['user_id']; ?>" data-username="<?php echo $_SESSION['username']; ?>" data-websocket-url="<?php echo htmlspecialchars($wsUrl); ?>">
