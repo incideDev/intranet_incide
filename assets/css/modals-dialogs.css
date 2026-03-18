@@ -690,6 +690,308 @@
     gap: 20px;
 }
 
+/* ---- Upload Form ---- */
+.gare-upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ---- Drop Zone ---- */
+.gare-upload-area {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+    background: #f8fafc;
+}
+
+.gare-upload-area:hover,
+.gare-upload-area.drag-over {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.04);
+}
+
+.gare-upload-area-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.gare-upload-icon {
+    width: 48px;
+    height: 48px;
+    color: #94a3b8;
+}
+
+.gare-upload-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.gare-upload-area.drag-over .gare-upload-icon {
+    color: #3b82f6;
+}
+
+.gare-upload-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.gare-upload-text strong {
+    font-size: 15px;
+    color: #0f172a;
+}
+
+.gare-upload-select {
+    background: none;
+    border: none;
+    color: #2563eb;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.gare-upload-select:hover {
+    color: #1d4ed8;
+}
+
+.gare-upload-subtext {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+/* ---- Info Pills ---- */
+.gare-upload-helper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gare-upload-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #1e40af;
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    line-height: 1.4;
+}
+
+.gare-upload-pill.neutral {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+/* ---- Selected Files List ---- */
+.gare-selected-files {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gare-selected-files-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.gare-selected-files-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.gare-selected-counter {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.gare-selected-files ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.gare-selected-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.gare-selected-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fee2e2;
+    border-radius: 6px;
+    color: #dc2626;
+}
+
+.gare-selected-icon svg,
+.gare-icon-file svg {
+    width: 16px;
+    height: 16px;
+}
+
+.gare-selected-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.gare-selected-name {
+    font-weight: 500;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gare-selected-size {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.gare-remove-file {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    line-height: 1;
+    font-size: 18px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.gare-remove-file:hover {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+/* ---- Form Actions ---- */
+.gare-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 8px;
+}
+
+/* ---- Buttons ---- */
+.gare-button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+    line-height: 1.4;
+}
+
+.gare-button.primary {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+}
+
+.gare-button.primary:hover:not(:disabled) {
+    background: #1d4ed8;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.gare-button.primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gare-button.secondary {
+    background: #fff;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.gare-button.secondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+/* ---- Upload Status ---- */
+.gare-upload-status h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.gare-upload-status ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.gare-upload-status li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.gare-upload-status li.success {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.gare-upload-status li.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.gare-upload-status li.uploading {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
 /* ============================================
    6. MODAL FORM ELEMENTS
    ============================================ */
