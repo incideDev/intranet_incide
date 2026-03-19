@@ -539,12 +539,10 @@
       if (isDuplicate && !isForced && jobId) {
         const refreshBtn = document.createElement("button");
         refreshBtn.className = "refresh-existing";
-        refreshBtn.innerHTML =
-          '<img src="assets/icons/refresh.png" alt="Aggiorna">';
-        refreshBtn.title = "Riesegui estrazione";
+        refreshBtn.textContent = "Ri-estrai";
+        refreshBtn.title = "Riesegui estrazione forzando il ricaricamento";
         refreshBtn.onclick = async (e) => {
           e.preventDefault();
-          // Carica solo questo file specifico con force=true
           await performSingleFileUpload(fileName, true);
         };
         li.appendChild(refreshBtn);
@@ -584,9 +582,7 @@
             li.innerHTML = `
               <span>${window.escapeHtml ? window.escapeHtml(job.file_name || `File ${idx + 1}`) : job.file_name || `File ${idx + 1}`}:</span>
               ${window.escapeHtml ? window.escapeHtml(job.error) : job.error}
-              <button type="button" class="refresh-existing" title="Riesegui estrazione">
-                <img src="assets/icons/refresh.png" alt="Aggiorna">
-              </button>
+              <button type="button" class="refresh-existing" title="Riesegui estrazione forzando il ricaricamento">Ri-estrai</button>
             `;
           } else {
             li.innerHTML = `<span>${window.escapeHtml ? window.escapeHtml(job.file_name || `File ${idx + 1}`) : job.file_name || `File ${idx + 1}`}:</span> ${window.escapeHtml ? window.escapeHtml(job.error) : job.error}`;

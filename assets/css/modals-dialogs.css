@@ -992,6 +992,35 @@
     color: #1e40af;
 }
 
+.gare-upload-status li.duplicate {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.gare-upload-status .refresh-existing {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1e40af;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+}
+.gare-upload-status .refresh-existing:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+.gare-upload-status .refresh-existing img { display: none; }
+
 /* ============================================
    6. MODAL FORM ELEMENTS
    ============================================ */

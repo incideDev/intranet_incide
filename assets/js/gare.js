@@ -174,9 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 statusSpan.innerHTML = `
                     <span class="warning">
                         File già elaborato.
-                        <button class="refresh-existing" id="refresh-existing-btn" title="Riesegui estrazione">
-                            <img src="assets/icons/refresh.png" alt="Aggiorna" />
-                        </button>
+                        <button class="refresh-existing" id="refresh-existing-btn" title="Riesegui estrazione forzando il ricaricamento">Ri-estrai</button>
                     </span>
                 `;
 
