@@ -1035,11 +1035,9 @@
     const chevronSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
 
     el.innerHTML = `
-      <nav class="gd-breadcrumb">
-        <a href="/index.php?section=commerciale&page=elenco_gare">Gare</a>
-        <span class="gd-bc-sep">&#8250;</span>
-        <span class="gd-bc-current">${escapeHtml(truncate(title, 50))}</span>
-      </nav>
+      <div class="page-title-container" style="border-bottom:3px solid var(--gd-blue);padding-bottom:10px;padding-left:5px;margin-bottom:15px;">
+        <h1 style="margin:0;margin-bottom:-5px;font-weight:bold;color:#333;">${escapeHtml(truncate(title, 100))}</h1>
+      </div>
       <div class="intest">
         <div class="int-top">
           <div class="int-left">
@@ -1050,6 +1048,7 @@
             </div>
           </div>
           <div class="int-right">
+            <div id="asi-slot"></div>
             ${jobInProgress ? `
             <div class="int-prog">
               <div class="prog-bar" style="width:80px;"><div class="prog-fill" style="width:${pct}%"></div></div>
@@ -1077,6 +1076,13 @@
       </div>
     `;
     showSection('gd-header');
+
+    // Move API status widget into the header int-right area
+    const asiSource = document.getElementById('api-status-container');
+    const asiSlot = document.getElementById('asi-slot');
+    if (asiSource && asiSlot && asiSource.firstElementChild) {
+      asiSlot.appendChild(asiSource.firstElementChild);
+    }
   }
 
   /**

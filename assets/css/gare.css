@@ -1188,12 +1188,7 @@
   transition: width .3s;
 }
 
-#api-status-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -14px;
-  margin-bottom: 8px;
-}
+#api-status-container:empty { display: none; }
 
 /* ============================================
    GARE DETTAGLIO — Component Styles
@@ -1231,23 +1226,6 @@
   --gd-r:        10px;
   --gd-r2:       14px;
 }
-
-/* ─ BREADCRUMB ─ */
-.gd-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  font-size: 12px;
-}
-.gd-breadcrumb a {
-  color: var(--gd-blue);
-  text-decoration: none;
-  font-weight: 500;
-}
-.gd-breadcrumb a:hover { text-decoration: underline; }
-.gd-bc-sep { color: var(--gd-t2); font-size: 11px; }
-.gd-bc-current { color: var(--gd-t1); font-weight: 500; }
 
 /* ─ INTESTAZIONE ─ */
 .intest {
