@@ -1053,6 +1053,31 @@
 }
 
 /* ============================================
+   8.9 TOGGLE BUTTONS - RIUTILIZZABILE
+   ============================================ */
+
+.participation-toggle {
+    display: inline-flex;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.part-btn {
+    border: none;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f8fafc;
+    color: #94a3b8;
+    transition: all .15s;
+}
+.part-btn:first-child { border-right: 1px solid #e2e8f0; }
+.part-btn:hover { background: #e2e8f0; }
+.part-btn.part-yes.on { background: #dcfce7; color: #166534; }
+.part-btn.part-no.on { background: #fee2e2; color: #991b1b; }
+
+/* ============================================
    9. TABLE TOP FILTERS - BARRA FILTRI SMART
    ============================================
    Stili generici e riutilizzabili per barre filtro

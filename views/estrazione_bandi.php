@@ -20,20 +20,20 @@ if (!checkPermissionOrWarn('view_gare'))
     <!-- VISTA TABELLA -->
     <div id="table-view" class="">
         <div class="gare-table-wrapper">
-            <table class="table table-filterable gare-table" id="gare-table" data-remote="0" data-page-size="10">
+            <table class="table table-filterable table--modern gare-table" id="gare-table" data-remote="0" data-page-size="10">
                 <thead>
                     <tr>
-                        <th class="gara-number">N° Gara</th>
-                        <th>Bando</th>
-                        <th class="gara-amount">Importo Lavori</th>
-                        <th class="gara-amount">Importo Corrispettivo</th>
+                        <th class="col-code">N° Gara</th>
+                        <th class="col-description">Bando</th>
+                        <th class="col-amount">Importo Lavori</th>
+                        <th class="col-amount">Importo Corrispettivo</th>
                         <th>Ente</th>
                         <th>Luogo</th>
-                        <th>Data Uscita</th>
-                        <th>Data Scadenza</th>
-                        <th>Partecipazione</th>
-                        <th>Avanzamento</th>
-                        <th>Aggiornato</th>
+                        <th class="col-date">Data Uscita</th>
+                        <th class="col-date">Data Scadenza</th>
+                        <th class="col-status">Partecipazione</th>
+                        <th class="col-status">Avanzamento</th>
+                        <th class="col-date">Aggiornato</th>
                     </tr>
                 </thead>
                 <tbody></tbody>

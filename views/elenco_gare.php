@@ -165,18 +165,18 @@ if (!checkPermissionOrWarn('view_gare'))
     <!-- VISTA TABELLA -->
     <div id="table-view">
         <div class="gare-table-wrapper">
-            <table class="table table-filterable gare-table" id="gare-table" data-remote="0" data-page-size="10">
+            <table class="table table-filterable table--modern gare-table" id="gare-table" data-remote="0" data-page-size="10">
                 <thead>
                     <tr>
-                        <th class="gara-number">N° Gara</th>
+                        <th class="col-code">N° Gara</th>
                         <th>Ente</th>
-                        <th>Titolo</th>
+                        <th class="col-description">Titolo</th>
                         <th>Settore</th>
                         <th>Tipologia</th>
                         <th>Luogo</th>
-                        <th>Data Uscita</th>
-                        <th>Data Scadenza</th>
-                        <th>Stato</th>
+                        <th class="col-date">Data Uscita</th>
+                        <th class="col-date">Data Scadenza</th>
+                        <th class="col-status">Stato</th>
                     </tr>
                 </thead>
                 <tbody></tbody>

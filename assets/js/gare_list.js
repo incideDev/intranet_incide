@@ -1047,36 +1047,45 @@
           row.importo_corrispettivi_formatted ||
           formatCurrencyValue(row.importo_corrispettivi) ||
           "\u2014";
+        const esc = window.escapeHtml || ((s) => s);
+        const fDate = window.formatDate || (() => "\u2014");
+        const fDateTime = window.formatDateTime || (() => "\u2014");
+        const titolo = row.titolo || row.file_name || `Job ${row.job_id}`;
+        const fileName = row.file_name || '';
+        const pctVal = row.progress_percent || 0;
+        const isComplete = pctVal >= 100 || row.estrazione === 'completed';
+        const isFailed = row.estrazione === 'error' || row.estrazione === 'failed';
+        const progressCls = isComplete ? 'table-pill--success' : (isFailed ? 'table-pill--danger' : (pctVal > 0 ? 'table-pill--info' : 'table-pill--default'));
+
+        tr.classList.add('table-row-clickable');
         tr.innerHTML = `
-          <td class="gara-number">${window.escapeHtml ? window.escapeHtml(codiceGara) : codiceGara}</td>
-          <td>${window.escapeHtml ? window.escapeHtml(row.titolo || row.file_name || `Job ${row.job_id}`) : row.titolo || row.file_name || `Job ${row.job_id}`}</td>
-          <td class="gara-amount">${window.escapeHtml ? window.escapeHtml(importoLavoriLabel) : importoLavoriLabel}</td>
-          <td class="gara-amount">${window.escapeHtml ? window.escapeHtml(importoCorrispettiviLabel) : importoCorrispettiviLabel}</td>
-          <td>${window.escapeHtml ? window.escapeHtml(row.ente || "\u2014") : row.ente || "\u2014"}</td>
-          <td>${window.escapeHtml ? window.escapeHtml(row.luogo || "\u2014") : row.luogo || "\u2014"}</td>
-          <td>${window.formatDate ? window.formatDate(row.data_uscita) || "\u2014" : "\u2014"}</td>
-          <td>${window.formatDate ? window.formatDate(row.data_scadenza) || "\u2014" : "\u2014"}</td>
-          <td>
-            <div class="participation-buttons" style="display: flex; gap: 4px;">
-              <button type="button" class="participation-btn participation-yes ${participationActive ? "active" : ""}" 
-                      data-job-id="${row.job_id}" data-participation="true"
-                      style="background: ${participationActive ? "#4caf50" : "#e0e0e0"}; color: ${participationActive ? "white" : "#666"}; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;"
-                      onclick="event.stopPropagation(); updateParticipation(${row.job_id}, true);">
-                Sì
-              </button>
-              <button type="button" class="participation-btn participation-no ${!participationActive ? "active" : ""}" 
-                      data-job-id="${row.job_id}" data-participation="false"
-                      style="background: ${!participationActive ? "#f44336" : "#e0e0e0"}; color: ${!participationActive ? "white" : "#666"}; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;"
-                      onclick="event.stopPropagation(); updateParticipation(${row.job_id}, false);">
-                No
-              </button>
+          <td class="col-code">${esc(codiceGara)}</td>
+          <td class="col-description">
+            <div class="cell-stack">
+              <span class="cell-primary">${esc(titolo)}</span>
+              ${fileName && fileName !== titolo ? `<span class="cell-secondary">${esc(fileName)}</span>` : ''}
             </div>
           </td>
-          <td class="progress-cell">
-              <span class="gare-progress-label">${row.progress_percent || 0}%</span>
-              <div class="gare-progress-bar"><span style="width:${row.progress_percent || 0}%"></span></div>
+          <td class="col-amount">${esc(importoLavoriLabel)}</td>
+          <td class="col-amount">${esc(importoCorrispettiviLabel)}</td>
+          <td>${esc(row.ente || "\u2014")}</td>
+          <td>${esc(row.luogo || "\u2014")}</td>
+          <td class="col-date">${fDate(row.data_uscita) || "\u2014"}</td>
+          <td class="col-date">${fDate(row.data_scadenza) || "\u2014"}</td>
+          <td class="col-status">
+            <div class="participation-toggle">
+              <button type="button" class="part-btn part-yes ${participationActive ? 'on' : ''}"
+                      data-job-id="${row.job_id}" data-participation="true"
+                      onclick="event.stopPropagation(); updateParticipation(${row.job_id}, true);">Si</button>
+              <button type="button" class="part-btn part-no ${!participationActive ? 'on' : ''}"
+                      data-job-id="${row.job_id}" data-participation="false"
+                      onclick="event.stopPropagation(); updateParticipation(${row.job_id}, false);">No</button>
+            </div>
           </td>
-          <td>${window.formatDateTime ? window.formatDateTime(row.updated_at || row.completed_at || row.created_at) || "\u2014" : "\u2014"}</td>
+          <td class="col-status">
+            <span class="table-pill ${progressCls}">${isComplete ? 'Completato' : (isFailed ? 'Errore' : pctVal + '%')}</span>
+          </td>
+          <td class="col-date">${fDateTime(row.updated_at || row.completed_at || row.created_at) || "\u2014"}</td>
         `;
       }
       tr.addEventListener("click", (e) => {
