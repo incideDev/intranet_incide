@@ -77,4 +77,5 @@ if (!$garaId && !$jobId) {
     </div>
 </div>
 
+<script src="/assets/js/media_viewer.js" defer></script>
 <script src="/assets/js/gare_detail.js" defer></script>
