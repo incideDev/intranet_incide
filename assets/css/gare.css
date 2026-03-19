@@ -1722,62 +1722,6 @@ tr.hidden { display: none; }
 .ic-v a:hover { text-decoration: underline; }
 .ic-v.abs { color: var(--gd-t2); font-style: italic; font-size: 12px; font-weight: 400; }
 
-/* ─ ECONOMICI CARD ─ */
-.econ-card {
-  background: var(--gd-s0);
-  border: 1px solid var(--gd-border);
-  border-radius: var(--gd-r);
-  padding: 16px 20px;
-}
-.econ-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-.econ-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  color: var(--gd-t2);
-  margin-bottom: 2px;
-}
-.econ-amount {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--gd-t0);
-  letter-spacing: -.02em;
-}
-.econ-cite {
-  font-size: 12px;
-  color: var(--gd-t1);
-  line-height: 1.6;
-  margin-bottom: 8px;
-  padding: 8px 0;
-  border-top: 1px solid var(--gd-s2);
-}
-.econ-badges {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.econ-rti {
-  font-size: 11px;
-  color: var(--gd-t1);
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--gd-s2);
-  line-height: 1.5;
-}
-.econ-rti-label {
-  font-weight: 700;
-  color: var(--gd-t2);
-  text-transform: uppercase;
-  font-size: 10px;
-  letter-spacing: .04em;
-}
-
 /* ─ CHIPS ─ */
 .gd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .gd-chip {

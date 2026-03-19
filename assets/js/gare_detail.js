@@ -1512,9 +1512,9 @@
     if (!el) return;
     if (!econItems || econItems.length === 0) return;
 
-    let html = '';
+    const cards = [];
 
-    // ── FATTURATO: hero card with amount + temporal + scope ──
+    // ── FATTURATO card ──
     const fatturatoItem = byType('fatturato_globale_n_minimo_anni');
     const fJson = fatturatoItem ? getJson(fatturatoItem) : null;
     const sr = fJson?.turnover_requirement?.single_requirement;
@@ -1523,85 +1523,63 @@
       let amountNum = (typeof sr.minimum_amount_value === 'number') ? sr.minimum_amount_value : parseItalianNumber(sr.minimum_amount_raw);
       const amount = (!isNaN(amountNum) && amountNum > 0) ? formatEuro(amountNum) : (sr.minimum_amount_raw || 'N/D');
       const citText = sr.source_text || sr.calculation_rule || '';
-      const page = sr.page_number || '';
       const tc = sr.temporal_calculation;
       const temporalLabel = tc ? `Migliori ${tc.periods_to_select || '?'} su ${tc.lookback_window_years || '?'} anni` : '';
       const derivation = sr.derivation_formula || '';
       const scope = sr.service_scope_description || '';
 
-      html += `
-        <div class="econ-card" style="margin-bottom:12px;">
-          <div class="econ-top">
-            <div>
-              <div class="econ-label">Fatturato globale minimo</div>
-              <div class="econ-amount">${escapeHtml(amount)}</div>
-            </div>
-            ${page ? `<span class="req-page">pag. ${escapeHtml(String(page))}</span>` : ''}
-          </div>
-          ${citText ? `<div class="econ-cite">${escapeHtml(citText)}</div>` : ''}
-          <div class="econ-badges">
-            ${temporalLabel ? `<span class="gd-badge gd-bb">${escapeHtml(temporalLabel)}</span>` : ''}
-            ${derivation ? `<span class="gd-badge gd-bb">${escapeHtml(derivation)}</span>` : ''}
-            ${scope ? `<span class="gd-badge gd-bb">${escapeHtml(truncate(scope, 50))}</span>` : ''}
-          </div>
+      let chipsHtml = [temporalLabel, derivation, scope].filter(Boolean)
+        .map(t => `<span class="gd-chip">${escapeHtml(truncate(t, 50))}</span>`).join('');
+
+      cards.push(`
+        <div class="info-card">
+          <div class="ic-l">Fatturato globale minimo</div>
+          <div class="ic-v" style="font-size:16px;font-weight:700;margin:4px 0">${escapeHtml(amount)}</div>
+          ${citText ? `<div class="ic-v sm">${escapeHtml(truncate(citText, 200))}</div>` : ''}
+          ${chipsHtml ? `<div class="gd-chips" style="margin-top:8px">${chipsHtml}</div>` : ''}
         </div>
-      `;
+      `);
     } else if (fatturatoItem) {
       const dv = getDisplayValue(fatturatoItem);
-      if (dv) html += `<div class="info-card" style="margin-bottom:12px;"><div class="ic-l">Fatturato globale minimo</div><div class="ic-v">${escapeHtml(truncate(dv, 300))}</div></div>`;
+      if (dv) cards.push(`<div class="info-card"><div class="ic-l">Fatturato globale minimo</div><div class="ic-v">${escapeHtml(truncate(dv, 300))}</div></div>`);
     }
 
-    // ── CAPACITA ECONOMICA: separate card(s) for each requirement ──
+    // ── CAPACITA ECONOMICA card(s) ──
     const capacitaItem = byType('requisiti_di_capacita_economica_finanziaria');
     const cJson = capacitaItem ? getJson(capacitaItem) : null;
 
     if (cJson?.requirements?.length > 0) {
       cJson.requirements.forEach(req => {
-        // Use Italian citation text, fallback to requirement_text
         const citText = (cJson.citations || []).map(c => (c.text || []).join(' ')).find(t => t.length > 20) || '';
         const reqText = req.source_text || req.requirement_text || citText || '';
         const amounts = (req.minimum_amount || []).filter(a => a.value);
-        const page = req.page_number || '';
         const tf = req.timeframe;
-        const tfLabel = tf ? `${tf.selection_method === 'best_of' ? 'Migliori' : ''} ${tf.selected_count || ''}/${tf.total_window || ''} ${tf.unit || 'anni'}`.trim() : '';
-        const formula = req.formula;
         const rtiRules = req.rti_allocation?.distribution_rules || '';
 
-        html += `
-          <div class="econ-card" style="margin-bottom:12px;">
-            <div class="econ-top">
-              <div class="econ-label">Requisito capacita economico-finanziaria</div>
-              ${page ? `<span class="req-page">pag. ${escapeHtml(String(page))}</span>` : ''}
-            </div>
-            ${reqText ? `<div class="econ-cite">${escapeHtml(truncate(reqText, 400))}</div>` : ''}
-            <div class="econ-badges">
-              ${amounts.map(a => `<span class="gd-badge gd-bb">${escapeHtml(formatEuro(a.value))}</span>`).join('')}
-              ${tfLabel ? `<span class="gd-badge gd-bb">${escapeHtml(tfLabel)}</span>` : ''}
-              ${formula?.multiplier ? `<span class="gd-badge gd-bb">x${formula.multiplier} ${escapeHtml(formula.base_reference || '')}</span>` : ''}
-            </div>
-            ${rtiRules ? `<div class="econ-rti"><span class="econ-rti-label">RTI:</span> ${escapeHtml(rtiRules)}</div>` : ''}
+        let chipsHtml = '';
+        if (amounts.length) chipsHtml += amounts.map(a => `<span class="gd-chip">${escapeHtml(formatEuro(a.value))}</span>`).join('');
+        if (tf) chipsHtml += `<span class="gd-chip">${escapeHtml(`${tf.selection_method === 'best_of' ? 'Migliori' : ''} ${tf.selected_count || ''}/${tf.total_window || ''} ${tf.unit || 'anni'}`.trim())}</span>`;
+
+        cards.push(`
+          <div class="info-card">
+            <div class="ic-l">Capacita economico-finanziaria</div>
+            ${reqText ? `<div class="ic-v sm">${escapeHtml(truncate(reqText, 200))}</div>` : ''}
+            ${chipsHtml ? `<div class="gd-chips" style="margin-top:8px">${chipsHtml}</div>` : ''}
+            ${rtiRules ? `<div class="ic-v sm" style="margin-top:8px;font-style:italic"><strong>RTI:</strong> ${escapeHtml(truncate(rtiRules, 150))}</div>` : ''}
           </div>
-        `;
+        `);
       });
     } else if (capacitaItem) {
-      // Fallback
-      const source = capacitaItem.synthetic_source || capacitaItem;
-      const tabs = buildExtractionTabs(source);
-      const responseTab = tabs.find(t => t.id === 'response');
-      if (responseTab?.content) {
-        html += `<div class="tcard"><div class="tcard-hd">Capacita economico-finanziaria</div><div style="overflow-x:auto;">${responseTab.content}</div></div>`;
-      } else {
-        const dv = getDisplayValue(capacitaItem);
-        if (dv) html += `<div class="info-card"><div class="ic-l">Capacita economico-finanziaria</div><div class="ic-v">${escapeHtml(truncate(dv, 300))}</div></div>`;
-      }
+      const dv = getDisplayValue(capacitaItem);
+      if (dv) cards.push(`<div class="info-card"><div class="ic-l">Capacita economico-finanziaria</div><div class="ic-v">${escapeHtml(truncate(dv, 300))}</div></div>`);
     }
 
-    if (!html) return;
+    if (!cards.length) return;
 
     el.innerHTML = `
       <div class="gd-sec">
         <div class="gd-sec-hd">Requisiti economico-finanziari</div>
-        ${html}
+        <div class="${cards.length > 1 ? 'g2' : ''}">${cards.join('')}</div>
       </div>
     `;
     showSection('gd-economici');
