@@ -487,17 +487,13 @@ class ExtractionService
             }
 
             // Corrispettivi opere
-            // IMPORTANTE: Per importi_corrispettivi_categoria_id_opere, usa ESCLUSIVAMENTE dati normalizzati
-            // Se non ci sono dati normalizzati, NON fare fallback ai dati raw (ignora completamente)
             if ($typeCode === 'importi_corrispettivi_categoria_id_opere') {
                 $estrazione = self::buildEstrazioneFromNormalizedCorrispettiviOpere($row, $jobId);
                 if ($estrazione) {
                     $estrazioni[] = $estrazione;
                     continue;
                 }
-                // Se non ci sono dati normalizzati, salta completamente questa estrazione
-                // Non fare fallback ai dati raw dall'AI (contengono fallback in inglese)
-                continue;
+                // Fallback: let it through to generic handler (API value_json has entries[])
             }
 
             // Requisiti tecnici
