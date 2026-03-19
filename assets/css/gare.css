@@ -1612,7 +1612,8 @@ tr.hidden { display: none; }
 .tcard-toggle .chv { transition: transform .2s; flex-shrink: 0; }
 .tcard.collapsible.open .tcard-toggle .chv { transform: rotate(180deg); }
 /* tcard table rows — scoped to .tcard to avoid global table overrides */
-.tcard table { width: 100%; border-collapse: collapse; table-layout: auto; }
+.tcard table { width: 100%; border-collapse: collapse; table-layout: auto; word-break: break-word; }
+.tcard-body { overflow: hidden; }
 /* Fixed layout only for fallback table with explicit colgroup */
 .tcard table:has(col.ca) { table-layout: fixed; }
 .tcard col.ca { width: 35%; }

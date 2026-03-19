@@ -1372,9 +1372,9 @@
       if (responseTab && responseTab.content && /<table[\s>]/i.test(responseTab.content)) {
         const collapseId = `imp-tbl-${Math.random().toString(36).slice(2, 8)}`;
         tablesHtml += `
-          <div class="tcard collapsible" style="margin-top:12px;">
+          <div class="tcard collapsible open" style="margin-top:12px;">
             <div class="tcard-hd tcard-toggle" onclick="this.parentElement.classList.toggle('open')">${escapeHtml(label)} <svg class="chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
-            <div class="tcard-body"><div style="overflow-x:auto;">${responseTab.content}</div></div>
+            <div class="tcard-body">${responseTab.content}</div>
           </div>
         `;
       }
