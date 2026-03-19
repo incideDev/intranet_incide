@@ -103,8 +103,6 @@
     window.currentGaraIdForUpload = garaId;
   }
 
-  const jobsEl = document.getElementById('gare-jobs');
-
   const jobs = new Map();
   let jobsInitialLoadPromise = null;
   const resultPromises = new Map();
@@ -191,48 +189,6 @@
     return normalized;
   }
 
-  function formatTenderSectorValue(rawValue) {
-    if (!rawValue) return '';
-    const text = String(rawValue).trim();
-    if (!text) return '';
-
-    const cpvPattern = /^(?:cpv(?:\s*principale)?[:\s]*)?([0-9]{8}-\d)\s*[-:]\s*([^()]+?)(?:\s*\(([^)]+)\))?$/i;
-    const match = text.match(cpvPattern);
-    if (match) {
-      const code = match[1] ? match[1].trim() : '';
-      let label = match[2] ? match[2].trim() : '';
-      if (!label && match[3]) {
-        label = match[3].trim();
-      }
-      const cleanedLabel = label.replace(/\s+/g, ' ').replace(/[;]+$/, '').trim();
-      const pieces = [];
-      if (cleanedLabel) {
-        pieces.push(cleanedLabel);
-      }
-      if (code) {
-        pieces.push(`CPV ${code}`);
-      }
-      return pieces.join(' (') + (pieces.length > 1 ? ')' : '');
-    }
-
-    const genericMatch = text.match(/([0-9]{8}-\d)/);
-    if (genericMatch) {
-      const code = genericMatch[1];
-      const remainder = text.replace(/(?:cpv(?:\s*principale)?[:\s]*)?[0-9]{8}-\d\s*[-:]?\s*/i, '').trim();
-      const cleanedRemainder = remainder
-        .replace(/\(([^)]+)\)$/, '')
-        .replace(/\s+/g, ' ')
-        .replace(/[;]+$/, '')
-        .trim();
-      if (cleanedRemainder) {
-        return `${cleanedRemainder} (CPV ${code})`;
-      }
-      return `CPV ${code}`;
-    }
-
-    return text;
-  }
-
   document.addEventListener('gare:upload:completed', () => {
     if (garaId) {
       scheduleLoadJobs();
@@ -278,11 +234,8 @@
       }
 
       if (jobs.size === 0) {
-        jobsEl.classList.add('hidden');
         return;
       }
-
-      jobsEl.classList.remove('hidden');
 
       renderJobs();
       for (const job of jobs.values()) {
@@ -308,15 +261,6 @@
           const job = jobs.get(jobId);
           job.results = res;
           renderJobs();
-
-          // Load batch usage info if the job is completed
-          if (job.status === 'completed' || job.status === 'done') {
-            const batchId = job.ext_batch_id;
-            const usageContainer = document.getElementById(`batch-usage-${job.job_id}`);
-            if (batchId && usageContainer) {
-              loadBatchUsage(batchId, usageContainer);
-            }
-          }
         }
       } catch (e) {
         console.error('Errore caricamento risultati job:', e);
@@ -333,7 +277,7 @@
 
   async function pollJob(jobId) {
     try {
-      const res = await customFetch('gare', 'jobPull', { job_id: jobId });
+      const res = await customFetch('gare', 'jobPull', { job_id: jobId }, { showLoader: false });
       if (!jobs.has(jobId)) return;
 
       const job = jobs.get(jobId);
@@ -375,55 +319,72 @@
 
   function renderJobs() {
     if (!jobs.size) {
-      jobsEl.classList.add('hidden');
+      hideSection('gd-loading');
+      const errEl = document.getElementById('gd-error');
+      if (errEl) {
+        errEl.textContent = 'Nessuna estrazione disponibile.';
+        errEl.style.display = '';
+      }
       return;
     }
 
-    jobsEl.classList.remove('hidden');
+    const primaryJob = jobs.values().next().value;
+    if (!primaryJob) return;
 
-    const contents = Array.from(jobs.values())
-      .map((job) => {
-        return `
-          <div class="job-content single" id="gare-job-${job.job_id}">
-            ${renderJobSummary(job)}
-            ${renderJobResultsHTML(job)}
+    const isComplete = primaryJob.status === 'completed' || primaryJob.status === 'done';
+    const isFailed = primaryJob.status === 'failed' || primaryJob.status === 'error';
+
+    if (primaryJob.results) {
+      renderGaraDetail(primaryJob);
+    } else if (!isComplete && !isFailed) {
+      // Job in progress — show header with live progress
+      renderProgressHeader(primaryJob);
+    } else if (isFailed) {
+      hideSection('gd-loading');
+      const errEl = document.getElementById('gd-error');
+      if (errEl) {
+        errEl.textContent = 'Estrazione fallita: ' + (primaryJob.error_message || 'errore sconosciuto');
+        errEl.style.display = '';
+      }
+    }
+  }
+
+  /**
+   * Render a minimal header with live progress bar while extraction is running.
+   */
+  function renderProgressHeader(job) {
+    const el = document.getElementById('gd-header');
+    if (!el) return;
+
+    const total = Math.max(1, job.progress_total || 100);
+    const done = Math.max(0, Math.min(total, job.progress_done || 0));
+    const pct = Math.round((done / total) * 100);
+    const fileName = job.file_name || 'Documento';
+    const badge = getStatusBadge(job);
+
+    el.innerHTML = `
+      <div class="intest">
+        <div class="int-top">
+          <div class="int-left">
+            <div class="pdf-chip">PDF</div>
+            <div class="int-meta2">
+              <span class="int-file">${escapeHtml(fileName)}</span>
+              <span class="int-title">Estrazione in corso...</span>
+            </div>
           </div>
-        `;
-      })
-      .join('');
-
-    jobsEl.innerHTML = `
-      <div class="jobs-content jobs-content-single no-print">${contents}</div>
-      <div class="jobs-print print-only" id="gare-print-root">
-        ${renderJobsPrint()}
+          <div class="int-right">
+            <span class="gd-badge ${badge.cls}"><span class="gd-dot"></span> ${escapeHtml(badge.label)}</span>
+          </div>
+        </div>
+        <div class="prog-strip">
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+          <span class="prog-pct">${pct}%</span>
+          <span class="prog-label">${done} / ${total} elementi elaborati</span>
+        </div>
       </div>
     `;
-
-    const printRoot = document.getElementById('gare-print-root');
-    if (printRoot) {
-      printRoot.setAttribute('data-print-root', 'true');
-    }
-
-    initializeExtractionTables(jobsEl);
-
-    attachDetailHandlers(jobsEl);
-
-    // Render highlighted PDF download links for each extraction item
-    for (const job of jobs.values()) {
-      const jobEl = document.getElementById(`gare-job-${job.job_id}`);
-      if (!jobEl) continue;
-      const detailInners = jobEl.querySelectorAll('.details-inner');
-      const items = job.normalized_items || [];
-      detailInners.forEach((detailInner, index) => {
-        const item = items[index];
-        if (item) {
-          renderHighlightedPdfLinks(
-            { ...item, ext_job_id: item.ext_job_id || job.ext_job_id, job_id: job.job_id },
-            detailInner
-          );
-        }
-      });
-    }
+    showSection('gd-header');
+    hideSection('gd-loading');
   }
 
   function initializeExtractionTables(scope) {
@@ -456,90 +417,6 @@
     if (job.oggetto_appalto && String(job.oggetto_appalto).trim()) return String(job.oggetto_appalto).trim();
     if (job.titolo && String(job.titolo).trim()) return String(job.titolo).trim();
     return '';
-  }
-
-  function resolveFieldFromResults(job, typeCodes) {
-    if (!job) return '';
-    const data = job.results && Array.isArray(job.results.data) ? job.results.data : [];
-    for (const item of data) {
-      const code = (item.type_code || item.tipo || item.type || '').toLowerCase();
-      if (typeCodes.includes(code)) {
-        const primary = extractPrimaryValue(item);
-        const text = stringifyValue(primary);
-        if (text && text.trim()) return text.trim();
-      }
-    }
-    return '';
-  }
-
-  function resolveEnte(job) {
-    return resolveFieldFromResults(job, ['stazione_appaltante']);
-  }
-
-  function resolveScadenza(job) {
-    return resolveFieldFromResults(job, ['data_scadenza_gara_appalto', 'data_scadenza']);
-  }
-
-  function resolveTipologia(job) {
-    return resolveFieldFromResults(job, ['tipologia_di_gara', 'tipologia_gara']);
-  }
-
-  function resolveLuogo(job) {
-    return resolveFieldFromResults(job, ['luogo_provincia_appalto', 'luogo']);
-  }
-
-  function renderJobSummary(job) {
-    const percent = progressPercent(job);
-    const updated = job.updated_at || job.completed_at || job.created_at;
-    const updatedLabel = formatDate(updated);
-    const statusText = job.status_label || statusLabel(job.status);
-    const isComplete = percent >= 100 || job.status === 'completed' || job.status === 'done';
-
-    // Resolve key fields from extraction results
-    const ente = resolveEnte(job);
-    const scadenza = resolveScadenza(job);
-    const tipologia = resolveTipologia(job);
-    const luogo = resolveLuogo(job);
-    const resultsCount =
-      job.results && job.results.ok && Array.isArray(job.results.data)
-        ? job.results.data.length
-        : null;
-
-    const docIcon = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
-
-    return `
-      <section class="job-summary">
-        <header class="job-summary-header">
-          <div class="job-summary-title">
-            <span class="job-summary-icon" aria-hidden="true">${docIcon}</span>
-            <div class="job-summary-text">
-              <h2 class="job-summary-name">${escapeHtml(job.file_name || 'Documento senza nome')}</h2>
-              <div class="job-summary-meta">
-                ${job.gara_id ? `<span class="job-summary-chip">Gara #${escapeHtml(String(job.gara_id))}</span>` : ''}
-                <span class="job-summary-chip job-summary-chip-muted">Aggiornato ${updatedLabel}</span>
-              </div>
-            </div>
-          </div>
-          <div class="job-summary-status-group">
-            <span class="status-chip status-${job.status}">${escapeHtml(statusText)}</span>
-            ${!isComplete ? `
-            <div class="job-summary-progress">
-              <div class="job-summary-progress-track">
-                <span style="width:${percent}%;"></span>
-              </div>
-              <span class="job-summary-progress-value">${percent}%</span>
-            </div>` : ''}
-          </div>
-        </header>
-        <div class="gare-detail-summary job-summary-grid">
-          ${ente ? `<div class="summary-card"><span class="field-label">Stazione Appaltante</span><span class="field-value">${escapeHtml(ente)}</span></div>` : ''}
-          ${scadenza ? `<div class="summary-card"><span class="field-label">Scadenza</span><span class="field-value">${escapeHtml(scadenza)}</span></div>` : ''}
-          ${tipologia ? `<div class="summary-card"><span class="field-label">Tipologia</span><span class="field-value">${escapeHtml(tipologia)}</span></div>` : ''}
-          ${luogo ? `<div class="summary-card"><span class="field-label">Luogo</span><span class="field-value">${escapeHtml(luogo)}</span></div>` : ''}
-          ${resultsCount !== null ? `<div class="summary-card"><span class="field-label">Elementi estratti</span><span class="field-value">${escapeHtml(String(resultsCount))}</span></div>` : ''}
-        </div>
-      </section>
-    `;
   }
 
   function renderJobsPrint() {
@@ -583,32 +460,6 @@
         ${appaltoTitle ? `<h2 class="print-job-title">${escapeHtml(appaltoTitle)}</h2>` : ''}
         ${renderJobPrintResults(job)}
       </article>
-    `;
-  }
-
-  function renderJobPrintSummary(job) {
-    const percent = progressPercent(job);
-    const statusText = job.status_label || statusLabel(job.status);
-    const createdLabel = formatDate(job.created_at);
-    const updatedLabel = formatDate(job.completed_at || job.updated_at || job.created_at);
-    const completedLabel = formatDate(job.completed_at);
-
-    return `
-      <header class="print-job-header">
-        <div class="print-job-title">
-          <h2>${escapeHtml(resolveOggettoAppalto(job) || job.file_name || 'Documento senza nome')}</h2>
-        </div>
-        <div class="print-job-meta">
-          <dl>
-            <div><dt>Job ID</dt><dd>#${escapeHtml(String(job.job_id))}</dd></div>
-            <div><dt>Stato</dt><dd>${escapeHtml(statusText)}</dd></div>
-            <div><dt>Avanzamento</dt><dd>${percent}%</dd></div>
-            <div><dt>Creato</dt><dd>${createdLabel}</dd></div>
-            <div><dt>Ultimo aggiornamento</dt><dd>${updatedLabel}</dd></div>
-            <div><dt>Completato</dt><dd>${completedLabel}</dd></div>
-          </dl>
-        </div>
-      </header>
     `;
   }
 
@@ -731,6 +582,1319 @@
     'requisiti_idoneita_professionale_gruppo_lavoro': 19,
   };
 
+  // ══════════════════════════════════════════════════════════════════
+  // SECTION CLASSIFICATION — maps extraction type_code to UI section
+  // ══════════════════════════════════════════════════════════════════
+  const SECTION_MAP = {
+    oggetto_appalto: 'header',
+    stazione_appaltante: 'header',
+    data_scadenza_gara_appalto: 'header',
+    data_uscita_gara_appalto: 'header',
+    luogo_provincia_appalto: 'header',
+    tipologia_di_gara: 'header',
+    link_portale_stazione_appaltante: 'header',
+    sopralluogo_obbligatorio: 'overview',
+    sopralluogo_obbligatorio_split: 'overview',
+    sopralluogo_deadline: 'overview',
+    tipologia_di_appalto: 'overview',
+    settore_industriale_gara_appalto: 'overview',
+    settore_gara: 'overview',
+    importi_opere_per_categoria_id_opere: 'importi',
+    importi_corrispettivi_categoria_id_opere: 'importi',
+    importi_requisiti_tecnici_categoria_id_opere: 'importi',
+    requisiti_tecnico_professionali: 'requisiti',
+    fatturato_globale_n_minimo_anni: 'economici',
+    requisiti_di_capacita_economica_finanziaria: 'economici',
+    documentazione_richiesta_tecnica: 'docs_ruoli',
+    requisiti_idoneita_professionale_gruppo_lavoro: 'docs_ruoli',
+    documenti_di_gara: 'docs_ruoli',
+    criteri_valutazione_offerta_tecnica: 'docs_ruoli',
+  };
+
+  /**
+   * Classify extraction items into UI sections.
+   * Each item goes to exactly ONE section (no duplicates).
+   */
+  function classifyExtractions(items) {
+    const sections = {
+      header: [], overview: [], importi: [],
+      requisiti: [], economici: [], docs_ruoli: [], fallback: []
+    };
+    for (const item of items) {
+      const type = (item.type_code || item.tipo || '').toLowerCase();
+      const section = SECTION_MAP[type] || 'fallback';
+      sections[section].push(item);
+    }
+    return sections;
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // HELPER FUNCTIONS for section renderers
+  // ══════════════════════════════════════════════════════════════════
+
+  /**
+   * Extract the human-readable display value from an extraction item.
+   */
+  function getDisplayValue(item) {
+    if (!item) return '';
+    const primary = extractPrimaryValue(item);
+    const text = stringifyValue(primary);
+    if (text && text.trim()) return text.trim();
+    if (item.display_value) {
+      const dv = stringifyValue(item.display_value);
+      if (dv && dv.trim()) return dv.trim();
+    }
+    if (item.empty_reason) return item.empty_reason;
+    return '';
+  }
+
+  /**
+   * Parse value_json once. Returns the parsed object or null.
+   */
+  function getJson(item) {
+    if (!item) return null;
+    return parseJsonObject(item.value_json);
+  }
+
+  /**
+   * Format an API date object {year, month, day, hour?, minute?} to Italian string.
+   * e.g. "07/11/2025 ore 12:00" or "07/11/2025"
+   */
+  function formatApiDate(dateObj) {
+    if (!dateObj || !dateObj.year) return '';
+    const dd = String(dateObj.day || 1).padStart(2, '0');
+    const mm = String(dateObj.month || 1).padStart(2, '0');
+    const yyyy = dateObj.year;
+    let result = `${dd}/${mm}/${yyyy}`;
+    if (dateObj.hour !== null && dateObj.hour !== undefined) {
+      const hh = String(dateObj.hour).padStart(2, '0');
+      const min = String(dateObj.minute || 0).padStart(2, '0');
+      result += ` ore ${hh}:${min}`;
+    }
+    return result;
+  }
+
+  /**
+   * Format an API date object to long Italian: "7 novembre 2025 ore 12:00"
+   */
+  function formatApiDateLong(dateObj) {
+    if (!dateObj || !dateObj.year) return '';
+    const months = [
+      'gennaio','febbraio','marzo','aprile','maggio','giugno',
+      'luglio','agosto','settembre','ottobre','novembre','dicembre'
+    ];
+    let result = `${dateObj.day} ${months[(dateObj.month || 1) - 1]} ${dateObj.year}`;
+    if (dateObj.hour !== null && dateObj.hour !== undefined) {
+      const hh = String(dateObj.hour).padStart(2, '0');
+      const min = String(dateObj.minute || 0).padStart(2, '0');
+      result += ` ore ${hh}:${min}`;
+    }
+    return result;
+  }
+
+  /**
+   * Read a simple string answer from API JSON.
+   * Checks: json.answer, json.url, then falls back to getDisplayValue.
+   */
+  function getSimpleAnswer(item) {
+    const json = getJson(item);
+    if (json) {
+      if (typeof json.answer === 'string' && json.answer.trim()) return json.answer.trim();
+      if (typeof json.url === 'string' && json.url.trim()) return json.url.trim();
+    }
+    return getDisplayValue(item);
+  }
+
+  /**
+   * Map type_code to Italian label, leveraging resolveExtractionType.
+   */
+  function getTypeLabel(typeCode) {
+    const TYPE_LABELS = {
+      oggetto_appalto: 'Oggetto dell\'appalto',
+      stazione_appaltante: 'Stazione appaltante',
+      data_scadenza_gara_appalto: 'Scadenza',
+      data_uscita_gara_appalto: 'Pubblicazione',
+      luogo_provincia_appalto: 'Luogo',
+      tipologia_di_gara: 'Tipologia di gara',
+      tipologia_di_appalto: 'Tipologia di appalto',
+      link_portale_stazione_appaltante: 'Portale',
+      sopralluogo_obbligatorio: 'Sopralluogo obbligatorio',
+      sopralluogo_obbligatorio_split: 'Sopralluogo obbligatorio',
+      sopralluogo_deadline: 'Data richiesta sopralluogo',
+      settore_industriale_gara_appalto: 'Settore industriale',
+      settore_gara: 'Settore della gara',
+      importi_opere_per_categoria_id_opere: 'Importi opere per categoria',
+      importi_corrispettivi_categoria_id_opere: 'Corrispettivi per categoria',
+      importi_requisiti_tecnici_categoria_id_opere: 'Requisiti tecnici per categoria',
+      requisiti_tecnico_professionali: 'Requisiti tecnico-professionali',
+      fatturato_globale_n_minimo_anni: 'Fatturato globale minimo',
+      requisiti_di_capacita_economica_finanziaria: 'Capacita economico-finanziaria',
+      documentazione_richiesta_tecnica: 'Documentazione richiesta tecnica',
+      requisiti_idoneita_professionale_gruppo_lavoro: 'Idoneita professionale gruppo di lavoro',
+      documenti_di_gara: 'Documenti di gara',
+      criteri_valutazione_offerta_tecnica: 'Criteri valutazione offerta tecnica',
+    };
+    if (!typeCode) return '';
+    const key = typeCode.toLowerCase();
+    return TYPE_LABELS[key] || typeCode.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  /**
+   * Format a number as Italian Euro: "1.234.567,89 EUR"
+   */
+  function formatEuro(amount) {
+    if (amount === null || amount === undefined || isNaN(amount)) return 'N/D';
+    return parseFloat(amount).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+  }
+
+  /**
+   * Format a date string as Italian long format: "21 gennaio 2026"
+   */
+  function formatDateItalianLong(dateStr) {
+    if (!dateStr) return '';
+    const months = [
+      'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+      'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
+    ];
+    // Try to parse various formats
+    let d = null;
+    if (typeof dateStr === 'string') {
+      const trimmed = dateStr.trim();
+      // dd/mm/yyyy
+      const itMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (itMatch) {
+        d = new Date(parseInt(itMatch[3]), parseInt(itMatch[2]) - 1, parseInt(itMatch[1]));
+      }
+      // yyyy-mm-dd
+      if (!d || isNaN(d.getTime())) {
+        const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (isoMatch) {
+          d = new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
+        }
+      }
+      if (!d || isNaN(d.getTime())) {
+        d = new Date(trimmed);
+      }
+    } else {
+      d = new Date(dateStr);
+    }
+    if (!d || isNaN(d.getTime())) return String(dateStr);
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  /**
+   * Calculate days until a given date string. Returns negative if past.
+   */
+  function daysUntil(dateStr) {
+    if (!dateStr) return null;
+    let d = null;
+    if (typeof dateStr === 'string') {
+      const trimmed = dateStr.trim();
+      const itMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (itMatch) {
+        d = new Date(parseInt(itMatch[3]), parseInt(itMatch[2]) - 1, parseInt(itMatch[1]));
+      }
+      if (!d || isNaN(d.getTime())) {
+        const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (isoMatch) {
+          d = new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
+        }
+      }
+      if (!d || isNaN(d.getTime())) {
+        d = new Date(trimmed);
+      }
+    }
+    if (!d || isNaN(d.getTime())) return null;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+  }
+
+  /**
+   * Show/hide a container by id.
+   */
+  function showSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  }
+  function hideSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  }
+
+  /**
+   * Find an extraction item by type_code from an items array.
+   */
+  function findByType(items, typeCode) {
+    if (!Array.isArray(items)) return null;
+    const target = typeCode.toLowerCase();
+    return items.find(item => {
+      const code = (item.type_code || item.tipo || '').toLowerCase();
+      return code === target;
+    }) || null;
+  }
+
+  /**
+   * Sum amount_eur from entries in value_json for importi-type items.
+   */
+  /**
+   * Parse an Italian-formatted number string like "10.000.000,50" to float.
+   */
+  function parseItalianNumber(str) {
+    if (str === null || str === undefined) return NaN;
+    if (typeof str === 'number') return str;
+    // Remove currency symbols, spaces, non-numeric chars except . and ,
+    const cleaned = String(str).replace(/[€$\s]/g, '').trim();
+    if (!cleaned) return NaN;
+    // If has both . and , → Italian: 1.234,56
+    if (cleaned.includes('.') && cleaned.includes(',')) {
+      return parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
+    }
+    // If only , and it looks like decimal separator (max 2 digits after)
+    if (cleaned.includes(',') && /,\d{1,2}$/.test(cleaned)) {
+      return parseFloat(cleaned.replace(',', '.'));
+    }
+    // Otherwise parse normally
+    return parseFloat(cleaned);
+  }
+
+  function sumAmountEur(item) {
+    if (!item) return 0;
+    const parsed = parseJsonObject(item.value_json);
+    if (parsed && Array.isArray(parsed.entries)) {
+      return parsed.entries.reduce((sum, e) => {
+        const raw = e.amount_eur ?? e.importo_corrispettivo_eur ?? e.amount_raw ?? 0;
+        const val = (typeof raw === 'number') ? raw : parseItalianNumber(raw);
+        return sum + (isNaN(val) ? 0 : val);
+      }, 0);
+    }
+    if (item.table && Array.isArray(item.table.rows)) {
+      return item.table.rows.reduce((sum, row) => {
+        if (Array.isArray(row)) {
+          for (const cell of row) {
+            const val = parseItalianNumber(cell);
+            if (!isNaN(val) && val > 100) return sum + val;
+          }
+        }
+        return sum;
+      }, 0);
+    }
+    return 0;
+  }
+
+  /**
+   * Get the status badge class and label for a job.
+   */
+  function getStatusBadge(job) {
+    const status = (job.status || '').toLowerCase();
+    if (status === 'completed' || status === 'done') {
+      return { cls: 'gd-bg', label: 'Completato' };
+    }
+    if (status === 'processing' || status === 'in_progress') {
+      return { cls: 'gd-ba', label: 'In elaborazione' };
+    }
+    if (status === 'failed' || status === 'error') {
+      return { cls: 'gd-br', label: 'Errore' };
+    }
+    return { cls: 'gd-bb', label: statusLabel(status) };
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // MAIN DISPATCHER — renderGaraDetail(job)
+  // ══════════════════════════════════════════════════════════════════
+
+  /**
+   * Main entry point for section-based rendering.
+   * Takes a loaded job with results and populates all section containers.
+   */
+  function renderGaraDetail(job) {
+    if (!job || !job.results || !job.results.ok || !Array.isArray(job.results.data)) {
+      hideSection('gd-loading');
+      const errEl = document.getElementById('gd-error');
+      if (errEl) {
+        errEl.textContent = 'Nessun dato disponibile per questa gara.';
+        errEl.style.display = '';
+      }
+      return;
+    }
+
+    // Normalize and sort items
+    if (!job.normalized_items) {
+      job.normalized_items = normalizeItems(job.results.data);
+      job.normalized_items = sortExtractionItems(job.normalized_items);
+    }
+
+    const allItems = job.normalized_items;
+    const sections = classifyExtractions(allItems);
+
+    // Helper to find by type across all items
+    const byType = (typeCode) => findByType(allItems, typeCode);
+
+    // Render each section
+    renderHeader(job, sections.header, byType);
+    renderOverview(sections.overview, byType, allItems);
+    renderImporti(sections.importi, byType);
+    renderRequisiti(sections.requisiti);
+    renderEconomici(sections.economici, byType);
+    renderDocsRuoli(sections.docs_ruoli, job);
+    renderAllFields(sections.fallback, job);
+    renderActionBar(job);
+
+    // Hide loading, show populated sections
+    hideSection('gd-loading');
+
+    // Update print layout
+    const printRoot = document.getElementById('gare-print-root');
+    if (printRoot) {
+      printRoot.innerHTML = renderJobsPrint();
+      printRoot.setAttribute('data-print-root', 'true');
+    }
+
+    // Load batch usage if completed
+    if (job.status === 'completed' || job.status === 'done') {
+      const batchId = job.ext_batch_id;
+      const usageContainer = document.getElementById('batch-usage-container');
+      if (batchId && usageContainer) {
+        loadBatchUsage(batchId, usageContainer);
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // SECTION RENDERERS
+  // ══════════════════════════════════════════════════════════════════
+
+  /**
+   * Render the header/intestazione card.
+   */
+  function renderHeader(job, headerItems, byType) {
+    const el = document.getElementById('gd-header');
+    if (!el) return;
+
+    // Title: from API JSON project_name or fallback
+    const oggettoItem = byType('oggetto_appalto');
+    const oggettoJson = getJson(oggettoItem);
+    const title = oggettoJson?.project_name || (oggettoItem ? getDisplayValue(oggettoItem) : '') || resolveOggettoAppalto(job) || job.file_name || 'Gara';
+
+    // Status badge
+    const badge = getStatusBadge(job);
+    const allItems = job.normalized_items || [];
+    const itemCount = allItems.length;
+
+    // Meta fields — read API JSON directly
+    const ente = getSimpleAnswer(byType('stazione_appaltante'));
+
+    const scadenzaItem = byType('data_scadenza_gara_appalto');
+    const scadenzaJson = getJson(scadenzaItem);
+    const scadenza = scadenzaJson?.date ? formatApiDate(scadenzaJson.date) : (getDisplayValue(scadenzaItem) ? (formatDateItalian(getDisplayValue(scadenzaItem)) || getDisplayValue(scadenzaItem)) : '');
+
+    const tipologia = getSimpleAnswer(byType('tipologia_di_gara'));
+
+    const luogoItem = byType('luogo_provincia_appalto');
+    const luogoJson = getJson(luogoItem);
+    let luogo = '';
+    if (luogoJson?.location) {
+      const loc = luogoJson.location;
+      const parts = [loc.entity_name, loc.city].filter(Boolean);
+      luogo = parts.join(', ');
+      if (loc.district) luogo += ` (${loc.district})`;
+    } else {
+      luogo = getDisplayValue(luogoItem);
+    }
+
+    const updated = job.updated_at || job.completed_at || job.created_at;
+    const updatedLabel = formatDate(updated) || '';
+
+    const portaleItem = byType('link_portale_stazione_appaltante');
+    const portaleJson = getJson(portaleItem);
+    const portaleValue = portaleJson?.url || getDisplayValue(portaleItem);
+    const portaleIsUrl = portaleValue && /^https?:\/\//i.test(portaleValue);
+    let portaleDomain = '';
+    if (portaleIsUrl) {
+      try { portaleDomain = new URL(portaleValue).hostname; } catch (_) { portaleDomain = portaleValue; }
+    }
+
+    // Confidence: average from all items that have confidence
+    let totalConf = 0;
+    let confCount = 0;
+    allItems.forEach(item => {
+      const c = parseFloat(item.confidence || item.confidence_score || 0);
+      if (c > 0) { totalConf += c; confCount++; }
+    });
+    const avgConf = confCount > 0 ? Math.round((totalConf / confCount) * 100) : 0;
+
+    const fileName = job.file_name || '';
+
+    // Live progress (visible when job is not yet completed)
+    const jobStatus = (job.status || '').toLowerCase();
+    const jobInProgress = jobStatus !== 'completed' && jobStatus !== 'done' && jobStatus !== 'failed' && jobStatus !== 'error';
+    const total = Math.max(1, job.progress_total || 100);
+    const done = Math.max(0, Math.min(total, job.progress_done || 0));
+    const pct = Math.round((done / total) * 100);
+    const chevronSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+    el.innerHTML = `
+      <nav class="gd-breadcrumb">
+        <a href="/index.php?section=commerciale&page=elenco_gare">Gare</a>
+        <span class="gd-bc-sep">&#8250;</span>
+        <span class="gd-bc-current">${escapeHtml(truncate(title, 50))}</span>
+      </nav>
+      <div class="intest">
+        <div class="int-top">
+          <div class="int-left">
+            <div class="pdf-chip">PDF</div>
+            <div class="int-meta2">
+              ${fileName ? `<span class="int-file">${escapeHtml(fileName)}</span>` : ''}
+              <span class="int-title">${escapeHtml(truncate(title, 120))}</span>
+            </div>
+          </div>
+          <div class="int-right">
+            ${jobInProgress ? `
+            <div class="int-prog">
+              <div class="prog-bar" style="width:80px;"><div class="prog-fill" style="width:${pct}%"></div></div>
+              <span class="prog-pct">${pct}%</span>
+            </div>` : ''}
+            <span class="gd-badge ${badge.cls}"><span class="gd-dot"></span> ${escapeHtml(badge.label)}</span>
+            <span class="gd-badge gd-bb">${itemCount} elementi</span>
+          </div>
+        </div>
+        <div class="meta-row">
+          <div class="mc"><span class="mc-l">Stazione appaltante</span><span class="mc-v sm">${ente ? escapeHtml(truncate(ente, 80)) : '<span class="mc-v sm" style="color:var(--gd-t2);font-style:italic">N/D</span>'}</span></div>
+          <div class="mc${scadenza ? ' hi' : ''}"><span class="mc-l">Scadenza</span><span class="mc-v">${scadenza ? escapeHtml(scadenza) : '<span style="color:var(--gd-t2);font-style:italic">N/D</span>'}</span></div>
+          <div class="mc"><span class="mc-l">Tipologia</span><span class="mc-v sm">${tipologia ? escapeHtml(truncate(tipologia, 50)) : '<span style="color:var(--gd-t2);font-style:italic">N/D</span>'}</span></div>
+          <div class="mc"><span class="mc-l">Luogo</span><span class="mc-v">${luogo ? escapeHtml(luogo) : '<span style="color:var(--gd-t2);font-style:italic">N/D</span>'}</span></div>
+          <div class="mc"><span class="mc-l">Aggiornato</span><span class="mc-v">${updatedLabel ? escapeHtml(updatedLabel) : '—'}</span></div>
+          <div class="mc"><span class="mc-l">Portale</span><span class="mc-v">${portaleIsUrl ? `<a href="${escapeAttribute(portaleValue)}" target="_blank" rel="noopener">${escapeHtml(portaleDomain)} &#8599;</a>` : (portaleValue ? escapeHtml(truncate(portaleValue, 40)) : '<span style="color:var(--gd-t2);font-style:italic">N/D</span>')}</span></div>
+        </div>
+        ${confCount > 0 ? `
+        <div class="conf-strip">
+          <span class="conf-l">Confidenza estrazione</span>
+          <div class="conf-bar"><div class="conf-fill" style="width:${avgConf}%"></div></div>
+          <span class="conf-pct">${avgConf}%</span>
+          <span class="conf-info">&nbsp;&middot;&nbsp; ${itemCount} campi elaborati</span>
+        </div>` : ''}
+      </div>
+    `;
+    showSection('gd-header');
+  }
+
+  /**
+   * Render the Panoramica (overview) section.
+   */
+  function renderOverview(overviewItems, byType, allItems) {
+    const el = document.getElementById('gd-overview');
+    if (!el) return;
+
+    // Timeline dates — read API date objects directly
+    const dataUscitaItem = byType('data_uscita_gara_appalto');
+    const dataUscitaJson = getJson(dataUscitaItem);
+    const dataScadenzaItem = byType('data_scadenza_gara_appalto');
+    const dataScadenzaJson = getJson(dataScadenzaItem);
+
+    const dataUscitaVal = dataUscitaJson?.date ? formatApiDate(dataUscitaJson.date) : getDisplayValue(dataUscitaItem);
+    const dataScadenzaVal = dataScadenzaJson?.date ? formatApiDate(dataScadenzaJson.date) : getDisplayValue(dataScadenzaItem);
+    const uscitaLong = dataUscitaJson?.date ? formatApiDateLong(dataUscitaJson.date) : formatDateItalianLong(dataUscitaVal);
+    const scadenzaLong = dataScadenzaJson?.date ? formatApiDateLong(dataScadenzaJson.date) : formatDateItalianLong(dataScadenzaVal);
+
+    // Sopralluogo — read API JSON directly (bool_answer, deadlines[], booking)
+    const sopItem = byType('sopralluogo_obbligatorio') || byType('sopralluogo_obbligatorio_split');
+    const sopJson = getJson(sopItem?.synthetic_source || sopItem);
+    let sopRequired = false;
+    let sopDeadlineVal = '';
+    let sopBookingUrl = '';
+
+    if (sopJson && typeof sopJson.bool_answer === 'boolean') {
+      sopRequired = sopJson.bool_answer;
+      if (Array.isArray(sopJson.deadlines) && sopJson.deadlines.length > 0) {
+        const dl = sopJson.deadlines[0];
+        const dtObj = dl.calculated_effective_datetime || dl.absolute_datetime;
+        sopDeadlineVal = dtObj ? formatApiDate(dtObj) : (dl.source_text || '');
+      }
+      if (sopJson.booking_platform?.url) sopBookingUrl = sopJson.booking_platform.url;
+    } else {
+      // Fallback to synthetic items
+      const sopSplitItem = byType('sopralluogo_obbligatorio_split');
+      if (sopSplitItem) {
+        const norm = (getDisplayValue(sopSplitItem) || '').toLowerCase().trim();
+        sopRequired = (norm === 'si' || norm === 'sì' || norm === 'yes' || norm === 'true' || norm === '1');
+      }
+      const sopDeadlineItem = byType('sopralluogo_deadline');
+      if (sopDeadlineItem) sopDeadlineVal = getDisplayValue(sopDeadlineItem);
+    }
+
+    // Countdown — use structured date if available
+    let scadenzaDays = null;
+    if (dataScadenzaJson?.date) {
+      const d = new Date(dataScadenzaJson.date.year, dataScadenzaJson.date.month - 1, dataScadenzaJson.date.day);
+      const now = new Date(); now.setHours(0,0,0,0); d.setHours(0,0,0,0);
+      scadenzaDays = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+    } else {
+      scadenzaDays = daysUntil(dataScadenzaVal);
+    }
+
+    // Stat cards
+    const totalItems = allItems.length;
+    const missingItems = allItems.filter(item => {
+      const dv = getDisplayValue(item);
+      return !dv || dv === '—' || dv === 'N/D' || (item.empty_reason && !dv);
+    }).length;
+
+    // Tipologia appalto
+    const tipologiaAppaltoVal = getSimpleAnswer(byType('tipologia_di_appalto'));
+
+    // Settore — read API JSON object fields
+    const settoreItem = byType('settore_industriale_gara_appalto') || byType('settore_gara');
+    const settoreJson = getJson(settoreItem);
+    let settoreVal = '';
+    if (settoreJson) {
+      const code = settoreJson.prevalent_id_opere?.code || (typeof settoreJson.prevalent_id_opere === 'string' ? settoreJson.prevalent_id_opere : '');
+      const cat = settoreJson.prevalent_categoria?.categoria || (typeof settoreJson.prevalent_categoria === 'string' ? settoreJson.prevalent_categoria : '');
+      settoreVal = [code, cat].filter(Boolean).join(' ');
+    }
+    if (!settoreVal) settoreVal = getDisplayValue(settoreItem);
+
+    // Timeline HTML
+    const timelineHtml = `
+      <div class="timeline">
+        <div class="tl-title">Cronologia della gara</div>
+        <div class="tl-track">
+          <div class="tl-item">
+            <div class="tl-dot ${dataUscitaVal ? 'done' : 'empty'}"></div>
+            <div class="tl-body">
+              <div class="tl-label">Pubblicazione</div>
+              ${dataUscitaVal
+                ? `<div class="tl-date">${escapeHtml(uscitaLong || dataUscitaVal)}</div>`
+                : '<div class="tl-date" style="color:var(--gd-t2);font-weight:400;font-size:12px;font-style:italic">Data non disponibile</div>'}
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot ${sopRequired ? 'warn' : 'empty'}"></div>
+            <div class="tl-body">
+              <div class="tl-label">Sopralluogo ${sopRequired ? 'obbligatorio' : 'facoltativo'}</div>
+              ${sopDeadlineVal && sopDeadlineVal !== '—'
+                ? `<div class="tl-date">${escapeHtml(sopDeadlineVal)}</div>`
+                : '<div class="tl-date" style="color:var(--gd-t2);font-weight:400;font-size:12px;font-style:italic">Nessuna data prevista</div>'}
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot ${dataScadenzaVal ? 'warn' : 'empty'}"></div>
+            <div class="tl-body">
+              <div class="tl-label">Scadenza presentazione offerte</div>
+              ${dataScadenzaVal
+                ? `<div class="tl-date">${escapeHtml(scadenzaLong || dataScadenzaVal)}</div>`
+                : '<div class="tl-date" style="color:var(--gd-t2);font-weight:400;font-size:12px;font-style:italic">Data non disponibile</div>'}
+              ${scadenzaDays !== null && scadenzaDays >= 0
+                ? `<div class="countdown">&#9201; ${scadenzaDays} giorni al termine</div>`
+                : (scadenzaDays !== null && scadenzaDays < 0
+                    ? `<div class="countdown" style="background:var(--gd-red-l);color:var(--gd-red-t)">Scaduta da ${Math.abs(scadenzaDays)} giorni</div>`
+                    : '')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Sopralluogo card
+    const sopCardBg = sopRequired ? 'var(--gd-amber-l)' : 'var(--gd-green-l)';
+    const sopCardBorder = sopRequired ? '#e0c97a' : '#b5dcc5';
+    const sopCardColor = sopRequired ? 'var(--gd-amber-t)' : 'var(--gd-green-t)';
+    const sopIconBg = sopRequired ? 'var(--gd-amber)' : 'var(--gd-green)';
+    const sopIcon = sopRequired
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    const rightColHtml = `
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="sop-card" style="background:${sopCardBg};border-color:${sopCardBorder};">
+          <div class="sop-icon" style="background:${sopIconBg};">${sopIcon}</div>
+          <div class="sop-body">
+            <div class="sop-label" style="color:${sopCardColor};">Sopralluogo obbligatorio</div>
+            <div class="sop-val" style="color:${sopCardColor};">${sopRequired ? 'Richiesto' : 'Non richiesto'}</div>
+            ${sopDeadlineVal && sopDeadlineVal !== '—'
+              ? `<div class="sop-note" style="color:${sopRequired ? 'var(--gd-amber)' : 'var(--gd-green)'};">${escapeHtml(sopDeadlineVal)}</div>`
+              : ''}
+            ${sopBookingUrl ? `<a class="sop-link" href="${escapeAttribute(sopBookingUrl)}" target="_blank" rel="noopener">Piattaforma prenotazione &#8599;</a>` : ''}
+          </div>
+        </div>
+        <div class="g2" style="gap:10px;">
+          <div class="gd-stat">
+            <div class="gd-stat-l">Elementi estratti</div>
+            <div class="gd-stat-v">${totalItems}</div>
+            <div class="gd-stat-sub">campi elaborati</div>
+          </div>
+          <div class="gd-stat">
+            <div class="gd-stat-l">Campi mancanti</div>
+            <div class="gd-stat-v" style="${missingItems > 0 ? 'color:var(--gd-amber)' : ''}">${missingItems}</div>
+            <div class="gd-stat-sub">${missingItems > 0 ? 'verifica manuale' : 'tutto estratto'}</div>
+          </div>
+        </div>
+        ${tipologiaAppaltoVal ? `
+        <div class="info-card">
+          <div class="ic-l">Tipologia appalto</div>
+          <div class="ic-v" style="font-size:14px;margin-bottom:6px">${escapeHtml(truncate(tipologiaAppaltoVal, 200))}</div>
+          ${settoreVal ? `<div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="gd-badge gd-bb">${escapeHtml(truncate(settoreVal, 60))}</span></div>` : ''}
+        </div>` : (settoreVal ? `
+        <div class="info-card">
+          <div class="ic-l">Settore</div>
+          <div class="ic-v">${escapeHtml(truncate(settoreVal, 200))}</div>
+        </div>` : '')}
+      </div>
+    `;
+
+    el.innerHTML = `
+      <div class="gd-sec">
+        <div class="gd-sec-hd">Panoramica</div>
+        <div class="g2">
+          ${timelineHtml}
+          ${rightColHtml}
+        </div>
+      </div>
+    `;
+    showSection('gd-overview');
+  }
+
+  /**
+   * Render the Importi e valori economici section.
+   */
+  function renderImporti(importiItems, byType) {
+    const el = document.getElementById('gd-importi');
+    if (!el) return;
+    if (!importiItems || importiItems.length === 0) return;
+
+    const opereItem = byType('importi_opere_per_categoria_id_opere');
+    const corrispettiviItem = byType('importi_corrispettivi_categoria_id_opere');
+    const requisitiTecItem = byType('importi_requisiti_tecnici_categoria_id_opere');
+    const fatturatoItem = byType('fatturato_globale_n_minimo_anni');
+
+    // Sum amounts — read entries[].amount_eur directly (API gives numbers)
+    const opereSum = sumAmountEur(opereItem);
+    const corrispettiviSum = sumAmountEur(corrispettiviItem);
+
+    // Importo a base d'asta: opere sum, or oggetto_appalto.servizi_previsti sum
+    let importoBaseAsta = opereSum;
+    let importoBaseAstaLabel = 'Somma importi per categoria';
+    if (importoBaseAsta === 0) {
+      const oggettoJson = getJson(byType('oggetto_appalto'));
+      if (oggettoJson?.servizi_previsti && Array.isArray(oggettoJson.servizi_previsti)) {
+        importoBaseAsta = oggettoJson.servizi_previsti.reduce((sum, s) => {
+          const v = (typeof s.amount_eur === 'number') ? s.amount_eur : parseItalianNumber(s.amount_eur || s.amount_raw);
+          return sum + (isNaN(v) ? 0 : v);
+        }, 0);
+        if (importoBaseAsta > 0) importoBaseAstaLabel = 'Da oggetto dell\'appalto';
+      }
+    }
+
+    // Fatturato — read API turnover_requirement directly (number, no re-parsing)
+    let fatturatoVal = 0;
+    if (fatturatoItem) {
+      const fJson = getJson(fatturatoItem);
+      if (fJson?.turnover_requirement?.single_requirement) {
+        const sr = fJson.turnover_requirement.single_requirement;
+        fatturatoVal = (typeof sr.minimum_amount_value === 'number') ? sr.minimum_amount_value : 0;
+      }
+      if (fatturatoVal === 0 && fJson) {
+        const raw = fJson.importo_minimo ?? fJson.importo_minimo_eur ?? null;
+        if (raw !== null) { const v = (typeof raw === 'number') ? raw : parseItalianNumber(raw); if (!isNaN(v)) fatturatoVal = v; }
+      }
+      if (fatturatoVal === 0) {
+        const fv = getDisplayValue(fatturatoItem);
+        const match = String(fv).match(/[\d.,]+/);
+        if (match) { const v = parseItalianNumber(match[0]); if (!isNaN(v) && v > 0) fatturatoVal = v; }
+      }
+    }
+
+    // First ID opera — read category_id directly from API entries
+    // ID opera looks like "E.20", "IA.01", "S.03" — skip pure numbers
+    let firstIdOpera = '';
+    function isValidIdOpera(v) { return v && typeof v === 'string' && /[A-Za-z]/.test(v); }
+    for (const src of [opereItem, corrispettiviItem, requisitiTecItem]) {
+      if (firstIdOpera || !src) continue;
+      const json = getJson(src);
+      if (json?.entries?.length > 0) {
+        for (const e of json.entries) {
+          const candidate = e.category_id || e.id_opera || e.id_opera_normalized || '';
+          if (isValidIdOpera(candidate)) { firstIdOpera = candidate; break; }
+        }
+      }
+      if (!firstIdOpera && json?.requirements?.length > 0) {
+        for (const r of json.requirements) {
+          if (isValidIdOpera(r.id_opera)) { firstIdOpera = r.id_opera; break; }
+        }
+      }
+    }
+
+    // Stat cards
+    const statCardsHtml = `
+      <div class="g4">
+        <div class="imp-card">
+          <div class="imp-label">Importo a base d'asta</div>
+          ${importoBaseAsta > 0 ? `<div class="imp-val">${escapeHtml(formatEuro(importoBaseAsta))}</div>` : '<div class="imp-val na">N/D</div>'}
+          <div class="imp-sub">${importoBaseAsta > 0 ? escapeHtml(importoBaseAstaLabel) : 'Non presente nel disciplinare'}</div>
+        </div>
+        <div class="imp-card">
+          <div class="imp-label">Corrispettivo</div>
+          ${corrispettiviSum > 0 ? `<div class="imp-val">${escapeHtml(formatEuro(corrispettiviSum))}</div>` : '<div class="imp-val na">N/D</div>'}
+          <div class="imp-sub">${corrispettiviSum > 0 ? 'Somma corrispettivi' : 'Non strutturato'}</div>
+        </div>
+        <div class="imp-card">
+          <div class="imp-label">Fatturato minimo</div>
+          ${fatturatoVal > 0 ? `<div class="imp-val">${escapeHtml(formatEuro(fatturatoVal))}</div>` : '<div class="imp-val na">N/D</div>'}
+          <div class="imp-sub">${fatturatoVal > 0 ? 'Requisito economico' : 'Non specificato'}</div>
+        </div>
+        <div class="imp-card">
+          <div class="imp-label">Categoria ID Opera</div>
+          ${firstIdOpera ? `<div class="imp-val" style="font-size:20px;">${escapeHtml(firstIdOpera)}</div>` : '<div class="imp-val na">N/D</div>'}
+          <div class="imp-sub">${firstIdOpera ? 'Prima categoria' : 'Non applicabile'}</div>
+        </div>
+      </div>
+    `;
+
+    // Detail tables for each importi type
+    let tablesHtml = '';
+    const importiTypesToRender = [
+      { item: opereItem, label: 'Importi opere per categoria' },
+      { item: corrispettiviItem, label: 'Corrispettivi per categoria' },
+      { item: requisitiTecItem, label: 'Requisiti tecnici per categoria' },
+    ];
+
+    importiTypesToRender.forEach(({ item, label }) => {
+      if (!item) return;
+      const source = item.synthetic_source || item;
+      const tabs = buildExtractionTabs(source);
+      const responseTab = tabs.find(t => t.id === 'response');
+      if (responseTab && responseTab.content && /<table[\s>]/i.test(responseTab.content)) {
+        const collapseId = `imp-tbl-${Math.random().toString(36).slice(2, 8)}`;
+        tablesHtml += `
+          <div class="tcard collapsible" style="margin-top:12px;">
+            <div class="tcard-hd tcard-toggle" onclick="this.parentElement.classList.toggle('open')">${escapeHtml(label)} <svg class="chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="tcard-body"><div style="overflow-x:auto;">${responseTab.content}</div></div>
+          </div>
+        `;
+      }
+    });
+
+    el.innerHTML = `
+      <div class="gd-sec">
+        <div class="gd-sec-hd">Importi e valori economici</div>
+        ${statCardsHtml}
+        ${tablesHtml}
+      </div>
+    `;
+    showSection('gd-importi');
+
+    // Initialize filterable tables
+    initializeExtractionTables(el);
+  }
+
+  /**
+   * Render the Requisiti tecnico-professionali section.
+   */
+  // Translate API requirement_type to Italian label
+  const REQ_TYPE_IT = {
+    registration: 'Iscrizione',
+    experience: 'Esperienza',
+    young_professional: 'Giovane professionista',
+    team_composition: 'Composizione team',
+    certification: 'Certificazione',
+    soa_qualification: 'Qualificazione SOA',
+    technical_director: 'Direttore tecnico',
+    other: 'Altro',
+  };
+
+  function renderRequisiti(requisitiItems) {
+    const el = document.getElementById('gd-requisiti');
+    if (!el) return;
+    if (!requisitiItems || requisitiItems.length === 0) return;
+
+    let cardsHtml = '';
+
+    requisitiItems.forEach(item => {
+      const json = getJson(item?.synthetic_source || item);
+
+      // API structure: requirements[] — use citations (Italian) as primary text
+      if (json?.requirements && Array.isArray(json.requirements) && json.requirements.length > 0) {
+        json.requirements.forEach(req => {
+          const isObb = req.is_mandatory === true;
+          const reqType = req.requirement_type || '';
+          const reqTypeLabel = REQ_TYPE_IT[reqType] || reqType;
+          const legalRef = req.legal_reference || '';
+          const page = req.source_location?.page || req.citations?.[0]?.page || '';
+
+          // Use citation text (Italian, from PDF) as primary description
+          const citText = (req.citations || []).map(c => c.text || '').filter(Boolean).join(' ');
+          // Fallback to section name from source_location (also Italian)
+          const sectionName = req.source_location?.section || '';
+          const desc = citText || sectionName || req.description || '';
+
+          // Experience details with per-category amounts
+          let experienceHtml = '';
+          if (req.experience_details?.categories?.length > 0) {
+            experienceHtml = `<div class="req-exp">${req.experience_details.categories.map(c =>
+              `<span class="req-exp-chip">${escapeHtml(c.category_code || '')} ${c.minimum_amount_eur ? formatEuro(c.minimum_amount_eur) : ''}</span>`
+            ).join('')}</div>`;
+          }
+
+          cardsHtml += `
+            <div class="req-card">
+              <div class="req-card-head">
+                <div class="req-tags">
+                  ${reqTypeLabel ? `<span class="gd-badge gd-bb">${escapeHtml(reqTypeLabel)}</span>` : ''}
+                  <span class="req-obbl ${isObb ? 'si' : 'no'}">${isObb ? 'Obbligatorio' : 'Facoltativo'}</span>
+                  ${page ? `<span class="req-page">pag. ${escapeHtml(String(page))}</span>` : ''}
+                </div>
+              </div>
+              ${desc ? `<div class="req-desc expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute(desc)}">${escapeHtml(truncate(desc, 150))}</div>` : ''}
+              <div class="req-foot">
+                ${legalRef ? `<span class="req-legal">${escapeHtml(legalRef)}</span>` : ''}
+                ${experienceHtml}
+              </div>
+            </div>
+          `;
+        });
+      } else if (json?.entries && Array.isArray(json.entries) && json.entries.length > 0) {
+        json.entries.forEach(entry => {
+          const name = entry.requisito || entry.titolo || entry.title || 'Requisito';
+          const desc = entry.descrizione || entry.description || '';
+          const obbStr = String(entry.obbligatorio || entry.is_mandatory || '').toLowerCase();
+          const isObb = (obbStr === 'si' || obbStr === 'yes' || obbStr === 'true' || obbStr === '1');
+          cardsHtml += `
+            <div class="req-card">
+              <div class="req-card-head">
+                <div class="req-tags">
+                  <span class="req-obbl ${isObb ? 'si' : 'no'}">${isObb ? 'Obbligatorio' : 'Facoltativo'}</span>
+                </div>
+              </div>
+              <div class="req-desc expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute(name + (desc ? ' — ' + desc : ''))}">${escapeHtml(truncate(name + (desc ? ' — ' + desc : ''), 150))}</div>
+            </div>
+          `;
+        });
+      } else {
+        const dv = getDisplayValue(item);
+        if (dv) {
+          cardsHtml += `
+            <div class="req-card">
+              <div class="req-desc">${escapeHtml(truncate(dv, 250))}</div>
+            </div>
+          `;
+        }
+      }
+    });
+
+    if (!cardsHtml) return;
+    el.innerHTML = `<div class="gd-sec"><div class="gd-sec-hd">Requisiti tecnico-professionali</div><div class="req-grid">${cardsHtml}</div></div>`;
+    showSection('gd-requisiti');
+
+    // Expand/collapse truncated text on click
+    el.querySelectorAll('.req-desc.expandable').forEach(div => {
+      const full = div.getAttribute('data-full');
+      const short = div.textContent;
+      if (full && full.length > short.length) {
+        div.addEventListener('click', () => {
+          const isOpen = div.classList.contains('open');
+          div.textContent = isOpen ? short : full;
+        });
+      }
+    });
+  }
+
+  /**
+   * Render the Requisiti economico-finanziari section.
+   */
+  function renderEconomici(econItems, byType) {
+    const el = document.getElementById('gd-economici');
+    if (!el) return;
+    if (!econItems || econItems.length === 0) return;
+
+    let html = '';
+
+    // ── FATTURATO: hero card with amount + temporal + scope ──
+    const fatturatoItem = byType('fatturato_globale_n_minimo_anni');
+    const fJson = fatturatoItem ? getJson(fatturatoItem) : null;
+    const sr = fJson?.turnover_requirement?.single_requirement;
+
+    if (sr) {
+      let amountNum = (typeof sr.minimum_amount_value === 'number') ? sr.minimum_amount_value : parseItalianNumber(sr.minimum_amount_raw);
+      const amount = (!isNaN(amountNum) && amountNum > 0) ? formatEuro(amountNum) : (sr.minimum_amount_raw || 'N/D');
+      const citText = sr.source_text || sr.calculation_rule || '';
+      const page = sr.page_number || '';
+      const tc = sr.temporal_calculation;
+      const temporalLabel = tc ? `Migliori ${tc.periods_to_select || '?'} su ${tc.lookback_window_years || '?'} anni` : '';
+      const derivation = sr.derivation_formula || '';
+      const scope = sr.service_scope_description || '';
+
+      html += `
+        <div class="econ-card" style="margin-bottom:12px;">
+          <div class="econ-top">
+            <div>
+              <div class="econ-label">Fatturato globale minimo</div>
+              <div class="econ-amount">${escapeHtml(amount)}</div>
+            </div>
+            ${page ? `<span class="req-page">pag. ${escapeHtml(String(page))}</span>` : ''}
+          </div>
+          ${citText ? `<div class="econ-cite">${escapeHtml(citText)}</div>` : ''}
+          <div class="econ-badges">
+            ${temporalLabel ? `<span class="gd-badge gd-bb">${escapeHtml(temporalLabel)}</span>` : ''}
+            ${derivation ? `<span class="gd-badge gd-bb">${escapeHtml(derivation)}</span>` : ''}
+            ${scope ? `<span class="gd-badge gd-bb">${escapeHtml(truncate(scope, 50))}</span>` : ''}
+          </div>
+        </div>
+      `;
+    } else if (fatturatoItem) {
+      const dv = getDisplayValue(fatturatoItem);
+      if (dv) html += `<div class="info-card" style="margin-bottom:12px;"><div class="ic-l">Fatturato globale minimo</div><div class="ic-v">${escapeHtml(truncate(dv, 300))}</div></div>`;
+    }
+
+    // ── CAPACITA ECONOMICA: separate card(s) for each requirement ──
+    const capacitaItem = byType('requisiti_di_capacita_economica_finanziaria');
+    const cJson = capacitaItem ? getJson(capacitaItem) : null;
+
+    if (cJson?.requirements?.length > 0) {
+      cJson.requirements.forEach(req => {
+        // Use Italian citation text, fallback to requirement_text
+        const citText = (cJson.citations || []).map(c => (c.text || []).join(' ')).find(t => t.length > 20) || '';
+        const reqText = req.source_text || req.requirement_text || citText || '';
+        const amounts = (req.minimum_amount || []).filter(a => a.value);
+        const page = req.page_number || '';
+        const tf = req.timeframe;
+        const tfLabel = tf ? `${tf.selection_method === 'best_of' ? 'Migliori' : ''} ${tf.selected_count || ''}/${tf.total_window || ''} ${tf.unit || 'anni'}`.trim() : '';
+        const formula = req.formula;
+        const rtiRules = req.rti_allocation?.distribution_rules || '';
+
+        html += `
+          <div class="econ-card" style="margin-bottom:12px;">
+            <div class="econ-top">
+              <div class="econ-label">Requisito capacita economico-finanziaria</div>
+              ${page ? `<span class="req-page">pag. ${escapeHtml(String(page))}</span>` : ''}
+            </div>
+            ${reqText ? `<div class="econ-cite">${escapeHtml(truncate(reqText, 400))}</div>` : ''}
+            <div class="econ-badges">
+              ${amounts.map(a => `<span class="gd-badge gd-bb">${escapeHtml(formatEuro(a.value))}</span>`).join('')}
+              ${tfLabel ? `<span class="gd-badge gd-bb">${escapeHtml(tfLabel)}</span>` : ''}
+              ${formula?.multiplier ? `<span class="gd-badge gd-bb">x${formula.multiplier} ${escapeHtml(formula.base_reference || '')}</span>` : ''}
+            </div>
+            ${rtiRules ? `<div class="econ-rti"><span class="econ-rti-label">RTI:</span> ${escapeHtml(rtiRules)}</div>` : ''}
+          </div>
+        `;
+      });
+    } else if (capacitaItem) {
+      // Fallback
+      const source = capacitaItem.synthetic_source || capacitaItem;
+      const tabs = buildExtractionTabs(source);
+      const responseTab = tabs.find(t => t.id === 'response');
+      if (responseTab?.content) {
+        html += `<div class="tcard"><div class="tcard-hd">Capacita economico-finanziaria</div><div style="overflow-x:auto;">${responseTab.content}</div></div>`;
+      } else {
+        const dv = getDisplayValue(capacitaItem);
+        if (dv) html += `<div class="info-card"><div class="ic-l">Capacita economico-finanziaria</div><div class="ic-v">${escapeHtml(truncate(dv, 300))}</div></div>`;
+      }
+    }
+
+    if (!html) return;
+
+    el.innerHTML = `
+      <div class="gd-sec">
+        <div class="gd-sec-hd">Requisiti economico-finanziari</div>
+        ${html}
+      </div>
+    `;
+    showSection('gd-economici');
+    initializeExtractionTables(el);
+  }
+
+  /**
+   * Render the Documentazione e ruoli section.
+   */
+  function renderDocsRuoli(docsItems, job) {
+    const el = document.getElementById('gd-docs-ruoli');
+    if (!el) return;
+    if (!docsItems || docsItems.length === 0) return;
+
+    let leftHtml = '';
+    let rightHtml = '';
+
+    docsItems.forEach(item => {
+      const typeCode = (item.type_code || item.tipo || '').toLowerCase();
+      const source = item.synthetic_source || item;
+      const json = getJson(source);
+      const label = getTypeLabel(typeCode);
+
+      if (typeCode === 'documentazione_richiesta_tecnica') {
+        // API: documents[] → compact table
+        if (json?.documents?.length > 0) {
+          const rows = json.documents.map(doc => {
+            const status = doc.requirement_status || '';
+            const statusCls = status === 'obbligatorio' ? 'gd-br' : (status === 'condizionale' ? 'gd-ba' : 'gd-bb');
+            const fmt = doc.formatting_requirements || {};
+            const maxPages = fmt.max_pages || '—';
+            const pageSize = fmt.page_size || '—';
+            return `<tr>
+              <td class="tt">${escapeHtml(truncate(doc.title || 'Documento', 80))}</td>
+              <td><span class="gd-badge ${statusCls}">${escapeHtml(status || '—')}</span></td>
+              <td class="tv">${escapeHtml(String(maxPages))}</td>
+              <td class="tv">${escapeHtml(pageSize)}</td>
+            </tr>`;
+          }).join('');
+          leftHtml += `
+            <div class="tcard" style="margin-bottom:12px;">
+              <div class="tcard-hd">${escapeHtml(label)} (${json.documents.length})</div>
+              <table>
+                <thead><tr><th>Documento</th><th>Stato</th><th>Pagine</th><th>Formato</th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>`;
+        } else {
+          const tabs = buildExtractionTabs(source);
+          const responseTab = tabs.find(t => t.id === 'response');
+          if (responseTab?.content) leftHtml += `<div class="tcard" style="margin-bottom:12px;"><div class="tcard-hd">${escapeHtml(label)}</div><div style="overflow-x:auto;">${responseTab.content}</div></div>`;
+        }
+      } else if (typeCode === 'criteri_valutazione_offerta_tecnica') {
+        // API: criteria[] with subcriteria[], max_points, total_max_points
+        if (json?.criteria?.length > 0) {
+          const totalPts = json.total_max_points || '';
+          const criteriaHtml = json.criteria.map(crit => {
+            const subsHtml = (crit.subcriteria || []).map(sub =>
+              `<div class="crit-sub"><span class="crit-sub-label">${escapeHtml(sub.label || '')}</span><span class="crit-sub-title">${escapeHtml(truncate(sub.title || '', 120))}</span><span class="crit-sub-pts">${sub.max_points || 0}</span></div>`
+            ).join('');
+            return `<div class="crit-group"><div class="crit-head"><span class="crit-label">${escapeHtml(crit.label || '')}</span><span class="crit-title">${escapeHtml(truncate(crit.title || '', 100))}</span><span class="crit-pts">${crit.max_points || 0} pt</span></div>${subsHtml}</div>`;
+          }).join('');
+          leftHtml += `<div class="tcard" style="margin-bottom:12px;"><div class="tcard-hd">${escapeHtml(label)}${totalPts ? ` — ${totalPts} punti totali` : ''}</div><div style="padding:10px;">${criteriaHtml}</div></div>`;
+        } else {
+          const tabs = buildExtractionTabs(source);
+          const responseTab = tabs.find(t => t.id === 'response');
+          if (responseTab?.content) leftHtml += `<div class="tcard" style="margin-bottom:12px;"><div class="tcard-hd">${escapeHtml(label)}</div><div style="overflow-x:auto;">${responseTab.content}</div></div>`;
+        }
+      } else if (typeCode === 'requisiti_idoneita_professionale_gruppo_lavoro') {
+        // Build a role-map: id → {name, qualifications}
+        const roles = json?.roles || [];
+        const reqs = json?.requirements || [];
+
+        // Map requirements to role IDs for qualification lookup
+        const qualsByRoleId = {};
+        reqs.forEach(req => {
+          const quals = (req.qualifications || []).map(q => q.description || q.type || '').filter(Boolean);
+          const roleIds = req.applies_to_all_roles ? roles.map(r => r.id) : (req.applies_to_role_ids || []);
+          roleIds.forEach(rid => {
+            if (!qualsByRoleId[rid]) qualsByRoleId[rid] = [];
+            qualsByRoleId[rid].push(...quals);
+          });
+        });
+
+        if (roles.length > 0) {
+          // Group roles by phase
+          const byPhase = {};
+          roles.forEach(role => {
+            const phases = role.applies_to_phases?.length > 0 ? role.applies_to_phases : ['Altro'];
+            phases.forEach(phase => {
+              if (!byPhase[phase]) byPhase[phase] = [];
+              byPhase[phase].push(role);
+            });
+          });
+
+          let tableRows = '';
+          let phaseIdx = 0;
+          Object.entries(byPhase).forEach(([phase, phaseRoles]) => {
+            const pid = 'ph-' + (phaseIdx++);
+            tableRows += `<tr class="prof-phase" data-phase="${pid}" onclick="this.classList.toggle('closed');this.closest('table').querySelectorAll('tr[data-group=\\'${pid}\\']').forEach(r=>r.classList.toggle('hidden'))"><td colspan="2"><svg class="chv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg> ${escapeHtml(phase)} (${phaseRoles.length})</td></tr>`;
+            phaseRoles.forEach(role => {
+              const quals = qualsByRoleId[role.id] || [];
+              tableRows += `<tr data-group="${pid}">
+                <td class="prof-name">${escapeHtml(role.name || 'Ruolo')}</td>
+                <td class="prof-quals">${quals.length > 0
+                  ? quals.map(q => `<span class="gd-chip">${escapeHtml(truncate(q, 50))}</span>`).join('')
+                  : '<span style="color:var(--gd-t2);font-size:11px">—</span>'}</td>
+              </tr>`;
+            });
+          });
+
+          rightHtml += `
+            <div class="tcard" style="margin-bottom:12px;">
+              <div class="tcard-hd">Gruppo di lavoro (${roles.length} ruoli)</div>
+              <table class="prof-table">
+                <thead><tr><th>Ruolo</th><th>Qualifiche richieste</th></tr></thead>
+                <tbody>${tableRows}</tbody>
+              </table>
+            </div>`;
+        } else if (reqs.length > 0) {
+          // No roles, just requirements
+          const reqRows = reqs.map(req => {
+            const reqText = req.original_text || req.description || '';
+            const quals = (req.qualifications || []).map(q => q.description || q.type || '').filter(Boolean);
+            return `<tr><td class="tt">${escapeHtml(truncate(reqText, 120))}</td><td class="tv">${quals.length > 0 ? quals.map(q => `<span class="gd-chip">${escapeHtml(truncate(q, 50))}</span>`).join(' ') : '—'}</td></tr>`;
+          }).join('');
+          rightHtml += `
+            <div class="tcard" style="margin-bottom:12px;">
+              <div class="tcard-hd">Requisiti professionali (${reqs.length})</div>
+              <table><thead><tr><th>Requisito</th><th>Qualifiche</th></tr></thead><tbody>${reqRows}</tbody></table>
+            </div>`;
+        } else {
+          // Fallback to entries
+          const parsed = json || {};
+          if (parsed.entries?.length > 0) {
+            parsed.entries.forEach(entry => {
+              rightHtml += `<div class="req-card" style="margin-bottom:10px;"><div class="req-card-head"><div class="req-name">${escapeHtml(entry.requisito || entry.ruolo || 'Requisito')}</div></div>${entry.descrizione ? `<div class="req-desc expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute(entry.descrizione)}">${escapeHtml(truncate(entry.descrizione, 150))}</div>` : ''}</div>`;
+            });
+          }
+        }
+      } else if (typeCode === 'documenti_di_gara') {
+        const parsed = json || {};
+        let chipItems = [];
+        if (parsed.entries) chipItems = parsed.entries.map(e => e.documento || e.titolo || e.nome || stringifyValue(e)).filter(Boolean);
+        // Fallback: the uploaded PDF is itself a document
+        if (chipItems.length === 0 && job?.file_name) {
+          chipItems.push(job.file_name);
+        }
+        if (chipItems.length > 0) {
+          rightHtml += `<div class="info-card" style="margin-bottom:12px;"><div class="ic-l">Documenti di gara</div><div class="gd-chips" style="margin-top:8px;">${chipItems.map(c => `<span class="gd-chip">${escapeHtml(truncate(c, 80))}</span>`).join('')}</div></div>`;
+        }
+      }
+    });
+
+    if (!leftHtml && !rightHtml) return;
+    const hasTwo = leftHtml && rightHtml;
+    el.innerHTML = `
+      <div class="gd-sec">
+        <div class="gd-sec-hd">Documentazione e ruoli</div>
+        ${hasTwo ? `<div class="g2"><div>${leftHtml}</div><div>${rightHtml}</div></div>` : `<div>${leftHtml || rightHtml}</div>`}
+      </div>
+    `;
+    showSection('gd-docs-ruoli');
+    initializeExtractionTables(el);
+  }
+
+  /**
+   * Render the fallback "Tutti i campi estratti" table for items not shown in any section.
+   */
+  function renderAllFields(fallbackItems, job) {
+    const el = document.getElementById('gd-all-fields');
+    if (!el) return;
+    if (!fallbackItems || fallbackItems.length === 0) return;
+
+    let rowIdx = 0;
+    const rowsHtml = fallbackItems.map(item => {
+      const rid = `af-${job.job_id}-${rowIdx++}`;
+      const typeCode = (item.type_code || item.tipo || item.type || '').toLowerCase();
+      const typeLabel = getTypeLabel(typeCode) || resolveExtractionType(item).label;
+      const value = renderValueCell(item);
+      const hasValue = value && value !== '—' && !value.includes('empty-reason');
+
+      // Build detail content (reuse existing tabbed detail)
+      const source = item.synthetic_source || item;
+      const detailHtml = renderTabbedDetail(buildExtractionTabs(source));
+
+      return `
+        <tr class="dr" data-id="${rid}">
+          <td class="tt">${escapeHtml(typeLabel)}</td>
+          <td class="tv${hasValue ? '' : ' abs'}">${value}</td>
+          <td><button class="dbtn" onclick="(function(){var e=document.getElementById('e-${rid}');var a=document.getElementById('ar-${rid}');var b=a&&a.closest('.dbtn');var o=e.classList.contains('show');e.classList.toggle('show',!o);if(a)a.classList.toggle('open',!o);if(b)b.classList.toggle('on',!o);})()"><i class="ar" id="ar-${rid}">&#8250;</i> Dettagli</button></td>
+        </tr>
+        <tr class="er" id="e-${rid}">
+          <td colspan="3">
+            <div class="er-inner${hasValue ? '' : ' w'}">
+              <div class="details-inner">${detailHtml}</div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="gd-sec">
+        <div class="tcard collapsible">
+          <div class="tcard-hd tcard-toggle" onclick="this.parentElement.classList.toggle('open')">Tutti i campi estratti (${fallbackItems.length}) <svg class="chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+          <div class="tcard-body">
+            <table>
+              <colgroup><col class="ca"><col class="cb"><col class="cc"></colgroup>
+              <thead><tr><th>Campo</th><th>Valore estratto</th><th>Azioni</th></tr></thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+    showSection('gd-all-fields');
+    initializeExtractionTables(el);
+
+    // Render highlighted PDF links for fallback items
+    const detailInners = el.querySelectorAll('.details-inner');
+    detailInners.forEach((detailInner, index) => {
+      const item = fallbackItems[index];
+      if (item) {
+        renderHighlightedPdfLinks(
+          { ...item, ext_job_id: item.ext_job_id || job.ext_job_id, job_id: job.job_id },
+          detailInner
+        );
+      }
+    });
+
+    // Attach tab handlers within the fallback section
+    attachDetailHandlers(el);
+  }
+
+  /**
+   * Render the action bar with buttons.
+   */
+  function renderActionBar(job) {
+    const el = document.getElementById('gd-actions');
+    if (!el) return;
+
+    el.className = 'gd-actions';
+    el.innerHTML = `
+      <button class="abtn pri" onclick="window.print()">&#8595; Stampa</button>
+      <button class="abtn" id="gd-btn-reextract">&#8635; Ri-estrai</button>
+      <div class="sp"></div>
+      <button class="abtn del" id="gd-btn-delete">&#10005; Elimina gara</button>
+    `;
+    showSection('gd-actions');
+
+    // Re-extract handler
+    const reextractBtn = document.getElementById('gd-btn-reextract');
+    if (reextractBtn) {
+      reextractBtn.addEventListener('click', async () => {
+        if (!confirm('Vuoi ripetere l\'estrazione? I dati attuali verranno sostituiti.')) return;
+        try {
+          reextractBtn.disabled = true;
+          reextractBtn.textContent = 'Estrazione in corso...';
+          const res = await customFetch('gare', 'reExtract', { job_id: job.job_id });
+          if (res && res.success) {
+            window.location.reload();
+          } else {
+            alert(res?.message || 'Errore durante la ri-estrazione');
+            reextractBtn.disabled = false;
+            reextractBtn.innerHTML = '&#8635; Ri-estrai';
+          }
+        } catch (e) {
+          console.error('Re-extract error:', e);
+          alert('Errore durante la ri-estrazione');
+          reextractBtn.disabled = false;
+          reextractBtn.innerHTML = '&#8635; Ri-estrai';
+        }
+      });
+    }
+
+    // Delete handler
+    const deleteBtn = document.getElementById('gd-btn-delete');
+    if (deleteBtn && garaId) {
+      deleteBtn.addEventListener('click', async () => {
+        if (!confirm('Sei sicuro di voler eliminare questa gara? L\'operazione non e reversibile.')) return;
+        try {
+          deleteBtn.disabled = true;
+          const res = await customFetch('gare', 'deleteGara', { gara_id: garaId });
+          if (res && res.success) {
+            window.location.href = '/index.php?page=elenco_gare';
+          } else {
+            alert(res?.message || 'Errore durante l\'eliminazione');
+            deleteBtn.disabled = false;
+          }
+        } catch (e) {
+          console.error('Delete error:', e);
+          alert('Errore durante l\'eliminazione');
+          deleteBtn.disabled = false;
+        }
+      });
+    }
+  }
+
   /**
    * Restituisce la chiave di ordinamento per un type_code
    * Se il type_code è nella mappa, usa l'indice corrispondente (1-19)
@@ -782,69 +1946,6 @@
       
       return orderA - orderB;
     });
-  }
-
-  function renderJobResultsHTML(job) {
-    const data = job.results;
-    if (!data || !data.ok || !Array.isArray(data.data) || !data.data.length) {
-      return '<div class="processing-message">Nessun dato disponibile.</div>';
-    }
-
-    if (!job.normalized_items) {
-      job.normalized_items = normalizeItems(data.data);
-      // IMPORTANTE: Ordina gli items usando DETTAGLIO_GARA_ORDER
-      job.normalized_items = sortExtractionItems(job.normalized_items);
-    }
-
-    // Se c'è un titolo "Oggetto dell'appalto", nascondi la voce duplicata nella lista
-    const hasOggettoAppaltoTitle = resolveOggettoAppalto(job);
-    let itemsToRender = job.normalized_items;
-    if (hasOggettoAppaltoTitle) {
-      itemsToRender = job.normalized_items.filter((item) => {
-        const typeCode = (item.type_code || item.tipo || item.type || '').toLowerCase();
-        return typeCode !== 'oggetto_appalto' && 
-               typeCode !== 'oggetto_dell_appalto' && 
-               typeCode !== 'oggetto_della_gara';
-      });
-    }
-
-    const rows = itemsToRender
-      .map((item, index) => {
-        const detailId = `job-${job.job_id}-detail-${index}`;
-        const typeInfo = resolveExtractionType(item);
-        const typeCellHtml = `<span class="type-label">${escapeHtml(typeInfo.label)}</span>`;
-        const value = renderValueCell(item);
-        return `
-          <tr class="extraction-row ${index % 2 === 0 ? 'even' : 'odd'}">
-            <td class="type-cell">${typeCellHtml}</td>
-            <td class="value-cell">${value}</td>
-            <td class="details-cell"><button class="toggle-details" data-target="${detailId}">Dettagli</button></td>
-          </tr>
-          <tr class="details-row hidden" id="${detailId}">
-            <td class="details-spacer"></td>
-            <td colspan="2" class="details-content">
-              <div class="details-inner">${renderExtractionDetail(item)}</div>
-            </td>
-          </tr>
-        `;
-      })
-      .join('');
-
-    return `
-      <div class="results-container">
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Valore</th>
-              <th class="details-col no-print">Dettagli</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <div id="batch-usage-${job.job_id}" class="batch-usage-container"></div>
-      </div>
-    `;
   }
 
   /**
@@ -1135,22 +2236,6 @@
       <div class="see-citations-detail">
         <p>${escapeHtml(message)}</p>
         ${tableHtml}
-      </div>
-    `;
-  }
-
-  function renderSopralluogoSplit(item, parsedValueJson) {
-    const details = buildSopralluogoDetails(item, parsedValueJson);
-    return `
-      <div class="sopralluogo-split">
-        <div class="sopralluogo-row">
-          <span class="sopralluogo-label">Sopralluogo obbligatorio</span>
-          <span class="sopralluogo-value">${details.required ? 'Sì' : 'No'}</span>
-        </div>
-        <div class="sopralluogo-row">
-          <span class="sopralluogo-label">Richiesta sopralluogo entro</span>
-          <span class="sopralluogo-value">${escapeHtml(details.deadline || '—')}</span>
-        </div>
       </div>
     `;
   }
@@ -1525,55 +2610,6 @@
         <div class="tab-panes">${panes}</div>
       </div>
     `;
-  }
-
-  function summarizeExtractionValue(item) {
-    const typeCode = item.type_code || item.tipo || item.type;
-    if (typeCode === 'sopralluogo_obbligatorio') {
-      const status =
-        normalizeSopralluogoStatus(item.display_value || item.valore_display) ||
-        normalizeSopralluogoStatus(extractPrimaryValue(item)) ||
-        stringifyValue(item.display_value || item.valore_display || extractPrimaryValue(item));
-      const deadlineLabel = resolveSopralluogoDeadline(item);
-      const combined = [status, deadlineLabel].filter(Boolean).join(' – ');
-      if (combined) {
-        return truncate(combined.replace(/\s+/g, ' '), 150);
-      }
-    }
-
-    if (item.table && Array.isArray(item.table.rows) && item.table.rows.length) {
-      if (typeCode === 'requisiti_tecnico_professionali') {
-        const summary = stringifyValue(
-          item.display_value || item.valore_display || extractPrimaryValue(item)
-        );
-        if (summary) {
-          return truncate(summary.replace(/\s+/g, ' '), 150);
-        }
-      }
-      return summarizeTable(item.table);
-    }
-    const summary = stringifyValue(
-      item.display_value || item.valore_display || extractPrimaryValue(item)
-    );
-    if (!summary && item.empty_reason) {
-      return truncate(item.empty_reason, 150);
-    }
-    if (!summary) return '';
-    return truncate(summary, 150);
-  }
-
-  function renderExtractionDetail(item) {
-    if (item && item.synthetic === 'sopralluogo' && item.synthetic_kind === 'deadline') {
-      // Se la deadline è vuota o "—", mostra un messaggio appropriato
-      const deadlineValue = item.display_value || '';
-      if (!deadlineValue || deadlineValue === '—' || deadlineValue.trim() === '') {
-        return '<div class="response-value">Non è prevista una data specifica per la richiesta di sopralluogo.</div>';
-      }
-      // Altrimenti mostra il valore normalmente
-      return renderTabbedDetail(buildExtractionTabs(item.synthetic_source || item));
-    }
-    const source = item && item.synthetic_source ? item.synthetic_source : item;
-    return renderTabbedDetail(buildExtractionTabs(source));
   }
 
   function renderPrintResponseContent(item) {
@@ -1971,12 +3007,6 @@
       ext_job_id: row.ext_job_id || row.job_id || row.id || null,
       results: null,
     };
-  }
-
-  function progressPercent(job) {
-    const total = Math.max(1, job.progress_total || 100);
-    const done = Math.max(0, Math.min(total, job.progress_done || 0));
-    return Math.round((done / total) * 100);
   }
 
   function attachDetailHandlers(scope) {
@@ -2396,7 +3426,7 @@
   async function loadBatchUsage(batchId, container) {
     if (!batchId) return;
     try {
-      const res = await customFetch('gare', 'getBatchUsage', { batch_id: batchId });
+      const res = await customFetch('gare', 'getBatchUsage', { batch_id: batchId }, { showLoader: false });
       if (res.success && res.data) {
         const d = res.data;
         const usageHtml = `
@@ -2411,39 +3441,64 @@
     }
   }
 
-  // --- API health status section ---
+  // --- API health status — info icon with popover ---
   async function loadApiStatus(container) {
     if (!container) return;
     try {
       const [healthRes, quotaRes] = await Promise.all([
-        customFetch('gare', 'apiHealth'),
-        customFetch('gare', 'getQuota')
+        customFetch('gare', 'apiHealth', {}, { showLoader: false }),
+        customFetch('gare', 'getQuota', {}, { showLoader: false })
       ]);
 
-      let html = '<div class="api-status-section">';
-      html += '<div class="api-status-header" onclick="this.parentElement.classList.toggle(\'collapsed\')">';
-      html += '<h4>Stato API Estrazione</h4></div>';
-      html += '<div class="api-status-body">';
+      const isHealthy = healthRes.success && healthRes.data && healthRes.data.status === 'healthy';
+      const model = (healthRes.success && healthRes.data) ? (healthRes.data.gemini_model || 'N/A') : 'N/A';
+      const dotColor = isHealthy ? 'var(--gd-green)' : 'var(--gd-red)';
+      const statusText = isHealthy ? 'Online' : 'Offline';
 
-      if (healthRes.success && healthRes.data) {
-        const h = healthRes.data;
-        const statusClass = h.status === 'healthy' ? 'pill-success' : 'pill-danger';
-        html += `<p><span class="pill ${statusClass}">${escapeHtml(h.status)}</span> Modello: ${escapeHtml(h.gemini_model || 'N/A')}</p>`;
-      } else {
-        html += '<p><span class="pill pill-danger">Offline</span></p>';
-      }
-
+      let quotaHtml = '';
       if (quotaRes.success && quotaRes.data) {
         const q = quotaRes.data;
         const pctUsed = q.percentage_used || 0;
-        html += `<div class="quota-bar">
-          <div class="quota-bar-fill" style="width: ${pctUsed}%"></div>
-        </div>
-        <p>Quota: ${q.rpd_remaining || 0} / ${q.rpd_limit || 0} richieste rimanenti</p>`;
+        quotaHtml = `
+          <div class="asi-row">
+            <span class="asi-label">Quota</span>
+            <span class="asi-val">${q.rpd_remaining || 0} / ${q.rpd_limit || 0} rimanenti</span>
+          </div>
+          <div class="asi-bar"><div class="asi-bar-fill" style="width:${pctUsed}%"></div></div>
+        `;
       }
 
-      html += '</div></div>';
-      container.insertAdjacentHTML('afterbegin', html);
+      container.innerHTML = `
+        <div class="asi-wrap">
+          <button class="asi-btn" title="Stato API Estrazione" type="button">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span class="asi-dot" style="background:${dotColor}"></span>
+          </button>
+          <div class="asi-pop">
+            <div class="asi-pop-title">Stato API Estrazione</div>
+            <div class="asi-row">
+              <span class="asi-label">Stato</span>
+              <span class="asi-val"><span class="asi-dot-inline" style="background:${dotColor}"></span> ${escapeHtml(statusText)}</span>
+            </div>
+            <div class="asi-row">
+              <span class="asi-label">Modello</span>
+              <span class="asi-val">${escapeHtml(model)}</span>
+            </div>
+            ${quotaHtml}
+          </div>
+        </div>
+      `;
+
+      const btn = container.querySelector('.asi-btn');
+      const pop = container.querySelector('.asi-pop');
+      if (btn && pop) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          pop.classList.toggle('open');
+        });
+        document.addEventListener('click', () => pop.classList.remove('open'));
+        pop.addEventListener('click', (e) => e.stopPropagation());
+      }
     } catch (e) {
       console.warn('Failed to load API status', e);
     }

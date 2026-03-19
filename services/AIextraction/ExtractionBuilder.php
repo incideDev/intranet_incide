@@ -426,7 +426,9 @@ class ExtractionBuilder
             'is_json' => true,
             'display_value' => count($entries) . ' opere',
             'value_state' => 'table',
-            'value_json' => json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
+            'value_json' => (($row['value_json'] ?? '') !== '' && ($row['value_json'] ?? '') !== '{}')
+                ? $row['value_json']
+                : json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
             'citations' => $citations,
             'file_name' => $row['file_name'],
             'confidence' => $row['confidence'],
@@ -473,7 +475,9 @@ class ExtractionBuilder
             'is_json' => true,
             'display_value' => count($entries) . ' corrispettivi',
             'value_state' => 'table',
-            'value_json' => json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
+            'value_json' => (($row['value_json'] ?? '') !== '' && ($row['value_json'] ?? '') !== '{}')
+                ? $row['value_json']
+                : json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
             'citations' => $citations,
             'file_name' => $row['file_name'],
             'confidence' => $row['confidence'],
@@ -539,7 +543,9 @@ class ExtractionBuilder
                 'headers' => $headers,
                 'rows' => $tableData
             ],
-            'value_json' => json_encode(['requirements' => $requirements], JSON_UNESCAPED_UNICODE),
+            'value_json' => (($row['value_json'] ?? '') !== '' && ($row['value_json'] ?? '') !== '{}')
+                ? $row['value_json']
+                : json_encode(['requirements' => $requirements], JSON_UNESCAPED_UNICODE),
             'citations' => $citations,
             'file_name' => $row['file_name'],
             'confidence' => $row['confidence'],

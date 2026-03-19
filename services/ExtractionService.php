@@ -533,6 +533,12 @@ class ExtractionService
                     ? count($entries) . ' requisito/i tecnico-professionale/i'
                     : 'Nessun requisito disponibile';
                 
+                // Preserve original API value_json from DB
+                $originalVj = $row['value_json'] ?? null;
+                $effectiveVj = ($originalVj && $originalVj !== '' && $originalVj !== '{}')
+                    ? $originalVj
+                    : json_encode($requisitiData['value_json'], JSON_UNESCAPED_UNICODE);
+
                 $estrazione = [
                     'id' => (int) ($row['id'] ?? 0),
                     'job_id' => $jobId,
@@ -543,7 +549,7 @@ class ExtractionService
                     'display_value' => $displayValue,
                     'value_state' => count($entries) > 0 ? 'table' : 'no_data',
                     'table' => $requisitiData['table'],
-                    'value_json' => json_encode($requisitiData['value_json'], JSON_UNESCAPED_UNICODE),
+                    'value_json' => $effectiveVj,
                     'confidence' => $row['confidence'] ?? null,
                     'citations' => $row['citations'] ?? [],
                     'updated_at' => $updatedAt,
@@ -1587,6 +1593,111 @@ class ExtractionService
         }
     }
 
+    /**
+     * Re-extract: purge old results (keep the file), re-submit to external API.
+     */
+    public static function reExtract(int $jobId): array
+    {
+        global $database;
+        $pdo = $database->connection;
+
+        // 1. Load job info
+        $stmt = $pdo->prepare("SELECT id, extraction_types, gara_id FROM ext_jobs WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $jobId]);
+        $job = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$job) {
+            return ['success' => false, 'message' => 'Job non trovato'];
+        }
+
+        // 2. Load file info
+        $stmt = $pdo->prepare("SELECT original_name, mime_type, rel_path FROM ext_job_files WHERE job_id = :id LIMIT 1");
+        $stmt->execute([':id' => $jobId]);
+        $file = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$file || empty($file['rel_path'])) {
+            return ['success' => false, 'message' => 'File originale non trovato'];
+        }
+
+        $absPath = self::absoluteStoragePath($file['rel_path']);
+        if (!file_exists($absPath)) {
+            return ['success' => false, 'message' => 'File fisico non trovato su disco'];
+        }
+
+        // 3. Purge old extractions (keep job + file)
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare("SELECT id FROM ext_extractions WHERE job_id = :id");
+            $stmt->execute([':id' => $jobId]);
+            $extractionIds = $stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+
+            if ($extractionIds) {
+                $placeholders = implode(',', array_fill(0, count($extractionIds), '?'));
+                $pdo->prepare("DELETE FROM ext_citations WHERE extraction_id IN ($placeholders)")->execute($extractionIds);
+                $pdo->prepare("DELETE FROM ext_table_cells WHERE extraction_id IN ($placeholders)")->execute($extractionIds);
+            }
+            $pdo->prepare("DELETE FROM ext_extractions WHERE job_id = :id")->execute([':id' => $jobId]);
+
+            // Reset job external IDs (status updated below via updateJobStatus)
+            $pdo->prepare("
+                UPDATE ext_jobs
+                   SET ext_job_id = NULL,
+                       ext_batch_id = NULL,
+                       updated_at = NOW()
+                 WHERE id = :id
+            ")->execute([':id' => $jobId]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            return ['success' => false, 'message' => 'Errore durante il reset: ' . $e->getMessage()];
+        }
+
+        // Reset status via helper (handles dynamic columns)
+        self::updateJobStatus($jobId, 'queued', null, ['done' => 0, 'total' => 100]);
+
+        // 4. Re-submit to external API
+        $env = self::expandEnvPlaceholders(self::loadEnvConfig());
+        $apiBase = trim((string) ($env['AI_API_BASE'] ?? ''));
+        $apiKey  = trim((string) ($env['AI_API_KEY'] ?? ''));
+
+        if ($apiBase === '' || $apiKey === '') {
+            return ['success' => false, 'message' => 'API esterna non configurata'];
+        }
+
+        $types = json_decode($job['extraction_types'] ?? '[]', true) ?: [];
+        if (empty($types)) {
+            $types = self::normalizeExtractionTypes(null);
+        }
+
+        try {
+            $resp = self::externalAnalyzeSingle(
+                [
+                    'extraction_types'   => $types,
+                    'notification_email' => self::defaultNotificationEmail([]),
+                    'file_name'          => $file['original_name'] ?? 'document.pdf',
+                ],
+                [
+                    'tmp_name' => $absPath,
+                    'type'     => $file['mime_type'],
+                    'name'     => $file['original_name'],
+                ],
+                $env
+            );
+
+            self::logAnalyzeResponse($jobId, $resp);
+
+            $extBatchId = $resp['body']['batch_id'] ?? null;
+            $extJobId   = $resp['body']['job_id'] ?? null;
+
+            self::markExternalIds($jobId, $extJobId, $extBatchId);
+            self::updateJobStatus($jobId, 'queued', null, ['done' => 0, 'total' => 100]);
+
+            return ['success' => true, 'message' => 'Ri-estrazione avviata', 'job_id' => $jobId];
+        } catch (\Throwable $e) {
+            self::updateJobStatus($jobId, 'error', $e->getMessage());
+            return ['success' => false, 'message' => 'Errore API: ' . $e->getMessage()];
+        }
+    }
+
     private static function markExternalIds(int $jobId, ?string $extJobId, ?string $extBatchId): void
     {
         global $database;
@@ -2044,7 +2155,10 @@ class ExtractionService
 
         // Settore: prevalent_id_opere + prevalent_categoria
         if (isset($data['prevalent_id_opere']) && isset($data['prevalent_categoria'])) {
-            return trim($data['prevalent_id_opere'] . ' ' . strtoupper($data['prevalent_categoria']));
+            $idOpere = is_string($data['prevalent_id_opere']) ? $data['prevalent_id_opere'] : '';
+            $cat = is_string($data['prevalent_categoria']) ? $data['prevalent_categoria'] : '';
+            $combined = trim($idOpere . ' ' . strtoupper($cat));
+            if ($combined !== '') return $combined;
         }
 
         // Tipi tabellari — non hanno display value scalare
@@ -7561,6 +7675,12 @@ class ExtractionService
             ?? $row['job_completed_at']
             ?? $row['job_created_at'];
 
+        // Preserve original API value_json from DB; use normalized only as fallback
+        $originalValueJson = $row['value_json'] ?? null;
+        $effectiveValueJson = ($originalValueJson && $originalValueJson !== '' && $originalValueJson !== '{}')
+            ? $originalValueJson
+            : ($valueJson ? json_encode($valueJson, JSON_UNESCAPED_UNICODE) : json_encode(['answer' => $displayValue], JSON_UNESCAPED_UNICODE));
+
         $estrazione = [
             'id' => $row['id'] ?? 0,
             'job_id' => $jobId,
@@ -7569,7 +7689,7 @@ class ExtractionService
             'type_display' => \Services\AIextraction\ExtractionFormatter::displayNameForExtractionType($typeCode),
             'value_text' => $displayValue !== null ? (string) $displayValue : null,
             'display_value' => $displayValue !== null ? (string) $displayValue : null,
-            'value_json' => $valueJson ? json_encode($valueJson, JSON_UNESCAPED_UNICODE) : json_encode(['answer' => $displayValue], JSON_UNESCAPED_UNICODE),
+            'value_json' => $effectiveValueJson,
             'confidence' => $row['confidence'] ?? null,
             'citations' => $row['citations'] ?? [],
             'value_state' => 'scalar',
@@ -7659,6 +7779,12 @@ class ExtractionService
             ?? $row['job_completed_at']
             ?? $row['job_created_at'];
 
+        // Preserve original API value_json from DB
+        $originalVj = $row['value_json'] ?? null;
+        $effectiveVj = ($originalVj && $originalVj !== '' && $originalVj !== '{}')
+            ? $originalVj
+            : json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE);
+
         return [
             'id' => $row['id'] ?? 0,
             'job_id' => $jobId,
@@ -7667,7 +7793,7 @@ class ExtractionService
             'type_display' => \Services\AIextraction\ExtractionFormatter::displayNameForExtractionType('importi_opere_per_categoria_id_opere'),
             'value_text' => count($entries) . ' elementi',
             'display_value' => count($entries) . ' elementi',
-            'value_json' => json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
+            'value_json' => $effectiveVj,
             'confidence' => $row['confidence'] ?? null,
             'citations' => $row['citations'] ?? [],
             'value_state' => 'table',
@@ -7832,6 +7958,12 @@ class ExtractionService
             ?? $row['job_completed_at']
             ?? $row['job_created_at'];
 
+        // Preserve original API value_json from DB
+        $originalVj = $row['value_json'] ?? null;
+        $effectiveVj = ($originalVj && $originalVj !== '' && $originalVj !== '{}')
+            ? $originalVj
+            : json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE);
+
         return [
             'id' => $row['id'] ?? 0,
             'job_id' => $jobId,
@@ -7845,7 +7977,7 @@ class ExtractionService
                 'headers' => $headers,
                 'rows' => $tableRows
             ],
-            'value_json' => json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
+            'value_json' => $effectiveVj,
             'confidence' => $row['confidence'] ?? null,
             'citations' => $row['citations'] ?? [],
             'updated_at' => $updatedAt,
@@ -7982,7 +8114,9 @@ class ExtractionService
             'type_display' => \Services\AIextraction\ExtractionFormatter::displayNameForExtractionType('importi_requisiti_tecnici_categoria_id_opere'),
             'value_text' => $displayValue,
             'display_value' => $displayValue,
-            'value_json' => json_encode($valueJson, JSON_UNESCAPED_UNICODE),
+            'value_json' => (($row['value_json'] ?? '') !== '' && ($row['value_json'] ?? '') !== '{}')
+                ? $row['value_json']
+                : json_encode($valueJson, JSON_UNESCAPED_UNICODE),
             'requirements' => $requirements, // Per compatibilità con frontend
             'table' => [
                 'headers' => $headers,
@@ -8062,6 +8196,12 @@ class ExtractionService
             ?? $row['job_completed_at']
             ?? $row['job_created_at'];
 
+        // Preserve original API value_json from DB
+        $originalValueJson = $row['value_json'] ?? null;
+        $effectiveValueJson = ($originalValueJson && $originalValueJson !== '' && $originalValueJson !== '{}')
+            ? $originalValueJson
+            : json_encode($valueJson, JSON_UNESCAPED_UNICODE);
+
         return [
             'id' => $row['id'] ?? 0,
             'job_id' => $jobId,
@@ -8070,7 +8210,7 @@ class ExtractionService
             'type_display' => \Services\AIextraction\ExtractionFormatter::displayNameForExtractionType('fatturato_globale_n_minimo_anni'),
             'value_text' => $displayValue,
             'display_value' => $displayValue,
-            'value_json' => json_encode($valueJson, JSON_UNESCAPED_UNICODE),
+            'value_json' => $effectiveValueJson,
             'confidence' => $row['confidence'] ?? null,
             'citations' => $row['citations'] ?? [],
             'value_state' => 'scalar',
@@ -8423,7 +8563,9 @@ class ExtractionService
                 'headers' => $headers,
                 'rows' => $tableRows
             ],
-            'value_json' => json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
+            'value_json' => (($row['value_json'] ?? '') !== '' && ($row['value_json'] ?? '') !== '{}')
+                ? $row['value_json']
+                : json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
             'confidence' => $row['confidence'] ?? null,
             'citations' => $row['citations'] ?? [],
             'updated_at' => $updatedAt,
@@ -8536,7 +8678,9 @@ class ExtractionService
                 'headers' => $headers,
                 'rows' => $tableRows
             ],
-            'value_json' => json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
+            'value_json' => (($row['value_json'] ?? '') !== '' && ($row['value_json'] ?? '') !== '{}')
+                ? $row['value_json']
+                : json_encode(['entries' => $entries], JSON_UNESCAPED_UNICODE),
             'confidence' => $row['confidence'] ?? null,
             'citations' => $row['citations'] ?? [],
             'updated_at' => $updatedAt,

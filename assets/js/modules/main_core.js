@@ -3993,6 +3993,10 @@ window.showAddContactModal = function (defaultName, companyId, defaultEmail, onS
         state.isReady = true;
     }
 
+    // Delay before showing loader (ms). If pop() arrives before this, loader never appears.
+    var SHOW_DELAY = 600;
+    var showTimer = null;
+
     function show(text) {
         ensureDom();
         if (typeof text === 'string' && text.trim() !== '') {
@@ -4003,6 +4007,7 @@ window.showAddContactModal = function (defaultName, companyId, defaultEmail, onS
     }
 
     function hide() {
+        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
         if (!state.isReady) return;
         state.overlayEl.classList.add('is-hidden');
         state.overlayEl.setAttribute('aria-hidden', 'true');
@@ -4010,11 +4015,15 @@ window.showAddContactModal = function (defaultName, companyId, defaultEmail, onS
 
     function push(text) {
         state.count += 1;
-        if (state.count === 1) {
-            show(text);
-        } else if (typeof text === 'string' && text.trim() !== '') {
-            // se arrivano più operazioni, aggiorno il testo all’ultima richiesta “significativa”
+        if (typeof text === 'string' && text.trim() !== '') {
+            ensureDom();
             state.textEl.textContent = text.trim();
+        }
+        if (state.count === 1 && !showTimer) {
+            showTimer = setTimeout(function() {
+                showTimer = null;
+                if (state.count > 0) show(state.textEl ? state.textEl.textContent : '');
+            }, SHOW_DELAY);
         }
     }
 

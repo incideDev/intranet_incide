@@ -1734,6 +1734,20 @@ switch ($section) {
                 sendJsonResponse(\Services\ExtractionService::getExtractionTypes(), JSON_UNESCAPED_UNICODE);
                 break;
 
+            case 'reExtract':
+                if (!function_exists('userHasPermission') || !userHasPermission('edit_gare')) {
+                    http_response_code(403);
+                    sendJsonResponse(['success' => false, 'message' => 'Permesso negato'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                $jobId = (int) ($input['job_id'] ?? 0);
+                if ($jobId <= 0) {
+                    sendJsonResponse(['success' => false, 'message' => 'job_id mancante'], JSON_UNESCAPED_UNICODE);
+                    break;
+                }
+                sendJsonResponse(\Services\ExtractionService::reExtract($jobId), JSON_UNESCAPED_UNICODE);
+                break;
+
             case 'apiHealth':
                 if (!function_exists('userHasPermission') || !userHasPermission('view_gare')) {
                     http_response_code(403);

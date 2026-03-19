@@ -21,6 +21,8 @@ if (!$garaId && !$jobId) {
 <style>
     @media print {
         @page { size: A4; margin: 5mm 10mm !important; }
+        .navbar, .fixed-sidebar, .function-bar, .bottom-bar { display: none !important; }
+        .dynamic-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
     }
     .gd-loading { text-align: center; padding: 60px 20px; color: #9a9893; }
     .gd-loading p { margin-top: 12px; font-size: 14px; }
@@ -42,11 +44,9 @@ if (!$garaId && !$jobId) {
         <!-- Error state -->
         <div id="gd-error" class="gd-error" style="display:none"></div>
 
-        <!-- Intestazione -->
+        <!-- Intestazione + API Status info icon -->
         <div id="gd-header" style="display:none"></div>
-
-        <!-- API Status -->
-        <div id="api-status-container"></div>
+        <div id="api-status-container" class="no-print"></div>
 
         <!-- Panoramica -->
         <div id="gd-overview" style="display:none"></div>
