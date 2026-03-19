@@ -3869,6 +3869,50 @@ class ExtractionService
         exit;
     }
 
+    /**
+     * Serve the original uploaded PDF for a given job_id.
+     */
+    public static function downloadOriginalPdf(array $input): void
+    {
+        $jobId = (int) ($input['job_id'] ?? 0);
+        if ($jobId <= 0) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'job_id obbligatorio']);
+            exit;
+        }
+
+        global $database;
+        $pdo = $database->connection;
+
+        $stmt = $pdo->prepare("SELECT original_name, mime_type, rel_path FROM ext_job_files WHERE job_id = :id LIMIT 1");
+        $stmt->execute([':id' => $jobId]);
+        $file = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$file || empty($file['rel_path'])) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'File non trovato']);
+            exit;
+        }
+
+        $absPath = self::absoluteStoragePath($file['rel_path']);
+        if (!file_exists($absPath)) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'File fisico non trovato']);
+            exit;
+        }
+
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        $mime = $file['mime_type'] ?: 'application/pdf';
+        $name = $file['original_name'] ?: 'document.pdf';
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: inline; filename="' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $name) . '"');
+        header('Content-Length: ' . filesize($absPath));
+        readfile($absPath);
+        exit;
+    }
+
     public static function deleteRemoteJob(array $input): array
     {
         $jobId = trim((string) ($input['job_id'] ?? ''));

@@ -1745,7 +1745,16 @@
           chipItems.push(job.file_name);
         }
         if (chipItems.length > 0) {
-          rightHtml += `<div class="info-card" style="margin-bottom:12px;"><div class="ic-l">Documenti di gara</div><div class="gd-chips" style="margin-top:8px;">${chipItems.map(c => `<span class="gd-chip">${escapeHtml(truncate(c, 80))}</span>`).join('')}</div></div>`;
+          // Make chips clickable to open in media viewer (for the uploaded file)
+          const pdfUrl = job?.job_id ? `ajax.php?section=gare&action=downloadOriginalPdf&job_id=${job.job_id}` : '';
+          const chipsHtml = chipItems.map((c, i) => {
+            if (pdfUrl && i === 0) {
+              // First chip = uploaded file, make it clickable
+              return `<span class="gd-chip cta" data-pdf-url="${escapeAttribute(pdfUrl)}" data-pdf-name="${escapeAttribute(c)}">${escapeHtml(truncate(c, 80))}</span>`;
+            }
+            return `<span class="gd-chip">${escapeHtml(truncate(c, 80))}</span>`;
+          }).join('');
+          rightHtml += `<div class="info-card" style="margin-bottom:12px;"><div class="ic-l">Documenti di gara</div><div class="gd-chips" style="margin-top:8px;">${chipsHtml}</div></div>`;
         }
       }
     });
@@ -1760,6 +1769,23 @@
     `;
     showSection('gd-docs-ruoli');
     initializeExtractionTables(el);
+
+    // Wire clickable document chips to media viewer
+    el.querySelectorAll('.gd-chip[data-pdf-url]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const url = chip.getAttribute('data-pdf-url');
+        const name = chip.getAttribute('data-pdf-name') || 'Documento';
+        if (typeof window.showMediaViewer === 'function') {
+          window.showMediaViewer(url, {
+            nome_file: name,
+            titolo: name,
+            mime_type: 'application/pdf'
+          });
+        } else {
+          window.open(url, '_blank');
+        }
+      });
+    });
   }
 
   /**
