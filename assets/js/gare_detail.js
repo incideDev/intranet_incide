@@ -1535,7 +1535,7 @@
         <div class="info-card">
           <div class="ic-l">Fatturato globale minimo</div>
           <div class="ic-v" style="font-size:16px;font-weight:700;margin:4px 0">${escapeHtml(amount)}</div>
-          ${citText ? `<div class="ic-v sm">${escapeHtml(truncate(citText, 200))}</div>` : ''}
+          ${citText ? `<div class="ic-v sm expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute(citText)}">${escapeHtml(truncate(citText, 200))}</div>` : ''}
           ${chipsHtml ? `<div class="gd-chips" style="margin-top:8px">${chipsHtml}</div>` : ''}
         </div>
       `);
@@ -1563,9 +1563,9 @@
         cards.push(`
           <div class="info-card">
             <div class="ic-l">Capacita economico-finanziaria</div>
-            ${reqText ? `<div class="ic-v sm">${escapeHtml(truncate(reqText, 200))}</div>` : ''}
+            ${reqText ? `<div class="ic-v sm expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute(reqText)}">${escapeHtml(truncate(reqText, 200))}</div>` : ''}
             ${chipsHtml ? `<div class="gd-chips" style="margin-top:8px">${chipsHtml}</div>` : ''}
-            ${rtiRules ? `<div class="ic-v sm" style="margin-top:8px;font-style:italic"><strong>RTI:</strong> ${escapeHtml(truncate(rtiRules, 150))}</div>` : ''}
+            ${rtiRules ? `<div class="ic-v sm expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute('RTI: ' + rtiRules)}" style="margin-top:8px;font-style:italic"><strong>RTI:</strong> ${escapeHtml(truncate(rtiRules, 150))}</div>` : ''}
           </div>
         `);
       });
@@ -1584,6 +1584,18 @@
     `;
     showSection('gd-economici');
     initializeExtractionTables(el);
+
+    // Expand/collapse truncated text on click
+    el.querySelectorAll('.expandable').forEach(div => {
+      const full = div.getAttribute('data-full');
+      const short = div.textContent;
+      if (full && full.length > short.length) {
+        div.addEventListener('click', () => {
+          const isOpen = div.classList.contains('open');
+          div.textContent = isOpen ? short : full;
+        });
+      }
+    });
   }
 
   /**
