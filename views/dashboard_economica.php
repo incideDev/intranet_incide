@@ -135,7 +135,7 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
                 <div class="dboard-card__body">
                     <div class="dboard-table-wrap">
-                        <table class="dboard-table" id="tableOverviewLatest">
+                        <table class="dboard-table table--modern" id="tableOverviewLatest">
                             <thead>
                                 <tr>
                                     <th>Codice</th>
@@ -169,7 +169,7 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
                 <div class="dboard-card__body">
                     <div class="dboard-table-wrap">
-                        <table class="dboard-table" id="tableCommesse">
+                        <table class="dboard-table table--modern" id="tableCommesse">
                             <thead>
                                 <tr>
                                     <th>Codice</th>
@@ -218,7 +218,7 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
                 <div class="dboard-card__body">
                     <div class="dboard-table-wrap">
-                        <table class="dboard-table" id="tableCosti">
+                        <table class="dboard-table table--modern" id="tableCosti">
                             <thead>
                                 <tr>
                                     <th>Commessa</th>
@@ -240,23 +240,107 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
             </div>
 
-            <!-- Altri Costi -->
-            <div class="dboard-card dboard-mt-16" id="costiAltriCard">
+            <!-- KPI Altri Costi -->
+            <div class="dboard-kpi-grid dboard-kpi-grid--5 dboard-mt-16" id="kpiAltriCosti"></div>
+
+            <!-- Acquisti -->
+            <div class="dboard-card dboard-mt-16" id="costiPurchaseCard">
                 <div class="dboard-card__head">
-                    <span class="dboard-card__title">Altri Costi</span>
-                    <span class="dboard-card__meta">Acquisti, Rimborsi, Overhead</span>
+                    <span class="dboard-card__title">Acquisti</span>
+                    <span class="dboard-card__meta" id="purchaseCount"></span>
                 </div>
                 <div class="dboard-card__body">
-                    <div id="costiAltriContent">
-                        <div class="dboard-empty-state">
-                            <p class="muted">Sezione in completamento. Tabelle richieste:</p>
-                            <ul class="dboard-pending-list" id="costiPendingList">
-                                <li>project_purchase</li>
-                                <li>project_other_cost</li>
-                                <li>project_overheads_cost</li>
-                                <li>quotation_reimbursment</li>
-                            </ul>
-                        </div>
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>Commessa</th>
+                                    <th>Fornitore</th>
+                                    <th>Descrizione</th>
+                                    <th>Doc.</th>
+                                    <th>Data</th>
+                                    <th class="text-right">Importo</th>
+                                    <th>Subforn.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyPurchase"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Altri Costi -->
+            <div class="dboard-card dboard-mt-16" id="costiOtherCard">
+                <div class="dboard-card__head">
+                    <span class="dboard-card__title">Altri Costi</span>
+                    <span class="dboard-card__meta" id="otherCostCount"></span>
+                </div>
+                <div class="dboard-card__body">
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>Commessa</th>
+                                    <th>Tipo Costo</th>
+                                    <th>Data</th>
+                                    <th class="text-right">Preventivo</th>
+                                    <th class="text-right">Effettivo</th>
+                                    <th class="text-right">Delta</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyOtherCost"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overhead -->
+            <div class="dboard-card dboard-mt-16" id="costiOverheadCard">
+                <div class="dboard-card__head">
+                    <span class="dboard-card__title">Overhead</span>
+                    <span class="dboard-card__meta" id="overheadCount"></span>
+                </div>
+                <div class="dboard-card__body">
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>Commessa</th>
+                                    <th>Voce di Costo</th>
+                                    <th>Data</th>
+                                    <th class="text-right">Qtà</th>
+                                    <th class="text-right">Costo Unit.</th>
+                                    <th class="text-right">Importo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyOverhead"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rimborsi -->
+            <div class="dboard-card dboard-mt-16" id="costiReimbCard">
+                <div class="dboard-card__head">
+                    <span class="dboard-card__title">Rimborsi</span>
+                    <span class="dboard-card__meta" id="reimbCount"></span>
+                </div>
+                <div class="dboard-card__body">
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>Commessa</th>
+                                    <th>Tipo</th>
+                                    <th>Risorsa</th>
+                                    <th>Data</th>
+                                    <th class="text-right">Valore</th>
+                                    <th class="text-right">Assegnato</th>
+                                    <th>Approvato</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyReimb"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -277,7 +361,7 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
                 <div class="dboard-card__body">
                     <div class="dboard-table-wrap">
-                        <table class="dboard-table" id="tableScadenze">
+                        <table class="dboard-table table--modern" id="tableScadenze">
                             <thead>
                                 <tr>
                                     <th>Data Scadenza</th>
@@ -296,17 +380,28 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
             </div>
 
-            <!-- Pagamenti ricevuti -->
+            <!-- Fatture Emesse -->
             <div class="dboard-card dboard-mt-16">
                 <div class="dboard-card__head">
-                    <span class="dboard-card__title">Pagamenti Ricevuti</span>
-                    <span class="dboard-card__meta" id="pagamentiCount"></span>
+                    <span class="dboard-card__title">Fatture Emesse</span>
+                    <span class="dboard-card__meta" id="fattureCount"></span>
                 </div>
                 <div class="dboard-card__body">
-                    <div id="pagamentiContent">
-                        <div class="dboard-empty-state">
-                            <p class="muted">Sezione in completamento. Richiede integrazione tabella pagamenti.</p>
-                        </div>
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>Numero</th>
+                                    <th>Tipo</th>
+                                    <th>Data</th>
+                                    <th>Pagamento</th>
+                                    <th class="text-right">Imponibile</th>
+                                    <th class="text-right">IVA</th>
+                                    <th class="text-right">Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyFatture"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -329,16 +424,27 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
             </div>
 
-            <!-- Dettaglio Cash Flow -->
+            <!-- Dettaglio Fatturato Mensile -->
             <div class="dboard-card dboard-mt-16">
                 <div class="dboard-card__head">
-                    <span class="dboard-card__title">Dettaglio Entrate/Uscite</span>
+                    <span class="dboard-card__title">Dettaglio Fatturato Mensile</span>
+                    <span class="dboard-card__meta" id="cashflowDetailCount"></span>
                 </div>
                 <div class="dboard-card__body">
-                    <div id="cashflowDetailContent">
-                        <div class="dboard-empty-state">
-                            <p class="muted">Sezione in completamento. Richiede aggregazione dati fatturazione e pagamenti.</p>
-                        </div>
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>Numero</th>
+                                    <th>Tipo</th>
+                                    <th>Data</th>
+                                    <th>Pagamento</th>
+                                    <th class="text-right">Imponibile</th>
+                                    <th class="text-right">Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyCashflowDetail"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -359,7 +465,7 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
                 <div class="dboard-card__body">
                     <div class="dboard-table-wrap">
-                        <table class="dboard-table" id="tableHrHours">
+                        <table class="dboard-table table--modern" id="tableHrHours">
                             <thead>
                                 <tr>
                                     <th>Risorsa</th>
@@ -385,7 +491,7 @@ if (!userHasPermission('view_dashboard_economica')) {
                 </div>
                 <div class="dboard-card__body">
                     <div class="dboard-table-wrap">
-                        <table class="dboard-table" id="tableHrCosts">
+                        <table class="dboard-table table--modern" id="tableHrCosts">
                             <thead>
                                 <tr>
                                     <th>Risorsa</th>
@@ -408,12 +514,24 @@ if (!userHasPermission('view_dashboard_economica')) {
             <div class="dboard-card dboard-mt-16">
                 <div class="dboard-card__head">
                     <span class="dboard-card__title">Assenze</span>
+                    <span class="dboard-card__meta" id="hrAbsenceCount"></span>
                 </div>
                 <div class="dboard-card__body">
-                    <div id="hrAssenzeContent">
-                        <div class="dboard-empty-state">
-                            <p class="muted">Sezione in completamento. Richiede sincronizzazione tabella hr_absence.</p>
-                        </div>
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>Risorsa</th>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Stato</th>
+                                    <th class="text-right">Ore</th>
+                                    <th>Approvata</th>
+                                    <th>Data Appr.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyHrAbsence"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -424,38 +542,30 @@ if (!userHasPermission('view_dashboard_economica')) {
         <!-- ════════════════════════════════════════════════════════════ -->
         <div class="dboard-panel" id="panel-pipeline">
             <!-- KPI Pipeline -->
-            <div class="dboard-kpi-grid dboard-kpi-grid--small" id="kpiPipeline"></div>
+            <div class="dboard-kpi-grid" id="kpiPipeline"></div>
 
-            <!-- Pipeline Overview -->
-            <div class="dboard-card">
-                <div class="dboard-card__head">
-                    <span class="dboard-card__title">Pipeline Opportunita</span>
-                </div>
-                <div class="dboard-card__body">
-                    <div id="pipelineContent">
-                        <div class="dboard-empty-state">
-                            <p class="muted">Sezione in completamento. Richiede integrazione tabelle:</p>
-                            <ul class="dboard-pending-list">
-                                <li>quotation_header</li>
-                                <li>negotiation</li>
-                                <li>negotiation_budget</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Trattative Attive -->
+            <!-- Pipeline Offerte -->
             <div class="dboard-card dboard-mt-16">
                 <div class="dboard-card__head">
-                    <span class="dboard-card__title">Trattative Attive</span>
-                    <span class="dboard-card__meta" id="trattativeCount"></span>
+                    <span class="dboard-card__title">Offerte</span>
+                    <span class="dboard-card__meta" id="pipelineCount"></span>
                 </div>
                 <div class="dboard-card__body">
-                    <div id="trattativeContent">
-                        <div class="dboard-empty-state">
-                            <p class="muted">Dati trattative non ancora disponibili.</p>
-                        </div>
+                    <div class="dboard-table-wrap">
+                        <table class="dboard-table table--modern">
+                            <thead>
+                                <tr>
+                                    <th>N. Offerta</th>
+                                    <th>Oggetto</th>
+                                    <th>Stato</th>
+                                    <th>Commerciale</th>
+                                    <th>Data</th>
+                                    <th class="text-right">Importo</th>
+                                    <th>Esito</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyPipeline"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>

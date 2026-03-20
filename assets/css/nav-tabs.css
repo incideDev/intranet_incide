@@ -390,6 +390,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 20px;
+    overflow: hidden;
 }
 
 /* Navbar sinistra (logo + toggle sidebar) */
@@ -441,10 +442,9 @@
 .navbar-menu-links li a {
     text-decoration: none;
     color: #333;
-    /*padding: 5px 60px;*/
     transition: background-color 0.3s ease;
     text-transform: uppercase;
-    margin-right: 50px;
+    white-space: nowrap;
 }
 
 /* Effetto hover sul menu */
@@ -478,6 +478,31 @@
 .centered-nav a {
     cursor: pointer;
     text-align: center;
+}
+
+/* Navbar responsive */
+@media (max-width: 1200px) {
+    .navbar-menu-links ul {
+        gap: 10px;
+    }
+    .logo-container {
+        gap: 20px;
+    }
+}
+
+@media (max-width: 900px) {
+    .payoff {
+        display: none;
+    }
+    .navbar-menu-links ul {
+        gap: 6px;
+    }
+    .navbar-menu-links li a {
+        font-size: 11px;
+    }
+    .navbar-container {
+        padding: 0 10px;
+    }
 }
 
 .header-row {

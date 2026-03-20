@@ -1729,28 +1729,24 @@ hr {
   display: flex;
   flex-direction: column;
   margin: 0;
-  /* Margini compensati per zoom 0.85: valore / 0.85 */
-  margin-right: 35px;   /* 30 / 0.85 ≈ 35 */
-  margin-left: 294px;   /* 250 / 0.85 ≈ 294 */
   margin-top: 106px;    /* 90 / 0.85 ≈ 106 */
+  /* Posizionamento orizzontale: sidebar 225px + 20px gap, con zoom 0.85 → /0.85 */
+  margin-left: 294px;   /* (225 + 25) / 0.85 ≈ 294 */
+  margin-right: 35px;   /* 30 / 0.85 ≈ 35 */
+  /* Larghezza: riempie lo spazio rimanente senza sbordare */
+  /* width: calc(100vw - 294px - 35px); */
   padding: 10px;
-  flex-grow: 1;
   box-sizing: border-box;
-  transition: margin-left 0.4s ease;
-  /*text-transform: capitalize;*/
-  /* ── Global scale-down ~15% ──
-     Scales EVERYTHING inside main-container: text, inputs, buttons, padding, icons.
-     Change 0.85 to adjust — then update margins above accordingly (value / zoom). */
+  min-width: 0;
+  overflow-x: hidden;   /* Previene sbordamento orizzontale */
+  transition: margin-left 0.4s ease, width 0.4s ease;
+  /* ── Global scale-down ~15% ── */
   zoom: 0.85;
-}
-
-.main-container {
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-container.sidebar-closed {
   margin-left: 47px;   /* 40 / 0.85 ≈ 47 */
-  /* Larghezza della sidebar chiusa */
+  width: calc(100vw - 47px - 35px);
 }
 
 .function-bar {
@@ -3808,22 +3804,16 @@ canvas {
   /* Transizioni fluide */
 }
 
-/* Layout per card dei contatti e filtri */
-.content-layout {
-  display: flex;
-  gap: 20px;
-}
+/* Layout per card dei contatti e filtri - base merged nel secondo blocco */
 
 /* Sezione dei contatti in griglia */
 .contacts-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 15px;
-  flex: 3;
+  flex: 1;
+  min-width: 0; /* Prevent flex blowout */
   min-height: 400px;
-}
-
-.contacts-container {
   transition: min-height 0.3s ease-in-out;
 }
 
@@ -3852,9 +3842,10 @@ canvas {
 .content-layout {
   display: flex;
   align-items: flex-start;
-  gap: 30px;
+  gap: 20px;
   min-height: calc(100vh - 100px);
-  /* ðŸ‘ˆ forza il layout a coprire tutta lâ€™altezza visibile meno navbar/padding */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .filters-contacts .filter-input,
@@ -3880,19 +3871,24 @@ canvas {
 }
 
 .filters-container {
-  width: 250px;
+  width: 220px;
   background-color: #f9f9f9;
-  padding: 20px;
+  padding: 16px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
   position: sticky;
-  top: 70px;
-  height: calc(100vh - 90px);
-
+  /*top: 70px;*/
   max-height: calc(100vh - 90px);
-  /* ðŸ‘ˆ altezza massima visibile */
   overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Responsive: nascondi filtri quando non c'è spazio */
+@media (max-width: 1024px) {
+  .filters-container.filters-contacts {
+    display: none;
+  }
 }
 
 .profile-img {

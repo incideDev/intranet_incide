@@ -13,9 +13,9 @@
  * - elenco_commesse: anagrafica commesse
  * - hr_resource: anagrafica risorse HR (nomi, ruoli, reparti)
  *
- * TODO SYNC PENDENTI (tabelle non ancora create nel DB):
- * - project_purchase, project_other_cost, project_overheads_cost
- * - hr_absence, quotation_reimbursment
+ * - project_purchase, project_other_cost, project_overheads_cost, quotation_reimbursment
+ *
+ * - hr_absence: assenze risorse
  */
 
 namespace Services;
@@ -719,20 +719,158 @@ class DashboardEconomicaService
             ? (($totals['deltaCost'] / $totals['quotLaborCost']) * 100)
             : 0;
 
+        // ── Acquisti (project_purchase) ──
+        $purchaseResult = $database->query(
+            "SELECT
+                ec.codice AS projectCode,
+                ec.oggetto AS projectDesc,
+                pp.supplierName,
+                pp.itemDescription,
+                pp.documentNr,
+                pp.projectPurchaseDate,
+                pp.totalCost,
+                pp.chkSubfornitura
+             FROM project_purchase pp
+             JOIN elenco_commesse ec ON ec.akeron_project_id = pp.idProject
+             WHERE YEAR(pp.projectPurchaseDate) = ?
+               AND pp.totalCost > 0
+               AND {$ecFilters['where']}
+             ORDER BY pp.totalCost DESC",
+            array_merge([$year], $ecFilters['params']),
+            __FILE__
+        );
+        $purchaseCosts = [];
+        foreach ($purchaseResult->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $purchaseCosts[] = [
+                'projectCode' => $row['projectCode'],
+                'projectDesc' => $row['projectDesc'],
+                'supplierName' => $row['supplierName'] ?? '',
+                'itemDescription' => $row['itemDescription'] ?? '',
+                'documentNr' => $row['documentNr'] ?? '',
+                'date' => $row['projectPurchaseDate'],
+                'totalCost' => self::parseDecimal($row['totalCost']),
+                'isSubfornitura' => ($row['chkSubfornitura'] == 1),
+            ];
+        }
+
+        // ── Altri Costi (project_other_cost) ──
+        $otherResult = $database->query(
+            "SELECT
+                ec.codice AS projectCode,
+                ec.oggetto AS projectDesc,
+                poc.costTypeDesc,
+                poc.dateCost,
+                poc.expectedOtherCost,
+                poc.effectiveOtherCost
+             FROM project_other_cost poc
+             JOIN elenco_commesse ec ON ec.akeron_project_id = poc.idProject
+             WHERE YEAR(poc.dateCost) = ?
+               AND (poc.expectedOtherCost > 0 OR poc.effectiveOtherCost > 0)
+               AND {$ecFilters['where']}
+             ORDER BY poc.effectiveOtherCost DESC",
+            array_merge([$year], $ecFilters['params']),
+            __FILE__
+        );
+        $otherCosts = [];
+        foreach ($otherResult->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $expected = self::parseDecimal($row['expectedOtherCost']);
+            $effective = self::parseDecimal($row['effectiveOtherCost']);
+            $otherCosts[] = [
+                'projectCode' => $row['projectCode'],
+                'projectDesc' => $row['projectDesc'],
+                'costType' => $row['costTypeDesc'] ?? '',
+                'date' => $row['dateCost'],
+                'expectedCost' => $expected,
+                'effectiveCost' => $effective,
+                'delta' => $effective - $expected,
+            ];
+        }
+
+        // ── Overhead (project_overheads_cost) ──
+        $overheadResult = $database->query(
+            "SELECT
+                ec.codice AS projectCode,
+                ec.oggetto AS projectDesc,
+                poh.costItemDesc,
+                poh.creationDate,
+                poh.quantity,
+                poh.unitCost,
+                poh.amountCost
+             FROM project_overheads_cost poh
+             JOIN elenco_commesse ec ON ec.akeron_project_id = poh.idProject
+             WHERE YEAR(poh.creationDate) = ?
+               AND poh.amountCost > 0
+               AND {$ecFilters['where']}
+             ORDER BY poh.amountCost DESC",
+            array_merge([$year], $ecFilters['params']),
+            __FILE__
+        );
+        $overheadCosts = [];
+        foreach ($overheadResult->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $overheadCosts[] = [
+                'projectCode' => $row['projectCode'],
+                'projectDesc' => $row['projectDesc'],
+                'costItem' => $row['costItemDesc'] ?? '',
+                'date' => $row['creationDate'],
+                'quantity' => self::parseDecimal($row['quantity']),
+                'unitCost' => self::parseDecimal($row['unitCost']),
+                'amountCost' => self::parseDecimal($row['amountCost']),
+            ];
+        }
+
+        // ── Rimborsi (quotation_reimbursment) ──
+        $reimbResult = $database->query(
+            "SELECT
+                ec.codice AS projectCode,
+                ec.oggetto AS projectDesc,
+                qr.reimbTypeDesc,
+                qr.resourceName,
+                qr.reimbursmentDate,
+                qr.reimbursmentValue,
+                qr.reimbValueAssigned,
+                qr.isApproved
+             FROM quotation_reimbursment qr
+             JOIN elenco_commesse ec ON ec.akeron_project_id = qr.idProjectLink
+             WHERE YEAR(qr.reimbursmentDate) = ?
+               AND (qr.reimbursmentValue > 0 OR qr.reimbValueAssigned > 0)
+               AND {$ecFilters['where']}
+             ORDER BY qr.reimbursmentValue DESC",
+            array_merge([$year], $ecFilters['params']),
+            __FILE__
+        );
+        $reimbursements = [];
+        foreach ($reimbResult->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $reimbursements[] = [
+                'projectCode' => $row['projectCode'],
+                'projectDesc' => $row['projectDesc'],
+                'reimbType' => $row['reimbTypeDesc'] ?? '',
+                'resourceName' => $row['resourceName'] ?? '',
+                'date' => $row['reimbursmentDate'],
+                'value' => self::parseDecimal($row['reimbursmentValue']),
+                'assigned' => self::parseDecimal($row['reimbValueAssigned']),
+                'isApproved' => ($row['isApproved'] == 1),
+            ];
+        }
+
+        // ── Totali altri costi ──
+        $altriTotals = [
+            'totalPurchase' => array_sum(array_column($purchaseCosts, 'totalCost')),
+            'totalOtherExpected' => array_sum(array_column($otherCosts, 'expectedCost')),
+            'totalOtherEffective' => array_sum(array_column($otherCosts, 'effectiveCost')),
+            'totalOverhead' => array_sum(array_column($overheadCosts, 'amountCost')),
+            'totalReimbursements' => array_sum(array_column($reimbursements, 'value')),
+        ];
+
         return [
             'success' => true,
             'data' => [
                 'laborCosts' => $laborCosts,
                 'totals' => $totals,
-                'purchaseCosts' => [],
-                'otherCosts' => [],
-                'overheadCosts' => [],
-                '_pendingSync' => [
-                    'project_purchase',
-                    'project_other_cost',
-                    'project_overheads_cost',
-                    'quotation_reimbursment',
-                ],
+                'purchaseCosts' => $purchaseCosts,
+                'otherCosts' => $otherCosts,
+                'overheadCosts' => $overheadCosts,
+                'reimbursements' => $reimbursements,
+                'altriTotals' => $altriTotals,
             ],
         ];
     }
@@ -877,16 +1015,250 @@ class DashboardEconomicaService
             ? (($totals['deltaCost'] / $totals['quotCost']) * 100)
             : 0;
 
+        // === Assenze ===
+        $absResult = $database->query(
+            "SELECT
+                ha.idHResource,
+                COALESCE(CONCAT(hr.firstname, ' ', hr.surname), ha.idHResource) AS resourceName,
+                ha.absenceDate,
+                ha.absenceTypeCode,
+                ha.absenceTypeDesc,
+                ha.absenceStatusCode,
+                ha.absenceStatusDesc,
+                ha.absenceHours,
+                ha.isApproved,
+                ha.approveDate
+             FROM hr_absence ha
+             LEFT JOIN hr_resource hr ON hr.id_hresource = ha.idHResource
+             WHERE YEAR(ha.absenceDate) = ?
+             ORDER BY ha.absenceDate DESC",
+            [$year],
+            __FILE__
+        );
+        $absRows = $absResult->fetchAll(\PDO::FETCH_ASSOC);
+
+        $absences = [];
+        $totalAbsenceHours = 0;
+        foreach ($absRows as $row) {
+            $hours = self::parseDecimal($row['absenceHours']);
+            $totalAbsenceHours += $hours;
+            $absences[] = [
+                'resourceName' => $row['resourceName'],
+                'absenceDate' => $row['absenceDate'],
+                'absenceType' => $row['absenceTypeDesc'] ?? $row['absenceTypeCode'] ?? '',
+                'status' => $row['absenceStatusDesc'] ?? $row['absenceStatusCode'] ?? '',
+                'hours' => $hours,
+                'isApproved' => ($row['isApproved'] == 1),
+                'approveDate' => $row['approveDate'],
+            ];
+        }
+
+        $totals['totalAbsenceHours'] = $totalAbsenceHours;
+        $totals['absenceCount'] = count($absences);
+
         return [
             'success' => true,
             'data' => [
                 'resourceHours' => $resourceHours,
                 'resourceCosts' => $resourceCosts,
                 'totals' => $totals,
-                'absences' => [],
-                '_pendingSync' => [
-                    'hr_absence',
-                ],
+                'absences' => $absences,
+            ],
+        ];
+    }
+
+    /**
+     * 8. getPipelineData - Pipeline opportunità da quotation_header.
+     *
+     * FILTRI: anno (su quotationDate), bu, pm, cliente
+     */
+    public static function getPipelineData(array $input): array
+    {
+        global $database;
+
+        if (!userHasPermission('view_dashboard_economica')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $filters = self::normalizeFilters($input);
+        $year = $filters['year'];
+
+        // Solo ultime revisioni per evitare duplicati
+        $result = $database->query(
+            "SELECT
+                qh.idQuotationHeader,
+                qh.quotationNo,
+                qh.quotationSubject,
+                qh.quotationStatus,
+                qh.quotationStatusDesc,
+                qh.salesOperator,
+                qh.techManager,
+                qh.quotationDate,
+                qh.expectedClosingDate,
+                qh.effectiveClosingDate,
+                qh.quotationAmount,
+                qh.saleAmount,
+                qh.progressPerc,
+                qh.outcome,
+                qh.outcomeDesc,
+                qh.idProjectLink
+             FROM quotation_header qh
+             WHERE qh.isLastRevision = 1
+               AND YEAR(qh.quotationDate) = ?
+             ORDER BY qh.quotationAmount DESC",
+            [$year],
+            __FILE__
+        );
+        $rows = $result->fetchAll(\PDO::FETCH_ASSOC);
+
+        $quotations = [];
+        $totalAmount = 0;
+        $wonCount = 0;
+        $wonAmount = 0;
+        $lostCount = 0;
+        $openCount = 0;
+        $openAmount = 0;
+
+        foreach ($rows as $row) {
+            $amount = self::parseDecimal($row['quotationAmount']);
+            $saleAmount = self::parseDecimal($row['saleAmount']);
+            $status = $row['quotationStatus'] ?? '';
+
+            $totalAmount += $amount;
+
+            if (stripos($status, 'CHIUSAPOS') !== false) {
+                $wonCount++;
+                $wonAmount += $saleAmount > 0 ? $saleAmount : $amount;
+            } elseif (stripos($status, 'CHIUSANEG') !== false) {
+                $lostCount++;
+            } else {
+                $openCount++;
+                $openAmount += $amount;
+            }
+
+            $quotations[] = [
+                'id' => $row['idQuotationHeader'],
+                'quotationNo' => $row['quotationNo'] ?? '',
+                'subject' => $row['quotationSubject'] ?? '',
+                'status' => $row['quotationStatusDesc'] ?? $status,
+                'statusCode' => $status,
+                'salesOperator' => $row['salesOperator'] ?? '',
+                'techManager' => $row['techManager'] ?? '',
+                'quotationDate' => $row['quotationDate'],
+                'expectedClosingDate' => $row['expectedClosingDate'],
+                'amount' => $amount,
+                'saleAmount' => $saleAmount,
+                'progressPerc' => self::parseDecimal($row['progressPerc']),
+                'outcome' => $row['outcomeDesc'] ?? $row['outcome'] ?? '',
+                'projectLink' => $row['idProjectLink'] ?? '',
+            ];
+        }
+
+        $totalDecided = $wonCount + $lostCount;
+        $winRate = ($totalDecided > 0) ? ($wonCount / $totalDecided * 100) : 0;
+
+        $totals = [
+            'totalQuotations' => count($rows),
+            'totalAmount' => $totalAmount,
+            'wonCount' => $wonCount,
+            'wonAmount' => $wonAmount,
+            'lostCount' => $lostCount,
+            'openCount' => $openCount,
+            'openAmount' => $openAmount,
+            'winRate' => $winRate,
+        ];
+
+        return [
+            'success' => true,
+            'data' => [
+                'quotations' => $quotations,
+                'totals' => $totals,
+            ],
+        ];
+    }
+
+    /**
+     * 9. getInvoicesData - Fatture emesse da sales_invoice + detail.
+     *
+     * FILTRI: anno (invoiceYear), bu, cliente
+     */
+    public static function getInvoicesData(array $input): array
+    {
+        global $database;
+
+        if (!userHasPermission('view_dashboard_economica')) {
+            return ['success' => false, 'message' => 'Permesso negato'];
+        }
+
+        $filters = self::normalizeFilters($input);
+        $year = $filters['year'];
+        $cliente = $filters['cliente'];
+
+        $where = "si.invoiceYear = ?";
+        $params = [$year];
+
+        if ($cliente !== '') {
+            $where .= " AND si.idCustomer = ?";
+            $params[] = $cliente;
+        }
+
+        $result = $database->query(
+            "SELECT
+                si.idSalesInvoiceHeader,
+                si.descInvoiceType,
+                si.invoiceNumber,
+                si.invoiceDate,
+                si.idCustomer,
+                si.paymentDesc,
+                si.taxable,
+                si.tax,
+                si.amount
+             FROM sales_invoice si
+             WHERE {$where}
+             ORDER BY si.invoiceDate DESC",
+            $params,
+            __FILE__
+        );
+        $rows = $result->fetchAll(\PDO::FETCH_ASSOC);
+
+        $invoices = [];
+        $totalTaxable = 0;
+        $totalTax = 0;
+        $totalAmount = 0;
+
+        foreach ($rows as $row) {
+            $taxable = self::parseDecimal($row['taxable']);
+            $tax = self::parseDecimal($row['tax']);
+            $amount = self::parseDecimal($row['amount']);
+            $totalTaxable += $taxable;
+            $totalTax += $tax;
+            $totalAmount += $amount;
+
+            $invoices[] = [
+                'id' => $row['idSalesInvoiceHeader'],
+                'invoiceType' => $row['descInvoiceType'] ?? '',
+                'invoiceNumber' => $row['invoiceNumber'] ?? '',
+                'invoiceDate' => $row['invoiceDate'],
+                'customerId' => $row['idCustomer'] ?? '',
+                'paymentDesc' => $row['paymentDesc'] ?? '',
+                'taxable' => $taxable,
+                'tax' => $tax,
+                'amount' => $amount,
+            ];
+        }
+
+        $totals = [
+            'invoiceCount' => count($rows),
+            'totalTaxable' => $totalTaxable,
+            'totalTax' => $totalTax,
+            'totalAmount' => $totalAmount,
+        ];
+
+        return [
+            'success' => true,
+            'data' => [
+                'invoices' => $invoices,
+                'totals' => $totals,
             ],
         ];
     }

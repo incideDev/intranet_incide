@@ -12,7 +12,6 @@
         mainContainer: null,
         currentContactId: null,
         isOpen: false,
-        resizeObserver: null,
 
         init() {
             this.overlay = document.getElementById('contacts-profile-overlay');
@@ -39,42 +38,6 @@
                 }
             });
 
-            // Aggiorna posizione overlay quando la finestra cambia dimensione
-            // Usa requestAnimationFrame per calcolare dopo reflow completo
-            window.addEventListener('resize', () => {
-                if (this.isOpen) {
-                    requestAnimationFrame(() => {
-                        this.updateOverlayPosition();
-                    });
-                }
-            });
-
-            // Osserva cambiamenti al main-container (es. sidebar toggle, media query breakpoint)
-            // Usa border-box per catturare anche margin/padding changes
-            this.resizeObserver = new ResizeObserver(() => {
-                if (this.isOpen) {
-                    this.updateOverlayPosition();
-                }
-            });
-            this.resizeObserver.observe(this.mainContainer, { box: 'border-box' });
-        },
-
-        /**
-         * Calcola e applica la posizione dell'overlay per coprire esattamente il main-container
-         */
-        updateOverlayPosition() {
-            if (!this.overlay || !this.mainContainer) return;
-
-            const rect = this.mainContainer.getBoundingClientRect();
-
-            this.overlay.style.top = rect.top + 'px';
-            this.overlay.style.left = rect.left + 'px';
-            this.overlay.style.width = rect.width + 'px';
-
-            // Calcola bottom invece di height fissa per permettere scroll completo
-            const bottom = window.innerHeight - rect.bottom;
-            this.overlay.style.bottom = bottom + 'px';
-            this.overlay.style.height = 'auto';
         },
 
         open(contact) {
@@ -83,15 +46,11 @@
             this.currentContactId = contact.user_id;
             this.isOpen = true;
 
-            // Posiziona l'overlay sopra il main-container
-            this.updateOverlayPosition();
-
-            // Show overlay
+            // Hide contacts list, show overlay
+            const contentLayout = this.mainContainer.querySelector('.content-layout');
+            if (contentLayout) contentLayout.style.display = 'none';
             this.overlay.classList.remove('contacts-overlay--hidden');
             this.overlay.classList.add('contacts-overlay--visible');
-
-            // Blocca lo scroll del body
-            document.body.style.overflow = 'hidden';
 
             // Update URL with profile ID
             const url = new URL(window.location);
@@ -108,12 +67,11 @@
             this.isOpen = false;
             this.currentContactId = null;
 
-            // Hide overlay
+            // Hide overlay, restore contacts list
             this.overlay.classList.add('contacts-overlay--hidden');
             this.overlay.classList.remove('contacts-overlay--visible');
-
-            // Ripristina lo scroll del body
-            document.body.style.overflow = '';
+            const contentLayout = this.mainContainer.querySelector('.content-layout');
+            if (contentLayout) contentLayout.style.display = '';
 
             // Reset CV state
             const cvFrame = document.getElementById('cp-pdf-preview');

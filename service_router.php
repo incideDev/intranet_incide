@@ -519,6 +519,12 @@ switch ($section) {
             case 'getHrEconomicSummary':
                 sendJsonResponse(DashboardEconomicaService::getHrEconomicSummary($input));
                 break;
+            case 'getPipelineData':
+                sendJsonResponse(DashboardEconomicaService::getPipelineData($input));
+                break;
+            case 'getInvoicesData':
+                sendJsonResponse(DashboardEconomicaService::getInvoicesData($input));
+                break;
             default:
                 sendJsonResponse(['success' => false, 'message' => 'Azione non valida per dashboard_economica']);
                 break;

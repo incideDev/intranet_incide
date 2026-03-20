@@ -251,6 +251,35 @@
     color: #94a3b8;
 }
 
+.dboard-kpi-grid--5 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+/* ── COLLAPSIBLE TABLES ────────────────────────────────── */
+.dboard-table-wrap--collapsible tbody tr.dboard-hidden-row {
+    display: none;
+}
+.dboard-table-wrap--collapsible.dboard-expanded tbody tr.dboard-hidden-row {
+    display: table-row;
+}
+.dboard-toggle-btn {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+    margin-top: 4px;
+    background: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #3b82f6;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.dboard-toggle-btn:hover {
+    background: #f1f5f9;
+}
+
 /* ── ROW/COL LAYOUT ─────────────────────────────────────── */
 .dboard-row {
     display: flex;

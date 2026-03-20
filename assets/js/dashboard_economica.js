@@ -454,33 +454,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderOverviewLatestProjects(projects) {
-        const tbody = getEl('tbodyOverviewLatest');
-        const countEl = getEl('overviewLatestCount');
-        if (!tbody) return;
-
-        if (countEl) {
-            countEl.textContent = `Top ${projects.length}`;
-        }
-
-        if (!projects || projects.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center muted">Nessuna commessa trovata</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = projects.map(row => {
-            const progressClass = getProgressClass(row.avgProgress);
-            return `
-                <tr>
-                    <td><strong>${htmlEsc(row.projectCode)}</strong></td>
-                    <td class="text-truncate">${htmlEsc(row.projectDesc)}</td>
-                    <td>${htmlEsc(row.customerName)}</td>
-                    <td>${htmlEsc(row.projectManager)}</td>
-                    <td>${htmlEsc(row.businessUnit || '-')}</td>
-                    <td class="text-right">${formatCurrency(row.milestoneValue)}</td>
-                    <td class="text-right"><span class="pill ${progressClass}">${formatPercent(row.avgProgress)}</span></td>
-                </tr>
-            `;
-        }).join('');
+        renderSimpleTable(
+            'tbodyOverviewLatest', 'overviewLatestCount',
+            projects || [], 7,
+            row => {
+                const progressClass = getProgressClass(row.avgProgress);
+                return `
+                    <tr>
+                        <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                        <td class="text-truncate">${htmlEsc(row.projectDesc)}</td>
+                        <td>${htmlEsc(row.customerName)}</td>
+                        <td>${htmlEsc(row.projectManager)}</td>
+                        <td>${htmlEsc(row.businessUnit || '-')}</td>
+                        <td class="text-right">${formatCurrency(row.milestoneValue)}</td>
+                        <td class="text-right"><span class="pill ${progressClass}">${formatPercent(row.avgProgress)}</span></td>
+                    </tr>
+                `;
+            }
+        );
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -534,39 +525,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderCommesseTable(data) {
-        const tbody = getEl('tbodyCommesse');
-        const countEl = getEl('commesseCount');
-        if (!tbody) return;
-
-        if (countEl) {
-            countEl.textContent = `${data.length} commesse`;
-        }
-
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" class="text-center muted">Nessuna commessa trovata</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data.map(row => {
-            const progressClass = getProgressClass(row.avgProgress);
-            const deltaClass = getDeltaClass(row.deltaCost);
-            return `
-                <tr>
-                    <td><strong>${htmlEsc(row.projectCode)}</strong></td>
-                    <td class="text-truncate">${htmlEsc(row.projectDesc)}</td>
-                    <td>${htmlEsc(row.customerName)}</td>
-                    <td>${htmlEsc(row.projectManager)}</td>
-                    <td><span class="pill">${htmlEsc(row.projectStatus || '-')}</span></td>
-                    <td class="text-right">${formatCurrency(row.milestoneValue)}</td>
-                    <td class="text-right">${formatNum(row.quotExpectedHours, 0)}</td>
-                    <td class="text-right">${formatNum(row.hoursWorked, 0)}</td>
-                    <td class="text-right">${formatCurrency(row.quotLaborCost)}</td>
-                    <td class="text-right">${formatCurrency(row.laborCost)}</td>
-                    <td class="text-right"><span class="pill ${deltaClass}">${formatCurrency(row.deltaCost)}</span></td>
-                    <td class="text-right"><span class="pill ${progressClass}">${formatPercent(row.avgProgress)}</span></td>
-                </tr>
-            `;
-        }).join('');
+        renderSimpleTable(
+            'tbodyCommesse', 'commesseCount',
+            data || [], 12,
+            row => {
+                const progressClass = getProgressClass(row.avgProgress);
+                const deltaClass = getDeltaClass(row.deltaCost);
+                return `
+                    <tr>
+                        <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                        <td class="text-truncate">${htmlEsc(row.projectDesc)}</td>
+                        <td>${htmlEsc(row.customerName)}</td>
+                        <td>${htmlEsc(row.projectManager)}</td>
+                        <td><span class="pill">${htmlEsc(row.projectStatus || '-')}</span></td>
+                        <td class="text-right">${formatCurrency(row.milestoneValue)}</td>
+                        <td class="text-right">${formatNum(row.quotExpectedHours, 0)}</td>
+                        <td class="text-right">${formatNum(row.hoursWorked, 0)}</td>
+                        <td class="text-right">${formatCurrency(row.quotLaborCost)}</td>
+                        <td class="text-right">${formatCurrency(row.laborCost)}</td>
+                        <td class="text-right"><span class="pill ${deltaClass}">${formatCurrency(row.deltaCost)}</span></td>
+                        <td class="text-right"><span class="pill ${progressClass}">${formatPercent(row.avgProgress)}</span></td>
+                    </tr>
+                `;
+            }
+        );
     }
 
     function renderSalSummary(data) {
@@ -630,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const laborCosts = data.laborCosts || [];
         const totals = data.totals || {};
 
-        // KPI Costi
+        // KPI Costi Lavoro
         const kpiContainer = getEl('kpiCosti');
         if (kpiContainer) {
             const deltaClass = totals.deltaCost > 0 ? 'kpi-danger' : (totals.deltaCost < 0 ? 'kpi-success' : '');
@@ -653,37 +635,191 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
 
-        // Tabella costi
-        const tbody = getEl('tbodyCosti');
-        const countEl = getEl('costiCount');
-        if (tbody) {
-            if (countEl) {
-                countEl.textContent = `${laborCosts.length} commesse`;
+        // Tabella costi lavoro
+        renderSimpleTable(
+            'tbodyCosti', 'costiCount',
+            laborCosts, 11,
+            row => {
+                const deltaClass = getDeltaClass(row.deltaCost);
+                return `
+                    <tr>
+                        <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                        <td class="text-truncate">${htmlEsc(row.projectDesc)}</td>
+                        <td>${htmlEsc(row.customerName)}</td>
+                        <td>${htmlEsc(row.projectManager)}</td>
+                        <td class="text-right">${formatNum(row.quotHours, 0)}</td>
+                        <td class="text-right">${formatNum(row.actualHours, 0)}</td>
+                        <td class="text-right">${formatCurrency(row.quotLaborCost)}</td>
+                        <td class="text-right">${formatCurrency(row.actualLaborCost)}</td>
+                        <td class="text-right"><span class="pill ${deltaClass}">${formatCurrency(row.deltaCost)}</span></td>
+                        <td class="text-right"><span class="pill ${deltaClass}">${formatPercent(row.deltaPercent)}</span></td>
+                        <td class="text-right">${formatNum(row.resourceCount)}</td>
+                    </tr>
+                `;
             }
+        );
 
-            if (laborCosts.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" class="text-center muted">Nessun dato costi disponibile</td></tr>';
-            } else {
-                tbody.innerHTML = laborCosts.map(row => {
-                    const deltaClass = getDeltaClass(row.deltaCost);
-                    return `
-                        <tr>
-                            <td><strong>${htmlEsc(row.projectCode)}</strong></td>
-                            <td class="text-truncate">${htmlEsc(row.projectDesc)}</td>
-                            <td>${htmlEsc(row.customerName)}</td>
-                            <td>${htmlEsc(row.projectManager)}</td>
-                            <td class="text-right">${formatNum(row.quotHours, 0)}</td>
-                            <td class="text-right">${formatNum(row.actualHours, 0)}</td>
-                            <td class="text-right">${formatCurrency(row.quotLaborCost)}</td>
-                            <td class="text-right">${formatCurrency(row.actualLaborCost)}</td>
-                            <td class="text-right"><span class="pill ${deltaClass}">${formatCurrency(row.deltaCost)}</span></td>
-                            <td class="text-right"><span class="pill ${deltaClass}">${formatPercent(row.deltaPercent)}</span></td>
-                            <td class="text-right">${formatNum(row.resourceCount)}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
+        // ── KPI Altri Costi ──
+        const at = data.altriTotals || {};
+        const kpiAltri = getEl('kpiAltriCosti');
+        if (kpiAltri) {
+            const grandTotal = (at.totalPurchase || 0) + (at.totalOtherEffective || 0) + (at.totalOverhead || 0) + (at.totalReimbursements || 0);
+            kpiAltri.innerHTML = `
+                <div class="dboard-kpi-card">
+                    <div class="dboard-kpi-label">Acquisti</div>
+                    <div class="dboard-kpi-value">${formatCurrency(at.totalPurchase)}</div>
+                    <div class="dboard-kpi-hint">${(data.purchaseCosts || []).length} righe</div>
+                </div>
+                <div class="dboard-kpi-card">
+                    <div class="dboard-kpi-label">Altri Costi</div>
+                    <div class="dboard-kpi-value">${formatCurrency(at.totalOtherEffective)}</div>
+                    <div class="dboard-kpi-hint">Prev: ${formatCurrency(at.totalOtherExpected)}</div>
+                </div>
+                <div class="dboard-kpi-card">
+                    <div class="dboard-kpi-label">Overhead</div>
+                    <div class="dboard-kpi-value">${formatCurrency(at.totalOverhead)}</div>
+                    <div class="dboard-kpi-hint">${(data.overheadCosts || []).length} righe</div>
+                </div>
+                <div class="dboard-kpi-card">
+                    <div class="dboard-kpi-label">Rimborsi</div>
+                    <div class="dboard-kpi-value">${formatCurrency(at.totalReimbursements)}</div>
+                    <div class="dboard-kpi-hint">${(data.reimbursements || []).length} righe</div>
+                </div>
+                <div class="dboard-kpi-card kpi-accent">
+                    <div class="dboard-kpi-label">Totale Altri Costi</div>
+                    <div class="dboard-kpi-value">${formatCurrency(grandTotal)}</div>
+                </div>
+            `;
         }
+
+        // ── Tabella Acquisti ──
+        renderSimpleTable(
+            'tbodyPurchase', 'purchaseCount',
+            data.purchaseCosts || [], 7,
+            row => `
+                <tr>
+                    <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                    <td>${htmlEsc(row.supplierName)}</td>
+                    <td class="text-truncate">${htmlEsc(row.itemDescription)}</td>
+                    <td>${htmlEsc(row.documentNr)}</td>
+                    <td>${formatDate(row.date)}</td>
+                    <td class="text-right">${formatCurrency(row.totalCost)}</td>
+                    <td>${row.isSubfornitura ? '<span class="pill pill-info">Sì</span>' : '-'}</td>
+                </tr>
+            `
+        );
+
+        // ── Tabella Altri Costi ──
+        renderSimpleTable(
+            'tbodyOtherCost', 'otherCostCount',
+            data.otherCosts || [], 6,
+            row => {
+                const deltaClass = getDeltaClass(row.delta);
+                return `
+                    <tr>
+                        <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                        <td>${htmlEsc(row.costType)}</td>
+                        <td>${formatDate(row.date)}</td>
+                        <td class="text-right">${formatCurrency(row.expectedCost)}</td>
+                        <td class="text-right">${formatCurrency(row.effectiveCost)}</td>
+                        <td class="text-right"><span class="pill ${deltaClass}">${formatCurrency(row.delta)}</span></td>
+                    </tr>
+                `;
+            }
+        );
+
+        // ── Tabella Overhead ──
+        renderSimpleTable(
+            'tbodyOverhead', 'overheadCount',
+            data.overheadCosts || [], 6,
+            row => `
+                <tr>
+                    <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                    <td>${htmlEsc(row.costItem)}</td>
+                    <td>${formatDate(row.date)}</td>
+                    <td class="text-right">${formatNum(row.quantity, 2)}</td>
+                    <td class="text-right">${formatCurrency(row.unitCost)}</td>
+                    <td class="text-right">${formatCurrency(row.amountCost)}</td>
+                </tr>
+            `
+        );
+
+        // ── Tabella Rimborsi ──
+        renderSimpleTable(
+            'tbodyReimb', 'reimbCount',
+            data.reimbursements || [], 7,
+            row => `
+                <tr>
+                    <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                    <td>${htmlEsc(row.reimbType)}</td>
+                    <td>${htmlEsc(row.resourceName)}</td>
+                    <td>${formatDate(row.date)}</td>
+                    <td class="text-right">${formatCurrency(row.value)}</td>
+                    <td class="text-right">${formatCurrency(row.assigned)}</td>
+                    <td>${row.isApproved ? '<span class="pill pill-success">Sì</span>' : '<span class="pill pill-warning">No</span>'}</td>
+                </tr>
+            `
+        );
+    }
+
+    const COLLAPSE_LIMIT = 5;
+
+    function renderSimpleTable(tbodyId, countId, rows, colSpan, rowRenderer) {
+        const tbody = getEl(tbodyId);
+        const countEl = getEl(countId);
+        if (!tbody) return;
+
+        const wrap = tbody.closest('.dboard-table-wrap');
+        if (countEl) {
+            countEl.textContent = `${rows.length} righe`;
+        }
+        if (rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center muted">Nessun dato disponibile</td></tr>`;
+            removeToggle(wrap);
+            return;
+        }
+
+        tbody.innerHTML = rows.map((row, i) => {
+            const html = rowRenderer(row);
+            if (i >= COLLAPSE_LIMIT) {
+                return html.replace('<tr>', '<tr class="dboard-hidden-row">');
+            }
+            return html;
+        }).join('');
+
+        if (wrap) {
+            wrap.classList.add('dboard-table-wrap--collapsible');
+            wrap.classList.remove('dboard-expanded');
+        }
+
+        if (rows.length > COLLAPSE_LIMIT) {
+            ensureToggle(wrap, rows.length);
+        } else {
+            removeToggle(wrap);
+        }
+    }
+
+    function ensureToggle(wrap, total) {
+        if (!wrap) return;
+        let btn = wrap.parentElement.querySelector('.dboard-toggle-btn');
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.className = 'dboard-toggle-btn';
+            btn.type = 'button';
+            wrap.parentElement.appendChild(btn);
+        }
+        const hidden = total - COLLAPSE_LIMIT;
+        btn.textContent = `Mostra tutte (${total})`;
+        btn.onclick = function () {
+            const expanded = wrap.classList.toggle('dboard-expanded');
+            btn.textContent = expanded ? 'Mostra meno' : `Mostra tutte (${total})`;
+        };
+    }
+
+    function removeToggle(wrap) {
+        if (!wrap) return;
+        const btn = wrap.parentElement.querySelector('.dboard-toggle-btn');
+        if (btn) btn.remove();
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -692,13 +828,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadScadenzeData() {
         const filters = getFilters();
-        const res = await window.customFetch('dashboard_economica', 'getInstallments', filters, { showLoader: false });
+        const [res, invRes] = await Promise.all([
+            window.customFetch('dashboard_economica', 'getInstallments', filters, { showLoader: false }),
+            window.customFetch('dashboard_economica', 'getInvoicesData', filters, { showLoader: false })
+        ]);
 
         if (!res.success) {
             throw new Error(res.message || 'Errore caricamento scadenze');
         }
 
         renderScadenzeData(res.data);
+
+        if (invRes.success) {
+            renderFattureData(invRes.data);
+        }
     }
 
     function renderScadenzeData(data) {
@@ -731,33 +874,51 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Tabella scadenze
-        const tbody = getEl('tbodyScadenze');
-        const countEl = getEl('scadenzeCount');
-        if (tbody) {
-            if (countEl) {
-                countEl.textContent = `${data.length} rate`;
+        renderSimpleTable(
+            'tbodyScadenze', 'scadenzeCount',
+            data || [], 8,
+            row => {
+                const billedIcon = row.isBilled ? '<span class="pill pill-success">Si</span>' : '<span class="pill pill-warning">No</span>';
+                return `
+                    <tr>
+                        <td>${formatDate(row.installDate)}</td>
+                        <td><strong>${htmlEsc(row.projectCode)}</strong></td>
+                        <td>${htmlEsc(row.customerName)}</td>
+                        <td class="text-truncate">${htmlEsc(row.installDesc || row.milestoneDescription || '-')}</td>
+                        <td class="text-right">${formatCurrency(row.expectedInstallValue)}</td>
+                        <td class="text-right">${formatCurrency(row.installNetAmount)}</td>
+                        <td><span class="pill">${htmlEsc(row.statusDesc || row.statusCode || '-')}</span></td>
+                        <td class="text-center">${billedIcon}</td>
+                    </tr>
+                `;
             }
+        );
+    }
 
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center muted">Nessuna rata trovata per l\'anno selezionato</td></tr>';
-            } else {
-                tbody.innerHTML = data.map(row => {
-                    const billedIcon = row.isBilled ? '<span class="pill pill-success">Si</span>' : '<span class="pill pill-warning">No</span>';
-                    return `
-                        <tr>
-                            <td>${formatDate(row.installDate)}</td>
-                            <td><strong>${htmlEsc(row.projectCode)}</strong></td>
-                            <td>${htmlEsc(row.customerName)}</td>
-                            <td class="text-truncate">${htmlEsc(row.installDesc || row.milestoneDescription || '-')}</td>
-                            <td class="text-right">${formatCurrency(row.expectedInstallValue)}</td>
-                            <td class="text-right">${formatCurrency(row.installNetAmount)}</td>
-                            <td><span class="pill">${htmlEsc(row.statusDesc || row.statusCode || '-')}</span></td>
-                            <td class="text-center">${billedIcon}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
+    function renderFattureData(data) {
+        const invoices = data.invoices || [];
+        const totals = data.totals || {};
+
+        const countEl = getEl('fattureCount');
+        if (countEl) {
+            countEl.textContent = `${invoices.length} fatture — Tot: ${formatCurrency(totals.totalAmount)}`;
         }
+
+        renderSimpleTable(
+            'tbodyFatture', null,
+            invoices, 7,
+            row => `
+                <tr>
+                    <td><strong>${htmlEsc(row.invoiceNumber)}</strong></td>
+                    <td>${htmlEsc(row.invoiceType)}</td>
+                    <td>${formatDate(row.invoiceDate)}</td>
+                    <td class="text-truncate">${htmlEsc(row.paymentDesc)}</td>
+                    <td class="text-right">${formatCurrency(row.taxable)}</td>
+                    <td class="text-right">${formatCurrency(row.tax)}</td>
+                    <td class="text-right">${formatCurrency(row.amount)}</td>
+                </tr>
+            `
+        );
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -767,17 +928,19 @@ document.addEventListener('DOMContentLoaded', function () {
     async function loadCashflowData() {
         const filters = getFilters();
 
-        // Load installments to compute basic cash flow
-        const res = await window.customFetch('dashboard_economica', 'getInstallments', filters, { showLoader: false });
+        const [res, invRes] = await Promise.all([
+            window.customFetch('dashboard_economica', 'getInstallments', filters, { showLoader: false }),
+            window.customFetch('dashboard_economica', 'getInvoicesData', filters, { showLoader: false })
+        ]);
 
         if (!res.success) {
             throw new Error(res.message || 'Errore caricamento cash flow');
         }
 
-        renderCashflowData(res.data);
+        renderCashflowData(res.data, invRes.success ? invRes.data : null);
     }
 
-    function renderCashflowData(data) {
+    function renderCashflowData(data, invoiceData) {
         // KPI Cash Flow
         const kpiContainer = getEl('kpiCashflow');
         if (kpiContainer) {
@@ -858,6 +1021,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 `;
             }
         }
+
+        // Dettaglio fatturato
+        if (invoiceData) {
+            const invoices = invoiceData.invoices || [];
+            const invTotals = invoiceData.totals || {};
+            const detailCount = getEl('cashflowDetailCount');
+            if (detailCount) {
+                detailCount.textContent = `${invoices.length} fatture — Tot: ${formatCurrency(invTotals.totalAmount)}`;
+            }
+            renderSimpleTable(
+                'tbodyCashflowDetail', null,
+                invoices, 6,
+                row => `
+                    <tr>
+                        <td><strong>${htmlEsc(row.invoiceNumber)}</strong></td>
+                        <td>${htmlEsc(row.invoiceType)}</td>
+                        <td>${formatDate(row.invoiceDate)}</td>
+                        <td class="text-truncate">${htmlEsc(row.paymentDesc)}</td>
+                        <td class="text-right">${formatCurrency(row.taxable)}</td>
+                        <td class="text-right">${formatCurrency(row.amount)}</td>
+                    </tr>
+                `
+            );
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -907,58 +1094,60 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Tabella ore per risorsa
-        const tbodyHours = getEl('tbodyHrHours');
-        const hoursCountEl = getEl('hrHoursCount');
-        if (tbodyHours) {
-            if (hoursCountEl) {
-                hoursCountEl.textContent = `${resourceHours.length} risorse`;
-            }
+        renderSimpleTable(
+            'tbodyHrHours', 'hrHoursCount',
+            resourceHours, 7,
+            row => `
+                <tr>
+                    <td><strong>${htmlEsc(row.resourceName || row.resourceId)}</strong></td>
+                    <td>${htmlEsc(row.roleName || '-')}</td>
+                    <td>${htmlEsc(row.department || '-')}</td>
+                    <td class="text-right">${formatNum(row.totalWorkHours, 1)}</td>
+                    <td class="text-right">${formatNum(row.totalTravelHours, 1)}</td>
+                    <td class="text-right">${formatNum(row.totalHours, 1)}</td>
+                    <td class="text-right">${formatNum(row.projectCount)}</td>
+                </tr>
+            `
+        );
 
-            if (resourceHours.length === 0) {
-                tbodyHours.innerHTML = '<tr><td colspan="7" class="text-center muted">Nessuna risorsa con ore registrate</td></tr>';
-            } else {
-                tbodyHours.innerHTML = resourceHours.map(row => `
+        // Tabella costi per risorsa
+        renderSimpleTable(
+            'tbodyHrCosts', 'hrCostsCount',
+            resourceCosts, 8,
+            row => {
+                const deltaClass = getDeltaClass(row.deltaCost);
+                return `
                     <tr>
                         <td><strong>${htmlEsc(row.resourceName || row.resourceId)}</strong></td>
                         <td>${htmlEsc(row.roleName || '-')}</td>
-                        <td>${htmlEsc(row.department || '-')}</td>
-                        <td class="text-right">${formatNum(row.totalWorkHours, 1)}</td>
-                        <td class="text-right">${formatNum(row.totalTravelHours, 1)}</td>
-                        <td class="text-right">${formatNum(row.totalHours, 1)}</td>
-                        <td class="text-right">${formatNum(row.projectCount)}</td>
+                        <td class="text-right">${formatNum(row.quotHours, 1)}</td>
+                        <td class="text-right">${formatNum(row.actualHours, 1)}</td>
+                        <td class="text-right">${formatCurrency(row.quotCost)}</td>
+                        <td class="text-right">${formatCurrency(row.actualCost)}</td>
+                        <td class="text-right"><span class="pill ${deltaClass}">${formatCurrency(row.deltaCost)}</span></td>
+                        <td class="text-right"><span class="pill ${deltaClass}">${formatPercent(row.deltaPercent)}</span></td>
                     </tr>
-                `).join('');
+                `;
             }
-        }
+        );
 
-        // Tabella costi per risorsa
-        const tbodyCosts = getEl('tbodyHrCosts');
-        const costsCountEl = getEl('hrCostsCount');
-        if (tbodyCosts) {
-            if (costsCountEl) {
-                costsCountEl.textContent = `${resourceCosts.length} risorse`;
-            }
-
-            if (resourceCosts.length === 0) {
-                tbodyCosts.innerHTML = '<tr><td colspan="8" class="text-center muted">Nessun dato costi per risorsa</td></tr>';
-            } else {
-                tbodyCosts.innerHTML = resourceCosts.map(row => {
-                    const deltaClass = getDeltaClass(row.deltaCost);
-                    return `
-                        <tr>
-                            <td><strong>${htmlEsc(row.resourceName || row.resourceId)}</strong></td>
-                            <td>${htmlEsc(row.roleName || '-')}</td>
-                            <td class="text-right">${formatNum(row.quotHours, 1)}</td>
-                            <td class="text-right">${formatNum(row.actualHours, 1)}</td>
-                            <td class="text-right">${formatCurrency(row.quotCost)}</td>
-                            <td class="text-right">${formatCurrency(row.actualCost)}</td>
-                            <td class="text-right"><span class="pill ${deltaClass}">${formatCurrency(row.deltaCost)}</span></td>
-                            <td class="text-right"><span class="pill ${deltaClass}">${formatPercent(row.deltaPercent)}</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-        }
+        // Tabella assenze
+        const absences = data.absences || [];
+        renderSimpleTable(
+            'tbodyHrAbsence', 'hrAbsenceCount',
+            absences, 7,
+            row => `
+                <tr>
+                    <td><strong>${htmlEsc(row.resourceName)}</strong></td>
+                    <td>${formatDate(row.absenceDate)}</td>
+                    <td>${htmlEsc(row.absenceType)}</td>
+                    <td><span class="pill">${htmlEsc(row.status)}</span></td>
+                    <td class="text-right">${formatNum(row.hours, 1)}</td>
+                    <td>${row.isApproved ? '<span class="pill pill-success">Sì</span>' : '<span class="pill pill-warning">No</span>'}</td>
+                    <td>${formatDate(row.approveDate)}</td>
+                </tr>
+            `
+        );
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -966,32 +1155,79 @@ document.addEventListener('DOMContentLoaded', function () {
     // ═══════════════════════════════════════════════════════════
 
     async function loadPipelineData() {
-        // Pipeline requires quotation/negotiation tables not yet available
-        // Render placeholder with KPI showing "in completamento"
-        renderPipelinePlaceholder();
+        const filters = getFilters();
+        const res = await window.customFetch('dashboard_economica', 'getPipelineData', filters, { showLoader: false });
+
+        if (!res.success) {
+            throw new Error(res.message || 'Errore caricamento pipeline');
+        }
+
+        renderPipelineData(res.data);
     }
 
-    function renderPipelinePlaceholder() {
+    function renderPipelineData(data) {
+        const quotations = data.quotations || [];
+        const totals = data.totals || {};
+
+        // KPI Pipeline
         const kpiContainer = getEl('kpiPipeline');
         if (kpiContainer) {
             kpiContainer.innerHTML = `
-                <div class="dboard-kpi-card kpi-muted">
-                    <div class="dboard-kpi-label">Opportunita</div>
-                    <div class="dboard-kpi-value">-</div>
-                    <div class="dboard-kpi-hint">In completamento</div>
+                <div class="dboard-kpi-card">
+                    <div class="dboard-kpi-label">Offerte Totali</div>
+                    <div class="dboard-kpi-value">${formatNum(totals.totalQuotations)}</div>
+                    <div class="dboard-kpi-hint">${formatCurrency(totals.totalAmount)}</div>
                 </div>
-                <div class="dboard-kpi-card kpi-muted">
-                    <div class="dboard-kpi-label">Valore Pipeline</div>
-                    <div class="dboard-kpi-value">-</div>
-                    <div class="dboard-kpi-hint">In completamento</div>
+                <div class="dboard-kpi-card kpi-success">
+                    <div class="dboard-kpi-label">Vinte</div>
+                    <div class="dboard-kpi-value">${formatNum(totals.wonCount)}</div>
+                    <div class="dboard-kpi-hint">${formatCurrency(totals.wonAmount)}</div>
                 </div>
-                <div class="dboard-kpi-card kpi-muted">
+                <div class="dboard-kpi-card kpi-danger">
+                    <div class="dboard-kpi-label">Perse</div>
+                    <div class="dboard-kpi-value">${formatNum(totals.lostCount)}</div>
+                </div>
+                <div class="dboard-kpi-card kpi-warning">
+                    <div class="dboard-kpi-label">Aperte</div>
+                    <div class="dboard-kpi-value">${formatNum(totals.openCount)}</div>
+                    <div class="dboard-kpi-hint">${formatCurrency(totals.openAmount)}</div>
+                </div>
+                <div class="dboard-kpi-card">
                     <div class="dboard-kpi-label">Win Rate</div>
-                    <div class="dboard-kpi-value">-</div>
-                    <div class="dboard-kpi-hint">In completamento</div>
+                    <div class="dboard-kpi-value">${formatPercent(totals.winRate)}</div>
+                    <div class="dboard-kpi-hint">su offerte chiuse</div>
                 </div>
             `;
         }
+
+        // Tabella offerte
+        renderSimpleTable(
+            'tbodyPipeline', 'pipelineCount',
+            quotations, 7,
+            row => {
+                const statusClass = getQuotationStatusClass(row.statusCode);
+                return `
+                    <tr>
+                        <td><strong>${htmlEsc(row.quotationNo)}</strong></td>
+                        <td class="text-truncate">${htmlEsc(row.subject)}</td>
+                        <td><span class="pill ${statusClass}">${htmlEsc(row.status)}</span></td>
+                        <td>${htmlEsc(row.salesOperator)}</td>
+                        <td>${formatDate(row.quotationDate)}</td>
+                        <td class="text-right">${formatCurrency(row.amount)}</td>
+                        <td>${htmlEsc(row.outcome || '-')}</td>
+                    </tr>
+                `;
+            }
+        );
+    }
+
+    function getQuotationStatusClass(statusCode) {
+        if (!statusCode) return '';
+        const s = statusCode.toUpperCase();
+        if (s.includes('CHIUSAPOS')) return 'pill-success';
+        if (s.includes('CHIUSANEG')) return 'pill-danger';
+        if (s.includes('EMESSA')) return 'pill-info';
+        return 'pill-warning';
     }
 
     // ═══════════════════════════════════════════════════════════
