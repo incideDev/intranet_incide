@@ -934,6 +934,7 @@
     // Render each section
     renderHeader(job, sections.header, byType);
     renderOverview(sections.overview, byType, allItems);
+    renderServizi(byType);
     renderImporti(sections.importi, byType);
     renderRequisiti(sections.requisiti);
     renderEconomici(sections.economici, byType);
@@ -996,9 +997,13 @@
     let luogo = '';
     if (luogoJson?.location) {
       const loc = luogoJson.location;
-      const parts = [loc.entity_name, loc.city].filter(Boolean);
+      const nameParts = [loc.entity_type, loc.entity_name].filter(Boolean);
+      const entityStr = nameParts.join(' ');
+      const parts = [entityStr, loc.city].filter(Boolean);
       luogo = parts.join(', ');
       if (loc.district) luogo += ` (${loc.district})`;
+      if (loc.country && loc.country !== 'Italia') luogo += ` — ${loc.country}`;
+      if (loc.nuts_code) luogo += ` [${loc.nuts_code}]`;
     } else {
       luogo = getDisplayValue(luogoItem);
     }
@@ -1086,6 +1091,44 @@
   }
 
   /**
+   * Search an extraction item's citations for a keyword match.
+   * Returns the matched citation text fragment or '' if not found.
+   */
+  function findInCitations(item, keyword) {
+    const json = getJson(item?.synthetic_source || item);
+    if (!json) return '';
+    const citations = json.citations || [];
+    for (const cit of citations) {
+      const texts = Array.isArray(cit.text) ? cit.text : [cit.text || ''];
+      for (const t of texts) {
+        if (t.toLowerCase().includes(keyword.toLowerCase())) return t;
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Parse Qcl codes and complexity grades from importi_corrispettivi citation text.
+   * Returns a Map of category_id → { qclCodes: string, complexityGrade: string }
+   */
+  function parseQclFromCitations(corrispettiviItem) {
+    const result = new Map();
+    const json = getJson(corrispettiviItem?.synthetic_source || corrispettiviItem);
+    if (!json?.citations) return result;
+    const regex = /^(.+?)\s+((?:[A-Z]+\.)\d+)\s+(Qcl\.\d+(?:\s+[–\-]\s+Qcl\.\d+)*)\s+([\d.,]+)\s+€/;
+    for (const cit of json.citations) {
+      const texts = Array.isArray(cit.text) ? cit.text : [cit.text || ''];
+      for (const line of texts) {
+        const m = line.match(regex);
+        if (m) {
+          result.set(m[2], { qclCodes: m[3], complexityGrade: m[4] });
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
    * Render the Panoramica (overview) section.
    */
   function renderOverview(overviewItems, byType, allItems) {
@@ -1109,6 +1152,9 @@
     let sopRequired = false;
     let sopDeadlineVal = '';
     let sopBookingUrl = '';
+    let sopBookingInstructions = '';
+    let sopDeadlineNotes = '';
+    let sopBookingContacts = [];
 
     if (sopJson && typeof sopJson.bool_answer === 'boolean') {
       sopRequired = sopJson.bool_answer;
@@ -1118,6 +1164,10 @@
         sopDeadlineVal = dtObj ? formatApiDate(dtObj) : (dl.source_text || '');
       }
       if (sopJson.booking_platform?.url) sopBookingUrl = sopJson.booking_platform.url;
+      sopBookingInstructions = sopJson.booking_instructions || '';
+      sopDeadlineNotes = (Array.isArray(sopJson.deadlines) && sopJson.deadlines.length > 0)
+        ? (sopJson.deadlines[0].notes || '') : '';
+      sopBookingContacts = Array.isArray(sopJson.booking_contacts) ? sopJson.booking_contacts : [];
     } else {
       // Fallback to synthetic items
       const sopSplitItem = byType('sopralluogo_obbligatorio_split');
@@ -1210,6 +1260,23 @@
       ? '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
       : '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
+    // Info procedurali
+    const tipologiaGaraItem = byType('tipologia_di_gara');
+    const criteriItem = byType('criteri_valutazione_offerta_tecnica');
+    const inversioneText = findInCitations(tipologiaGaraItem, 'inversione procedimentale');
+    const hasInversione = !!inversioneText;
+    const metodoText = findInCitations(criteriItem, 'aggregativo') || findInCitations(criteriItem, 'metodo');
+    const criterioText = findInCitations(tipologiaGaraItem, 'offerta economicamente') || findInCitations(tipologiaGaraItem, 'criterio');
+    const procItems = [];
+    procItems.push(`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0"><span class="ic-l" style="margin:0">Inversione procedimentale</span><span class="gd-badge ${hasInversione ? 'gd-ba' : 'gd-bb'}" style="font-size:11px">${hasInversione ? 'Sì' : 'No'}</span></div>`);
+    if (metodoText) procItems.push(`<div style="padding:4px 0"><span class="ic-l" style="margin:0">Metodo di aggiudicazione</span><div class="ic-v" style="font-size:13px;margin-top:2px">${escapeHtml(truncate(metodoText, 120))}</div></div>`);
+    if (criterioText) procItems.push(`<div style="padding:4px 0"><span class="ic-l" style="margin:0">Criterio di aggiudicazione</span><div class="ic-v" style="font-size:13px;margin-top:2px">${escapeHtml(truncate(criterioText, 120))}</div></div>`);
+    const procCardHtml = procItems.length > 0 ? `
+        <div class="info-card">
+          <div class="ic-l" style="font-weight:600;margin-bottom:6px">Informazioni procedurali</div>
+          ${procItems.join('<div style="border-top:1px solid #eee"></div>')}
+        </div>` : '';
+
     const rightColHtml = `
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div class="sop-card" style="background:${sopCardBg};border-color:${sopCardBorder};">
@@ -1221,6 +1288,9 @@
               ? `<div class="sop-note" style="color:${sopRequired ? 'var(--gd-amber)' : 'var(--gd-green)'};">${escapeHtml(sopDeadlineVal)}</div>`
               : ''}
             ${sopBookingUrl ? `<a class="sop-link" href="${escapeAttribute(sopBookingUrl)}" target="_blank" rel="noopener">Piattaforma prenotazione &#8599;</a>` : ''}
+            ${sopDeadlineNotes ? `<div class="sop-note" style="margin-top:4px"><span class="gd-badge gd-ba" style="font-size:11px">${escapeHtml(sopDeadlineNotes)}</span></div>` : ''}
+            ${sopBookingInstructions ? `<div class="sop-instr" style="margin-top:6px;font-size:12px;color:var(--gd-t2);line-height:1.4">${escapeHtml(truncate(sopBookingInstructions, 200))}</div>` : ''}
+            ${sopBookingContacts.length > 0 ? `<div class="sop-contacts" style="margin-top:4px;font-size:12px">${sopBookingContacts.map(c => escapeHtml(typeof c === 'string' ? c : (c.name || c.email || JSON.stringify(c)))).join(', ')}</div>` : ''}
           </div>
         </div>
         <div class="g2" style="gap:10px;">
@@ -1245,6 +1315,7 @@
           <div class="ic-l">Settore</div>
           <div class="ic-v">${escapeHtml(truncate(settoreVal, 200))}</div>
         </div>` : '')}
+        ${procCardHtml}
       </div>
     `;
 
@@ -1258,6 +1329,96 @@
       </div>
     `;
     showSection('gd-overview');
+  }
+
+  /**
+   * Render the Servizi e Prestazioni richieste section.
+   * Cross-extraction renderer: reads oggetto_appalto + importi_corrispettivi.
+   */
+  function renderServizi(byType) {
+    const el = document.getElementById('gd-servizi');
+    if (!el) return;
+
+    const oggettoJson = getJson(byType('oggetto_appalto'));
+    const corrispettiviItem = byType('importi_corrispettivi_categoria_id_opere');
+    const corrispettiviJson = getJson(corrispettiviItem?.synthetic_source || corrispettiviItem);
+
+    const servizi = oggettoJson?.servizi_previsti || [];
+    const entries = corrispettiviJson?.entries || [];
+    const qclMap = parseQclFromCitations(corrispettiviItem);
+
+    if (servizi.length === 0 && entries.length === 0) return;
+
+    // Service cards
+    let serviziCardsHtml = '';
+    if (servizi.length > 0) {
+      serviziCardsHtml = `<div class="${servizi.length > 1 ? 'g2' : ''}" style="margin-bottom:16px">` +
+        servizi.map(s => {
+          const amount = (typeof s.amount_eur === 'number' && s.amount_eur > 0)
+            ? formatEuro(s.amount_eur)
+            : (s.amount_raw || '');
+          const isObb = s.is_optional === false;
+          return `
+            <div class="info-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <div class="ic-l" style="margin:0;font-weight:600">${escapeHtml(s.label || s.service_type || 'Servizio')}</div>
+                <span class="gd-badge ${isObb ? 'gd-br' : 'gd-bb'}">${isObb ? 'Obbligatorio' : 'Opzionale'}</span>
+              </div>
+              ${amount ? `<div class="ic-v" style="font-size:16px;font-weight:700;margin:4px 0">${escapeHtml(amount)}</div>` : ''}
+              ${s.legal_reference ? `<div style="font-size:12px;color:var(--gd-t2);margin-top:4px">${escapeHtml(truncate(s.legal_reference, 150))}</div>` : ''}
+              ${s.notes ? `<div style="font-size:12px;color:var(--gd-t2);margin-top:4px;font-style:italic">${escapeHtml(truncate(s.notes, 200))}</div>` : ''}
+            </div>`;
+        }).join('') + '</div>';
+    }
+
+    // Prestazioni table
+    let tableHtml = '';
+    if (entries.length > 0) {
+      const hasQcl = qclMap.size > 0;
+      const rows = entries.map(e => {
+        const catId = e.category_id || e.id_opera || '';
+        const parsed = qclMap.get(catId) || {};
+        const amount = (typeof e.amount_eur === 'number') ? formatEuro(e.amount_eur) : (e.amount_raw || '—');
+        return `<tr>
+          <td>${escapeHtml(e.category_name || '—')}</td>
+          <td><strong>${escapeHtml(catId)}</strong></td>
+          ${hasQcl ? `<td>${escapeHtml(parsed.qclCodes || '—')}</td>` : ''}
+          ${hasQcl ? `<td class="tv">${escapeHtml(parsed.complexityGrade || '—')}</td>` : ''}
+          <td class="tv">${escapeHtml(amount)}</td>
+        </tr>`;
+      }).join('');
+
+      const totalAmount = entries.reduce((sum, e) => {
+        const v = (typeof e.amount_eur === 'number') ? e.amount_eur : 0;
+        return sum + v;
+      }, 0);
+
+      tableHtml = `
+        <div class="tcard">
+          <div class="tcard-hd">Prestazioni per categoria</div>
+          <table class="table--modern">
+            <thead><tr>
+              <th>Categoria</th><th>ID Opera</th>
+              ${hasQcl ? '<th>Codici Prestazione</th><th>Grado Complessità</th>' : ''}
+              <th>Importo</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+            ${totalAmount > 0 ? `<tfoot><tr>
+              <td colspan="${hasQcl ? 4 : 2}" style="text-align:right;font-weight:600">Totale</td>
+              <td class="tv" style="font-weight:700">${escapeHtml(formatEuro(totalAmount))}</td>
+            </tr></tfoot>` : ''}
+          </table>
+        </div>`;
+    }
+
+    el.innerHTML = `
+      <div class="gd-sec">
+        <div class="gd-sec-hd">Servizi e prestazioni richieste</div>
+        ${serviziCardsHtml}
+        ${tableHtml}
+      </div>
+    `;
+    showSection('gd-servizi');
   }
 
   /**
