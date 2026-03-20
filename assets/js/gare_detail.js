@@ -1438,27 +1438,39 @@
     const opereSum = sumAmountEur(opereItem);
     const corrispettiviSum = sumAmountEur(corrispettiviItem);
 
-    // Importo a base d'asta: opere sum, or oggetto_appalto.servizi_previsti sum
-    let importoBaseAsta = opereSum;
-    let importoBaseAstaLabel = 'Somma importi per categoria';
-    if (importoBaseAsta === 0) {
-      const oggettoJson = getJson(byType('oggetto_appalto'));
-      if (oggettoJson?.servizi_previsti && Array.isArray(oggettoJson.servizi_previsti)) {
-        importoBaseAsta = oggettoJson.servizi_previsti.reduce((sum, s) => {
-          const v = (typeof s.amount_eur === 'number') ? s.amount_eur : parseItalianNumber(s.amount_eur || s.amount_raw);
-          return sum + (isNaN(v) ? 0 : v);
-        }, 0);
-        if (importoBaseAsta > 0) importoBaseAstaLabel = 'Da oggetto dell\'appalto';
-      }
+    // Importo a base d'appalto: prefer servizi_previsti sum, fallback to opere sum
+    const oggettoJson = getJson(byType('oggetto_appalto'));
+    let importoBase = 0;
+    let importoBaseLabel = '';
+    if (oggettoJson?.servizi_previsti && Array.isArray(oggettoJson.servizi_previsti)) {
+      importoBase = oggettoJson.servizi_previsti.reduce((sum, s) => {
+        const v = (typeof s.amount_eur === 'number') ? s.amount_eur : parseItalianNumber(s.amount_eur || s.amount_raw);
+        return sum + (isNaN(v) ? 0 : v);
+      }, 0);
+      if (importoBase > 0) importoBaseLabel = 'Da oggetto dell\'appalto';
+    }
+    if (importoBase === 0 && opereSum > 0) {
+      importoBase = opereSum;
+      importoBaseLabel = 'Somma importi per categoria';
     }
 
-    // Fatturato — read API turnover_requirement directly (number, no re-parsing)
+    // Sub-label: check if "a corpo" in tipologia_di_appalto
+    const tipAppaltoAnswer = getSimpleAnswer(byType('tipologia_di_appalto')) || '';
+    if (tipAppaltoAnswer.toLowerCase().includes('a corpo')) {
+      importoBaseLabel += importoBaseLabel ? ' · corrispettivo a corpo' : 'Corrispettivo a corpo';
+    }
+
+    // Fatturato — read API turnover_requirement directly
     let fatturatoVal = 0;
+    let fatturatoDerivation = '';
+    let fatturatoScope = '';
     if (fatturatoItem) {
       const fJson = getJson(fatturatoItem);
       if (fJson?.turnover_requirement?.single_requirement) {
         const sr = fJson.turnover_requirement.single_requirement;
         fatturatoVal = (typeof sr.minimum_amount_value === 'number') ? sr.minimum_amount_value : 0;
+        fatturatoDerivation = sr.derivation_formula || '';
+        fatturatoScope = sr.service_scope_description || '';
       }
       if (fatturatoVal === 0 && fJson) {
         const raw = fJson.importo_minimo ?? fJson.importo_minimo_eur ?? null;
@@ -1471,48 +1483,25 @@
       }
     }
 
-    // First ID opera — read category_id directly from API entries
-    // ID opera looks like "E.20", "IA.01", "S.03" — skip pure numbers
-    let firstIdOpera = '';
-    function isValidIdOpera(v) { return v && typeof v === 'string' && /[A-Za-z]/.test(v); }
-    for (const src of [opereItem, corrispettiviItem, requisitiTecItem]) {
-      if (firstIdOpera || !src) continue;
-      const json = getJson(src);
-      if (json?.entries?.length > 0) {
-        for (const e of json.entries) {
-          const candidate = e.category_id || e.id_opera || e.id_opera_normalized || '';
-          if (isValidIdOpera(candidate)) { firstIdOpera = candidate; break; }
-        }
-      }
-      if (!firstIdOpera && json?.requirements?.length > 0) {
-        for (const r of json.requirements) {
-          if (isValidIdOpera(r.id_opera)) { firstIdOpera = r.id_opera; break; }
-        }
-      }
-    }
+    const fatturatoSub = [fatturatoDerivation, fatturatoScope].filter(Boolean).join(' · ') || 'Requisito economico';
 
-    // Stat cards
+    // 3 stat cards (removed old "Categoria ID Opera" card — now in Servizi section)
     const statCardsHtml = `
-      <div class="g4">
+      <div class="g3">
         <div class="imp-card">
-          <div class="imp-label">Importo a base d'asta</div>
-          ${importoBaseAsta > 0 ? `<div class="imp-val">${escapeHtml(formatEuro(importoBaseAsta))}</div>` : '<div class="imp-val na">N/D</div>'}
-          <div class="imp-sub">${importoBaseAsta > 0 ? escapeHtml(importoBaseAstaLabel) : 'Non presente nel disciplinare'}</div>
+          <div class="imp-label">Importo a base d'appalto</div>
+          ${importoBase > 0 ? `<div class="imp-val">${escapeHtml(formatEuro(importoBase))}</div>` : '<div class="imp-val na">N/D</div>'}
+          <div class="imp-sub">${importoBase > 0 ? escapeHtml(importoBaseLabel) : 'Non presente nel disciplinare'}</div>
         </div>
         <div class="imp-card">
-          <div class="imp-label">Corrispettivo</div>
+          <div class="imp-label">Corrispettivi professionali</div>
           ${corrispettiviSum > 0 ? `<div class="imp-val">${escapeHtml(formatEuro(corrispettiviSum))}</div>` : '<div class="imp-val na">N/D</div>'}
-          <div class="imp-sub">${corrispettiviSum > 0 ? 'Somma corrispettivi' : 'Non strutturato'}</div>
+          <div class="imp-sub">${corrispettiviSum > 0 ? 'Somma per categoria' : 'Non strutturato'}</div>
         </div>
         <div class="imp-card">
-          <div class="imp-label">Fatturato minimo</div>
+          <div class="imp-label">Fatturato minimo richiesto</div>
           ${fatturatoVal > 0 ? `<div class="imp-val">${escapeHtml(formatEuro(fatturatoVal))}</div>` : '<div class="imp-val na">N/D</div>'}
-          <div class="imp-sub">${fatturatoVal > 0 ? 'Requisito economico' : 'Non specificato'}</div>
-        </div>
-        <div class="imp-card">
-          <div class="imp-label">Categoria ID Opera</div>
-          ${firstIdOpera ? `<div class="imp-val" style="font-size:20px;">${escapeHtml(firstIdOpera)}</div>` : '<div class="imp-val na">N/D</div>'}
-          <div class="imp-sub">${firstIdOpera ? 'Prima categoria' : 'Non applicabile'}</div>
+          <div class="imp-sub">${fatturatoVal > 0 ? escapeHtml(truncate(fatturatoSub, 60)) : 'Non specificato'}</div>
         </div>
       </div>
     `;
@@ -1602,6 +1591,40 @@
             ).join('')}</div>`;
           }
 
+          // Young professional details
+          let ypHtml = '';
+          if (reqType === 'young_professional' && req.young_professional_details) {
+            const yp = req.young_professional_details;
+            const ypChips = [];
+            if (yp.academic_requirement) ypChips.push(yp.academic_requirement);
+            if (yp.maximum_registration_years) ypChips.push(`iscritto da meno di ${yp.maximum_registration_years} anni`);
+            if (yp.minimum_count) ypChips.push(`almeno ${yp.minimum_count}`);
+            if (yp.must_be_designer) ypChips.push('deve essere progettista');
+            if (yp.applies_to_organization_types?.length > 0) {
+              ypChips.push(...yp.applies_to_organization_types);
+            }
+            if (ypChips.length > 0) {
+              ypHtml = `<div class="req-exp">${ypChips.map(c => `<span class="req-exp-chip">${escapeHtml(c)}</span>`).join('')}</div>`;
+            }
+          }
+
+          // Experience details enrichment
+          let expDetailHtml = '';
+          if (reqType === 'experience' && req.experience_details) {
+            const ed = req.experience_details;
+            const edParts = [];
+            if (ed.time_period_years && ed.reference_date) {
+              edParts.push(`<div style="font-size:12px;color:var(--gd-t2);margin-top:4px">Ultimi ${ed.time_period_years} anni dalla ${escapeHtml(ed.reference_date)}</div>`);
+            }
+            if (ed.analogy_criteria) {
+              edParts.push(`<div style="font-size:12px;color:var(--gd-t2);margin-top:2px;font-style:italic">${escapeHtml(truncate(ed.analogy_criteria, 150))}</div>`);
+            }
+            if (ed.min_project_count) {
+              edParts.push(`<div style="font-size:12px;margin-top:2px"><span class="gd-badge gd-bb">Minimo ${ed.min_project_count} progetti</span></div>`);
+            }
+            expDetailHtml = edParts.join('');
+          }
+
           cardsHtml += `
             <div class="req-card">
               <div class="req-card-head">
@@ -1615,6 +1638,8 @@
               <div class="req-foot">
                 ${legalRef ? `<span class="req-legal">${escapeHtml(legalRef)}</span>` : ''}
                 ${experienceHtml}
+                ${ypHtml}
+                ${expDetailHtml}
               </div>
             </div>
           `;
@@ -1648,8 +1673,24 @@
       }
     });
 
+    // Requirements summary
+    let summaryHtml = '';
+    requisitiItems.forEach(item => {
+      const rJson = getJson(item?.synthetic_source || item);
+      if (rJson?.requirements_summary) {
+        const rs = rJson.requirements_summary;
+        const pills = [];
+        if (rs.total_count) pills.push(`${rs.total_count} requisiti totali`);
+        if (rs.all_mandatory === false && rs.count_experience) pills.push(`${rs.count_experience} esperienza`);
+        if (rs.has_legal_references) pills.push(`${rs.has_legal_references} con rif. normativo`);
+        if (pills.length > 0) {
+          summaryHtml = `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${pills.map(p => `<span class="gd-badge gd-bb" style="font-size:11px">${escapeHtml(p)}</span>`).join('')}</div>`;
+        }
+      }
+    });
+
     if (!cardsHtml) return;
-    el.innerHTML = `<div class="gd-sec"><div class="gd-sec-hd">Requisiti tecnico-professionali</div><div class="req-grid">${cardsHtml}</div></div>`;
+    el.innerHTML = `<div class="gd-sec"><div class="gd-sec-hd">Requisiti tecnico-professionali</div><div class="req-grid">${cardsHtml}</div>${summaryHtml}</div>`;
     showSection('gd-requisiti');
 
     // Expand/collapse truncated text on click
@@ -1689,8 +1730,16 @@
       const derivation = sr.derivation_formula || '';
       const scope = sr.service_scope_description || '';
 
-      let chipsHtml = [temporalLabel, derivation, scope].filter(Boolean)
-        .map(t => `<span class="gd-chip">${escapeHtml(truncate(t, 50))}</span>`).join('');
+      const thresholdPhrase = sr.threshold_direction_phrase || '';
+      const calcMethod = sr.calculation_method || '';
+      const calcMethodLabel = calcMethod === 'cumulative_total' ? 'Totale cumulativo' :
+        calcMethod === 'average' ? 'Media' : calcMethod;
+      const amountBasis = sr.amount_basis || '';
+      const amountBasisLabel = amountBasis === 'derived_from_contract' ? 'Derivato dal valore contrattuale' : '';
+
+      const chipItems = [temporalLabel, derivation, scope, thresholdPhrase, calcMethodLabel, amountBasisLabel]
+        .filter(Boolean);
+      let chipsHtml = chipItems.map(t => `<span class="gd-chip">${escapeHtml(truncate(t, 60))}</span>`).join('');
 
       cards.push(`
         <div class="info-card">
@@ -1715,18 +1764,48 @@
         const reqText = req.source_text || req.requirement_text || citText || '';
         const amounts = (req.minimum_amount || []).filter(a => a.value);
         const tf = req.timeframe;
-        const rtiRules = req.rti_allocation?.distribution_rules || '';
 
         let chipsHtml = '';
         if (amounts.length) chipsHtml += amounts.map(a => `<span class="gd-chip">${escapeHtml(formatEuro(a.value))}</span>`).join('');
         if (tf) chipsHtml += `<span class="gd-chip">${escapeHtml(`${tf.selection_method === 'best_of' ? 'Migliori' : ''} ${tf.selected_count || ''}/${tf.total_window || ''} ${tf.unit || 'anni'}`.trim())}</span>`;
 
+        // Formula details
+        const formula = req.formula;
+        let formulaHtml = '';
+        if (formula && formula.multiplier && formula.base_reference) {
+          const baseRefLabel = formula.base_reference === 'contract_value' ? 'valore contratto' : formula.base_reference;
+          formulaHtml = `<div style="font-size:12px;color:var(--gd-t2);margin-top:4px"><strong>Formula:</strong> ${formula.multiplier}x ${escapeHtml(baseRefLabel)}</div>`;
+        }
+
+        // Calculation rule
+        const calcRule = req.calculation_rule || '';
+        let calcRuleHtml = '';
+        if (calcRule) {
+          calcRuleHtml = `<div class="ic-v sm expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute(calcRule)}" style="margin-top:6px;font-size:12px">${escapeHtml(truncate(calcRule, 150))}</div>`;
+        }
+
+        // RTI enrichment
+        let rtiHtml = '';
+        const rti = req.rti_allocation;
+        if (rti) {
+          const rtiParts = [];
+          if (rti.distribution_rules) rtiParts.push(rti.distribution_rules);
+          if (rti.lead_firm_minimum_percentage) rtiParts.push(`Capogruppo minimo: ${rti.lead_firm_minimum_percentage}%`);
+          if (rti.minimum_per_member_percentage) rtiParts.push(`Minimo per membro: ${rti.minimum_per_member_percentage}%`);
+          if (rtiParts.length > 0) {
+            const rtiText = rtiParts.join(' · ');
+            rtiHtml = `<div class="ic-v sm expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute('RTI: ' + rtiText)}" style="margin-top:8px;font-style:italic"><strong>RTI:</strong> ${escapeHtml(truncate(rtiText, 150))}</div>`;
+          }
+        }
+
         cards.push(`
           <div class="info-card">
-            <div class="ic-l">Capacita economico-finanziaria</div>
+            <div class="ic-l">Capacità economico-finanziaria</div>
             ${reqText ? `<div class="ic-v sm expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute(reqText)}">${escapeHtml(truncate(reqText, 200))}</div>` : ''}
             ${chipsHtml ? `<div class="gd-chips" style="margin-top:8px">${chipsHtml}</div>` : ''}
-            ${rtiRules ? `<div class="ic-v sm expandable" onclick="this.classList.toggle('open')" data-full="${escapeAttribute('RTI: ' + rtiRules)}" style="margin-top:8px;font-style:italic"><strong>RTI:</strong> ${escapeHtml(truncate(rtiRules, 150))}</div>` : ''}
+            ${formulaHtml}
+            ${calcRuleHtml}
+            ${rtiHtml}
           </div>
         `);
       });
