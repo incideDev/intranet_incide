@@ -503,15 +503,21 @@ class GaraDataNormalizer
                     $importoLavoriRaw = $entry['amount_raw'];
                 }
 
+                $tipoLavori = null;
+                if (!empty($entry['work_types']) && is_array($entry['work_types'])) {
+                    $tipoLavori = implode(', ', $entry['work_types']);
+                }
+
                 try {
-                    $sql = "INSERT INTO gar_gara_importi_opere 
-                            (job_id, extraction_id, id_opera, id_opera_raw, gar_opera_id, categoria, identificazione_opera, complessita_dm50, importo_lavori_eur, importo_lavori_raw, note)
-                            VALUES (:job_id, :extraction_id, :id_opera, :id_opera_raw, :gar_opera_id, :categoria, :identificazione_opera, :complessita_dm50, :importo_lavori_eur, :importo_lavori_raw, :note)
+                    $sql = "INSERT INTO gar_gara_importi_opere
+                            (job_id, extraction_id, id_opera, id_opera_raw, gar_opera_id, categoria, tipo_lavori, identificazione_opera, complessita_dm50, importo_lavori_eur, importo_lavori_raw, note)
+                            VALUES (:job_id, :extraction_id, :id_opera, :id_opera_raw, :gar_opera_id, :categoria, :tipo_lavori, :identificazione_opera, :complessita_dm50, :importo_lavori_eur, :importo_lavori_raw, :note)
                             ON DUPLICATE KEY UPDATE
                             extraction_id = VALUES(extraction_id),
                             id_opera_raw = VALUES(id_opera_raw),
                             gar_opera_id = VALUES(gar_opera_id),
                             categoria = VALUES(categoria),
+                            tipo_lavori = VALUES(tipo_lavori),
                             identificazione_opera = VALUES(identificazione_opera),
                             complessita_dm50 = VALUES(complessita_dm50),
                             importo_lavori_eur = VALUES(importo_lavori_eur),
@@ -526,6 +532,7 @@ class GaraDataNormalizer
                         ':id_opera_raw' => $idOperaRaw ?: null,
                         ':gar_opera_id' => $garOperaId,
                         ':categoria' => $categoria,
+                        ':tipo_lavori' => $tipoLavori,
                         ':identificazione_opera' => $identificazioneOpera,
                         ':complessita_dm50' => $complessitaDm50,
                         ':importo_lavori_eur' => $importoLavoriEur,
@@ -1046,6 +1053,12 @@ class GaraDataNormalizer
         // Accumulatore: [id_opera => [dati_comuni, importo_minimo_eur, importo_minimo_punta_eur]]
         $requisitiPerCategoria = [];
 
+        // Meta fields da importi_requisiti_tecnici (top-level, denormalizzati per riga)
+        $moltiplicatore = null;
+        $anniRiferimento = null;
+        $minServizi = null;
+        $fulfillmentAlternativo = null;
+
         // STEP 1: Leggi da importi_requisiti_tecnici_categoria_id_opere (1× lavori)
         if (isset($extractionsByType['importi_requisiti_tecnici_categoria_id_opere'])) {
             $extractions = $extractionsByType['importi_requisiti_tecnici_categoria_id_opere'];
@@ -1055,6 +1068,17 @@ class GaraDataNormalizer
                 if (!is_array($valueJson) || empty($valueJson['requirements'])) {
                     continue;
                 }
+
+                // Estrai campi top-level (comuni a tutte le righe di questo job)
+                $moltiplicatore = $valueJson['multiplier_coefficient'] ?? $moltiplicatore;
+                $anniRiferimento = isset($valueJson['lookback_period_years'])
+                    ? (int)$valueJson['lookback_period_years']
+                    : $anniRiferimento;
+                $minServizi = isset($valueJson['minimum_service_count'])
+                    ? (int)$valueJson['minimum_service_count']
+                    : $minServizi;
+                $fulfillmentAlternativo = $valueJson['alternative_fulfillment']['condition_text']
+                    ?? $fulfillmentAlternativo;
 
                 foreach ($valueJson['requirements'] as $req) {
                     if (!is_array($req)) continue;
@@ -1068,12 +1092,15 @@ class GaraDataNormalizer
                     // Inizializza se non esiste
                     if (!isset($requisitiPerCategoria[$idOperaStr])) {
                         $requisitiPerCategoria[$idOperaStr] = [
-                            'extraction_id' => $extractionId,
-                            'id_opera_raw' => $req['id_opera_raw'] ?? $idOperaStr,
-                            'importo_minimo_eur' => null,
-                            'importo_minimo_raw' => null,
+                            'extraction_id'           => $extractionId,
+                            'id_opera_raw'            => $req['id_opera_raw'] ?? $idOperaStr,
+                            'importo_minimo_eur'      => null,
+                            'importo_minimo_raw'      => null,
                             'importo_minimo_punta_eur' => null,
                             'importo_minimo_punta_raw' => null,
+                            'grado_complessita'       => null,
+                            'importo_lavori_eur'      => null,
+                            'corrispondenza_dm'       => null,
                         ];
                     }
 
@@ -1085,11 +1112,22 @@ class GaraDataNormalizer
                         // Fallback: base_value_eur è spesso uguale a minimum_amount_eur quando multiplier = 1.0
                         $requisitiPerCategoria[$idOperaStr]['importo_minimo_eur'] = (float)$req['base_value_eur'];
                     }
-                    
+
                     if (isset($req['minimum_amount_raw'])) {
                         $requisitiPerCategoria[$idOperaStr]['importo_minimo_raw'] = $req['minimum_amount_raw'];
                     } elseif (isset($req['amount_raw'])) {
                         $requisitiPerCategoria[$idOperaStr]['importo_minimo_raw'] = $req['amount_raw'];
+                    }
+
+                    // Nuovi campi per riga
+                    if (isset($req['complexity']) && is_numeric($req['complexity'])) {
+                        $requisitiPerCategoria[$idOperaStr]['grado_complessita'] = (float)$req['complexity'];
+                    }
+                    if (isset($req['base_value_eur']) && is_numeric($req['base_value_eur'])) {
+                        $requisitiPerCategoria[$idOperaStr]['importo_lavori_eur'] = (float)$req['base_value_eur'];
+                    }
+                    if (isset($req['legal_correspondence'])) {
+                        $requisitiPerCategoria[$idOperaStr]['corrispondenza_dm'] = (string)$req['legal_correspondence'];
                     }
                 }
             }
@@ -1200,9 +1238,9 @@ class GaraDataNormalizer
             }
 
             try {
-                $sql = "INSERT INTO gar_gara_requisiti_tecnici_categoria 
-                        (job_id, extraction_id, id_opera, id_opera_raw, gar_opera_id, categoria, identificazione_opera, importo_minimo_eur, importo_minimo_raw, importo_minimo_punta_eur, note)
-                        VALUES (:job_id, :extraction_id, :id_opera, :id_opera_raw, :gar_opera_id, :categoria, :identificazione_opera, :importo_minimo_eur, :importo_minimo_raw, :importo_minimo_punta_eur, :note)
+                $sql = "INSERT INTO gar_gara_requisiti_tecnici_categoria
+                        (job_id, extraction_id, id_opera, id_opera_raw, gar_opera_id, categoria, identificazione_opera, importo_minimo_eur, importo_minimo_raw, importo_minimo_punta_eur, note, grado_complessita, importo_lavori_eur, corrispondenza_dm, moltiplicatore, anni_riferimento, min_servizi, fulfillment_alternativo)
+                        VALUES (:job_id, :extraction_id, :id_opera, :id_opera_raw, :gar_opera_id, :categoria, :identificazione_opera, :importo_minimo_eur, :importo_minimo_raw, :importo_minimo_punta_eur, :note, :grado_complessita, :importo_lavori_eur, :corrispondenza_dm, :moltiplicatore, :anni_riferimento, :min_servizi, :fulfillment_alternativo)
                         ON DUPLICATE KEY UPDATE
                         extraction_id = VALUES(extraction_id),
                         id_opera_raw = VALUES(id_opera_raw),
@@ -1212,21 +1250,35 @@ class GaraDataNormalizer
                         importo_minimo_eur = VALUES(importo_minimo_eur),
                         importo_minimo_raw = VALUES(importo_minimo_raw),
                         importo_minimo_punta_eur = VALUES(importo_minimo_punta_eur),
-                        note = VALUES(note)";
+                        note = VALUES(note),
+                        grado_complessita = VALUES(grado_complessita),
+                        importo_lavori_eur = VALUES(importo_lavori_eur),
+                        corrispondenza_dm = VALUES(corrispondenza_dm),
+                        moltiplicatore = VALUES(moltiplicatore),
+                        anni_riferimento = VALUES(anni_riferimento),
+                        min_servizi = VALUES(min_servizi),
+                        fulfillment_alternativo = VALUES(fulfillment_alternativo)";
 
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([
-                    ':job_id' => $jobId,
-                    ':extraction_id' => $data['extraction_id'],
-                    ':id_opera' => $idOperaStr,
-                    ':id_opera_raw' => $data['id_opera_raw'] ?: null,
-                    ':gar_opera_id' => $garOperaId,
-                    ':categoria' => $categoria,
-                    ':identificazione_opera' => $identificazioneOpera,
-                    ':importo_minimo_eur' => $data['importo_minimo_eur'],
-                    ':importo_minimo_raw' => $data['importo_minimo_raw'],
+                    ':job_id'                  => $jobId,
+                    ':extraction_id'           => $data['extraction_id'],
+                    ':id_opera'                => $idOperaStr,
+                    ':id_opera_raw'            => $data['id_opera_raw'] ?: null,
+                    ':gar_opera_id'            => $garOperaId,
+                    ':categoria'               => $categoria,
+                    ':identificazione_opera'   => $identificazioneOpera,
+                    ':importo_minimo_eur'      => $data['importo_minimo_eur'],
+                    ':importo_minimo_raw'      => $data['importo_minimo_raw'],
                     ':importo_minimo_punta_eur' => $data['importo_minimo_punta_eur'],
-                    ':note' => null,
+                    ':note'                    => null,
+                    ':grado_complessita'       => $data['grado_complessita'],
+                    ':importo_lavori_eur'      => $data['importo_lavori_eur'],
+                    ':corrispondenza_dm'       => $data['corrispondenza_dm'],
+                    ':moltiplicatore'          => $moltiplicatore,
+                    ':anni_riferimento'        => $anniRiferimento,
+                    ':min_servizi'             => $minServizi,
+                    ':fulfillment_alternativo' => $fulfillmentAlternativo,
                 ]);
             } catch (\PDOException $e) {
                 $this->addDebugLog("Job {$jobId}: Errore insert requisiti_tecnici_categoria: " . $e->getMessage());

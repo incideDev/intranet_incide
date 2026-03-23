@@ -7767,7 +7767,7 @@ class ExtractionService
 
         try {
             // Query con LEFT JOIN a gar_opere_dm50 per completare dati mancanti
-            $sql = "SELECT 
+            $sql = "SELECT
                         imp.id,
                         imp.job_id,
                         imp.extraction_id,
@@ -7777,6 +7777,7 @@ class ExtractionService
                         COALESCE(imp.categoria, dm50.categoria) AS categoria,
                         COALESCE(imp.identificazione_opera, dm50.identificazione_opera) AS identificazione_opera,
                         COALESCE(imp.complessita_dm50, dm50.complessita) AS complessita_dm50,
+                        imp.tipo_lavori,
                         imp.importo_lavori_eur,
                         imp.importo_lavori_raw,
                         imp.note
@@ -7799,18 +7800,39 @@ class ExtractionService
         $entries = [];
         foreach ($rows as $r) {
             $entries[] = [
-                'id_opera' => $r['id_opera'] ?? '',
-                'id_opera_normalized' => $r['id_opera'] ?? '',
-                'id_opera_raw' => $r['id_opera_raw'] ?? $r['id_opera'] ?? '',
-                'category_id' => $r['id_opera'] ?? '', // Per compatibilità con nuovo formato
-                'category_name' => $r['categoria'] ?? '',
-                'categoria' => $r['categoria'] ?? '',
+                'id_opera'             => $r['id_opera'] ?? '',
+                'id_opera_normalized'  => $r['id_opera'] ?? '',
+                'id_opera_raw'         => $r['id_opera_raw'] ?? $r['id_opera'] ?? '',
+                'category_id'          => $r['id_opera'] ?? '', // Per compatibilità con nuovo formato
+                'category_name'        => $r['categoria'] ?? '',
+                'categoria'            => $r['categoria'] ?? '',
+                'tipo_lavori'          => $r['tipo_lavori'] ?? null,
                 'identificazione_opera' => $r['identificazione_opera'] ?? '',
-                'descrizione' => $r['identificazione_opera'] ?? '', // Alias per compatibilità
-                'complessita' => $r['complessita_dm50'] ?? null,
-                'amount_eur' => $r['importo_lavori_eur'] ?? null,
-                'amount_raw' => $r['importo_lavori_raw'] ?? null,
-                'source_page' => null, // Non disponibile in gar_gara_importi_opere
+                'descrizione'          => $r['identificazione_opera'] ?? '', // Alias per compatibilità
+                'complessita'          => $r['complessita_dm50'] ?? null,
+                'amount_eur'           => $r['importo_lavori_eur'] ?? null,
+                'amount_raw'           => $r['importo_lavori_raw'] ?? null,
+                'source_page'          => null, // Non disponibile in gar_gara_importi_opere
+            ];
+        }
+
+        // Costruisce tabella con colonne fisse
+        $opereHeaders = ['ID opere', 'Categoria', 'Tipo lavori', 'Descrizione', 'Grado di complessità', 'Importo lavori'];
+        $opereRows = [];
+        foreach ($rows as $r) {
+            $importoFmt = '—';
+            if (isset($r['importo_lavori_eur']) && is_numeric($r['importo_lavori_eur'])) {
+                $importoFmt = '€ ' . number_format((float)$r['importo_lavori_eur'], 2, ',', '.');
+            } elseif (!empty($r['importo_lavori_raw'])) {
+                $importoFmt = $r['importo_lavori_raw'];
+            }
+            $opereRows[] = [
+                $r['id_opera'] ?: '—',
+                $r['categoria'] ?: '—',
+                $r['tipo_lavori'] ?: '—',
+                $r['identificazione_opera'] ?: '—',
+                isset($r['complessita_dm50']) && $r['complessita_dm50'] !== null ? (string)$r['complessita_dm50'] : '—',
+                $importoFmt,
             ];
         }
 
@@ -7837,6 +7859,10 @@ class ExtractionService
             'confidence' => $row['confidence'] ?? null,
             'citations' => $row['citations'] ?? [],
             'value_state' => 'table',
+            'table' => [
+                'headers' => $opereHeaders,
+                'rows'    => $opereRows,
+            ],
             'updated_at' => $updatedAt,
         ];
     }
@@ -8036,7 +8062,7 @@ class ExtractionService
 
         try {
             // Query per requisiti per categoria con LEFT JOIN a gar_opere_dm50
-            $sqlCategoria = "SELECT 
+            $sqlCategoria = "SELECT
                         reqcat.id,
                         reqcat.job_id,
                         reqcat.extraction_id,
@@ -8049,6 +8075,9 @@ class ExtractionService
                         reqcat.importo_minimo_raw,
                         reqcat.importo_minimo_punta_eur,
                         reqcat.importo_minimo_punta_raw,
+                        reqcat.grado_complessita,
+                        reqcat.importo_lavori_eur,
+                        reqcat.corrispondenza_dm,
                         reqcat.note
                     FROM gar_gara_requisiti_tecnici_categoria reqcat
                     LEFT JOIN gar_opere_dm50 dm50 ON dm50.id_opera = reqcat.id_opera
@@ -8117,27 +8146,40 @@ class ExtractionService
 
         $displayValue = $rowTesto['testo_sintetico'] ?? (count($requirements) . ' requisiti');
 
-        // Costruisce tabella con colonne fisse: ID Opera, Categoria, Descrizione, Importo minimo
-        $headers = ['ID Opera', 'Categoria', 'Descrizione', 'Importo minimo'];
+        // Costruisce tabella con colonne fisse: ID Opera, Categoria, Descrizione, Importo lavori, Importo minimo, Complessità, Corrisp. DM
+        $headers = ['ID Opera', 'Categoria', 'Descrizione', 'Importo lavori', 'Importo minimo', 'Complessità', 'Corrisp. DM'];
         $tableRows = [];
         foreach ($rowsCategoria as $r) {
-            $idOpera = $r['id_opera'] ?? '—';
-            $categoria = $r['categoria'] ?? '—';
-            $descrizione = $r['identificazione_opera'] ?? '—';
-            
-            // Importo minimo: formatta da importo_minimo_eur
+            $idOpera    = ($r['id_opera'] ?? '') ?: '—';
+            $categoria  = ($r['categoria'] ?? '') ?: '—';
+            $descrizione = ($r['identificazione_opera'] ?? '') ?: '—';
+
+            $importoLavori = '—';
+            if (isset($r['importo_lavori_eur']) && $r['importo_lavori_eur'] !== null && is_numeric($r['importo_lavori_eur'])) {
+                $importoLavori = '€ ' . number_format((float)$r['importo_lavori_eur'], 2, ',', '.');
+            }
+
             $importoMinimo = '—';
             if (isset($r['importo_minimo_eur']) && $r['importo_minimo_eur'] !== null && is_numeric($r['importo_minimo_eur'])) {
-                $importoMinimo = number_format((float) $r['importo_minimo_eur'], 2, ',', '.') . ' €';
+                $importoMinimo = number_format((float)$r['importo_minimo_eur'], 2, ',', '.') . ' €';
             } elseif (!empty($r['importo_minimo_raw'])) {
                 $importoMinimo = $r['importo_minimo_raw'];
             }
-            
+
+            $complessita = isset($r['grado_complessita']) && $r['grado_complessita'] !== null
+                ? (string)$r['grado_complessita']
+                : '—';
+
+            $corrDm = ($r['corrispondenza_dm'] ?? '') ?: '—';
+
             $tableRows[] = [
-                $idOpera !== '' ? $idOpera : '—',
-                $categoria !== '' ? $categoria : '—',
-                $descrizione !== '' ? $descrizione : '—',
-                $importoMinimo
+                $idOpera,
+                $categoria,
+                $descrizione,
+                $importoLavori,
+                $importoMinimo,
+                $complessita,
+                $corrDm,
             ];
         }
 

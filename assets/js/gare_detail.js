@@ -1557,7 +1557,7 @@
     if (requisitiTecItem) {
       const reqJson = getJson(requisitiTecItem.synthetic_source || requisitiTecItem);
       const chips = [];
-      if (reqJson?.multiplier_coefficient) chips.push(`Coefficiente moltiplicatore: ${reqJson.multiplier_coefficient}x`);
+      if (reqJson?.multiplier_coefficient) chips.push(`Coefficiente moltiplicatore: ${reqJson.multiplier_coefficient}`);
       if (reqJson?.lookback_period_years) chips.push(`Riferimento temporale: ultimi ${reqJson.lookback_period_years} anni`);
       const metaHtml = chips.length > 0
         ? `<div class="gd-chips" style="padding:6px 10px 4px">${chips.map(c => `<span class="gd-chip">${escapeHtml(c)}</span>`).join('')}</div>`
