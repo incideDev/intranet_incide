@@ -1508,27 +1508,68 @@
 
     // Detail tables for each importi type
     let tablesHtml = '';
-    const importiTypesToRender = [
-      { item: opereItem, label: 'Importi opere per categoria' },
-      { item: corrispettiviItem, label: 'Corrispettivi per categoria' },
-      { item: requisitiTecItem, label: 'Requisiti tecnici per categoria' },
-    ];
+    const addTableCard = (label, content) => {
+      tablesHtml += `
+        <div class="tcard collapsible open" style="margin-top:12px;">
+          <div class="tcard-hd tcard-toggle" onclick="this.parentElement.classList.toggle('open')">${escapeHtml(label)} <svg class="chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+          <div class="tcard-body">${content}</div>
+        </div>
+      `;
+    };
 
-    importiTypesToRender.forEach(({ item, label }) => {
-      if (!item) return;
-      const source = item.synthetic_source || item;
-      const tabs = buildExtractionTabs(source);
-      const responseTab = tabs.find(t => t.id === 'response');
-      if (responseTab && responseTab.content && /<table[\s>]/i.test(responseTab.content)) {
-        const collapseId = `imp-tbl-${Math.random().toString(36).slice(2, 8)}`;
-        tablesHtml += `
-          <div class="tcard collapsible open" style="margin-top:12px;">
-            <div class="tcard-hd tcard-toggle" onclick="this.parentElement.classList.toggle('open')">${escapeHtml(label)} <svg class="chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
-            <div class="tcard-body">${responseTab.content}</div>
-          </div>
-        `;
+    // Opere table — pass-through (entries from AI/backend)
+    if (opereItem) {
+      const tabs = buildExtractionTabs(opereItem.synthetic_source || opereItem);
+      const rt = tabs.find(t => t.id === 'response');
+      if (rt?.content && /<table[\s>]/i.test(rt.content)) addTableCard('Importi opere per categoria', rt.content);
+    }
+
+    // Corrispettivi table — built from entries[] + parseQclFromCitations (adds Qcl codes + exact coefficient)
+    if (corrispettiviItem) {
+      const corrJson = getJson(corrispettiviItem.synthetic_source || corrispettiviItem);
+      const entries = corrJson?.entries || [];
+      const qclMap = parseQclFromCitations(corrispettiviItem);
+      if (entries.length > 0 || qclMap.size > 0) {
+        const rows = entries.map(e => {
+          const qcl = qclMap.get(e.category_id) || {};
+          const amount = typeof e.amount_eur === 'number' ? formatEuro(e.amount_eur) : (e.amount_raw || '—');
+          return [
+            escapeHtml(e.category_id || '—'),
+            escapeHtml(e.category_name || '—'),
+            escapeHtml(qcl.qclCodes || '—'),
+            escapeHtml(qcl.complexityGrade || '—'),
+            escapeHtml(amount),
+          ];
+        });
+        addTableCard('Corrispettivi per categoria', renderTable({
+          headers: ['ID Opera', 'Categoria', 'Codici Prestazione', 'G. Complessità', 'Importo'],
+          rows,
+        }));
+      } else {
+        // Fallback to backend-normalized item.table
+        const tabs = buildExtractionTabs(corrispettiviItem.synthetic_source || corrispettiviItem);
+        const rt = tabs.find(t => t.id === 'response');
+        if (rt?.content && /<table[\s>]/i.test(rt.content)) addTableCard('Corrispettivi per categoria', rt.content);
       }
-    });
+    }
+
+    // Requisiti tecnici table — meta chips (multiplier, lookback) + table or "nessuna soglia" note
+    if (requisitiTecItem) {
+      const reqJson = getJson(requisitiTecItem.synthetic_source || requisitiTecItem);
+      const chips = [];
+      if (reqJson?.multiplier_coefficient) chips.push(`Coefficiente moltiplicatore: ${reqJson.multiplier_coefficient}x`);
+      if (reqJson?.lookback_period_years) chips.push(`Riferimento temporale: ultimi ${reqJson.lookback_period_years} anni`);
+      const metaHtml = chips.length > 0
+        ? `<div class="gd-chips" style="padding:6px 10px 4px">${chips.map(c => `<span class="gd-chip">${escapeHtml(c)}</span>`).join('')}</div>`
+        : '';
+      const tabs = buildExtractionTabs(requisitiTecItem.synthetic_source || requisitiTecItem);
+      const rt = tabs.find(t => t.id === 'response');
+      const tableHtml = rt?.content && /<table[\s>]/i.test(rt.content) ? rt.content : '';
+      const noDataNote = !tableHtml
+        ? '<div style="padding:8px 10px;color:var(--gd-t2);font-size:13px">Nessuna soglia monetaria specificata nel disciplinare</div>'
+        : '';
+      if (metaHtml || tableHtml) addTableCard('Requisiti tecnici per categoria', metaHtml + (tableHtml || noDataNote));
+    }
 
     el.innerHTML = `
       <div class="gd-sec">
