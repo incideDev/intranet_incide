@@ -1864,18 +1864,43 @@
             const fmt = doc.formatting_requirements || {};
             const maxPages = fmt.max_pages || '—';
             const pageSize = fmt.page_size || '—';
+            const template = doc.template_reference?.template_id || '';
+            const condText = (status === 'condizionale' && doc.conditional_logic?.description) ? doc.conditional_logic.description : '';
+
+            // Expandable detail parts
+            const detailParts = [];
+            if (doc.document_cardinality) {
+              const dc = doc.document_cardinality;
+              const cardText = [dc.max_instances ? `Max ${dc.max_instances} ${dc.per_unit || ''}` : '', dc.description || ''].filter(Boolean).join(' — ');
+              if (cardText) detailParts.push(cardText);
+            }
+            if (doc.required_components?.length > 0) {
+              doc.required_components.forEach(rc => {
+                detailParts.push(`${rc.is_mandatory ? 'Obbligatorio' : 'Facoltativo'}: ${rc.description || rc.component_type}`);
+              });
+            }
+            if (fmt.page_count_exclusions?.length > 0) {
+              detailParts.push(`Non contano: ${fmt.page_count_exclusions.join(', ')}`);
+            }
+            if (doc.notes) detailParts.push(doc.notes);
+
+            const detailHtml = detailParts.length > 0
+              ? `<tr class="doc-detail-row"><td colspan="5" style="padding:4px 12px 8px;font-size:12px;color:var(--gd-t2);border-top:none">${detailParts.map(d => `<div style="margin-bottom:2px">${escapeHtml(truncate(d, 200))}</div>`).join('')}</td></tr>`
+              : '';
+
             return `<tr>
               <td class="tt">${escapeHtml(truncate(doc.title || 'Documento', 80))}</td>
-              <td><span class="gd-badge ${statusCls}">${escapeHtml(status || '—')}</span></td>
+              <td><span class="gd-badge ${statusCls}">${escapeHtml(status || '—')}</span>${condText ? `<div style="font-size:11px;color:var(--gd-t2);margin-top:2px">${escapeHtml(truncate(condText, 80))}</div>` : ''}</td>
+              <td class="tv">${template ? `<span class="gd-badge gd-bb" style="font-size:11px">${escapeHtml(template)}</span>` : '—'}</td>
               <td class="tv">${escapeHtml(String(maxPages))}</td>
               <td class="tv">${escapeHtml(pageSize)}</td>
-            </tr>`;
+            </tr>${detailHtml}`;
           }).join('');
           leftHtml += `
             <div class="tcard" style="margin-bottom:12px;">
               <div class="tcard-hd">${escapeHtml(label)} (${json.documents.length})</div>
               <table>
-                <thead><tr><th>Documento</th><th>Stato</th><th>Pagine</th><th>Formato</th></tr></thead>
+                <thead><tr><th>Documento</th><th>Stato</th><th>Template</th><th>Pagine</th><th>Formato</th></tr></thead>
                 <tbody>${rows}</tbody>
               </table>
             </div>`;
@@ -1888,13 +1913,28 @@
         // API: criteria[] with subcriteria[], max_points, total_max_points
         if (json?.criteria?.length > 0) {
           const totalPts = json.total_max_points || '';
+          const econPts = totalPts ? (100 - totalPts) : '';
+
+          // Search citations for metodo and riparametrazione
+          const metodoMatch = findInCitations(item, 'aggregativo') || findInCitations(item, 'metodo');
+          const riparametrMatch = findInCitations(item, 'riparametr');
+
+          let headerInfo = '';
+          const headerParts = [];
+          if (metodoMatch) headerParts.push(`<span class="gd-chip">${escapeHtml(truncate(metodoMatch, 60))}</span>`);
+          if (totalPts && econPts) headerParts.push(`<span class="gd-chip">${totalPts}/100 tecnica — ${econPts}/100 economica</span>`);
+          if (headerParts.length > 0) headerInfo = `<div class="gd-chips" style="padding:6px 10px">${headerParts.join('')}</div>`;
+
+          const riparametrHtml = riparametrMatch
+            ? `<div style="padding:4px 10px;font-size:12px;color:var(--gd-t2);font-style:italic">${escapeHtml(truncate(riparametrMatch, 200))}</div>` : '';
+
           const criteriaHtml = json.criteria.map(crit => {
             const subsHtml = (crit.subcriteria || []).map(sub =>
               `<div class="crit-sub"><span class="crit-sub-label">${escapeHtml(sub.label || '')}</span><span class="crit-sub-title">${escapeHtml(truncate(sub.title || '', 120))}</span><span class="crit-sub-pts">${sub.max_points || 0}</span></div>`
             ).join('');
             return `<div class="crit-group"><div class="crit-head"><span class="crit-label">${escapeHtml(crit.label || '')}</span><span class="crit-title">${escapeHtml(truncate(crit.title || '', 100))}</span><span class="crit-pts">${crit.max_points || 0} pt</span></div>${subsHtml}</div>`;
           }).join('');
-          leftHtml += `<div class="tcard" style="margin-bottom:12px;"><div class="tcard-hd">${escapeHtml(label)}${totalPts ? ` — ${totalPts} punti totali` : ''}</div><div style="padding:10px;">${criteriaHtml}</div></div>`;
+          leftHtml += `<div class="tcard" style="margin-bottom:12px;"><div class="tcard-hd">${escapeHtml(label)}${totalPts ? ` — ${totalPts} punti totali` : ''}</div>${headerInfo}${riparametrHtml}<div style="padding:10px;">${criteriaHtml}</div></div>`;
         } else {
           const tabs = buildExtractionTabs(source);
           const responseTab = tabs.find(t => t.id === 'response');
@@ -1916,6 +1956,17 @@
           });
         });
 
+        // Staffing constraints map
+        const constraintsByRoleId = {};
+        reqs.forEach(req => {
+          const sc = req.role_staffing_constraints;
+          if (sc) {
+            const roleIds = req.applies_to_all_roles ? roles.map(r => r.id) : (req.applies_to_role_ids || []);
+            roleIds.forEach(rid => { constraintsByRoleId[rid] = sc; });
+          }
+        });
+        const isMinComposition = json.is_minimum_composition;
+
         if (roles.length > 0) {
           // Group roles by phase
           const byPhase = {};
@@ -1934,8 +1985,11 @@
             tableRows += `<tr class="prof-phase" data-phase="${pid}" onclick="this.classList.toggle('closed');this.closest('table').querySelectorAll('tr[data-group=\\'${pid}\\']').forEach(r=>r.classList.toggle('hidden'))"><td colspan="2"><svg class="chv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg> ${escapeHtml(phase)} (${phaseRoles.length})</td></tr>`;
             phaseRoles.forEach(role => {
               const quals = qualsByRoleId[role.id] || [];
+              const constraint = constraintsByRoleId[role.id];
+              const minPers = constraint?.minimum_personnel;
+              const constraintHtml = minPers ? ` <span class="gd-badge gd-bb" style="font-size:10px">Min. ${minPers}</span>` : '';
               tableRows += `<tr data-group="${pid}">
-                <td class="prof-name">${escapeHtml(role.name || 'Ruolo')}</td>
+                <td class="prof-name">${escapeHtml(role.name || 'Ruolo')}${constraintHtml}</td>
                 <td class="prof-quals">${quals.length > 0
                   ? quals.map(q => `<span class="gd-chip">${escapeHtml(truncate(q, 50))}</span>`).join('')
                   : '<span style="color:var(--gd-t2);font-size:11px">—</span>'}</td>
@@ -1945,7 +1999,7 @@
 
           rightHtml += `
             <div class="tcard" style="margin-bottom:12px;">
-              <div class="tcard-hd">Gruppo di lavoro (${roles.length} ruoli)</div>
+              <div class="tcard-hd">Gruppo di lavoro (${roles.length} ruoli)${typeof isMinComposition === 'boolean' ? ` <span class="gd-badge ${isMinComposition ? 'gd-br' : 'gd-bb'}" style="font-size:11px;margin-left:8px">${isMinComposition ? 'Composizione minima' : 'Composizione indicativa'}</span>` : ''}</div>
               <table class="prof-table">
                 <thead><tr><th>Ruolo</th><th>Qualifiche richieste</th></tr></thead>
                 <tbody>${tableRows}</tbody>

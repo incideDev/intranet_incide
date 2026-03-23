@@ -51,6 +51,9 @@ if (!$garaId && !$jobId) {
         <!-- Panoramica -->
         <div id="gd-overview" style="display:none"></div>
 
+        <!-- Servizi e Prestazioni richieste -->
+        <div id="gd-servizi" style="display:none"></div>
+
         <!-- Importi e valori economici -->
         <div id="gd-importi" style="display:none"></div>
 
