@@ -1517,11 +1517,32 @@
       `;
     };
 
-    // Opere table — pass-through (entries from AI/backend)
+    // Opere table — built from entries[] directly (same pattern as corrispettivi)
     if (opereItem) {
-      const tabs = buildExtractionTabs(opereItem.synthetic_source || opereItem);
-      const rt = tabs.find(t => t.id === 'response');
-      if (rt?.content && /<table[\s>]/i.test(rt.content)) addTableCard('Importi opere per categoria', rt.content);
+      const opereJson = getJson(opereItem.synthetic_source || opereItem);
+      const opereEntries = opereJson?.entries || [];
+      if (opereEntries.length > 0) {
+        const rows = opereEntries.map(e => {
+          const tipoLavori = Array.isArray(e.work_types) ? e.work_types.join(', ') : (e.work_types || '—');
+          const importo = typeof e.amount_eur === 'number' ? formatEuro(e.amount_eur) : (e.amount_raw || '—');
+          return [
+            escapeHtml(e.id_opera_normalized || e.id_opera || '—'),
+            escapeHtml(e.category_name || '—'),
+            escapeHtml(tipoLavori),
+            escapeHtml(e.description || '—'),
+            escapeHtml(importo),
+          ];
+        });
+        addTableCard('Importi opere per categoria', renderTable({
+          headers: ['ID Opera', 'Categoria', 'Tipo lavori', 'Descrizione', 'Importo'],
+          rows,
+        }));
+      } else {
+        // Fallback al backend se entries vuoto
+        const tabs = buildExtractionTabs(opereItem.synthetic_source || opereItem);
+        const rt = tabs.find(t => t.id === 'response');
+        if (rt?.content && /<table[\s>]/i.test(rt.content)) addTableCard('Importi opere per categoria', rt.content);
+      }
     }
 
     // Corrispettivi table — built from entries[] + parseQclFromCitations (adds Qcl codes + exact coefficient)
@@ -1553,18 +1574,40 @@
       }
     }
 
-    // Requisiti tecnici table — meta chips (multiplier, lookback) + table or "nessuna soglia" note
+    // Requisiti tecnici table — built from requirements[] directly + meta chips
     if (requisitiTecItem) {
       const reqJson = getJson(requisitiTecItem.synthetic_source || requisitiTecItem);
       const chips = [];
       if (reqJson?.multiplier_coefficient) chips.push(`Coefficiente moltiplicatore: ${reqJson.multiplier_coefficient}`);
       if (reqJson?.lookback_period_years) chips.push(`Riferimento temporale: ultimi ${reqJson.lookback_period_years} anni`);
+      if (reqJson?.minimum_service_count) chips.push(`Servizi minimi richiesti: ${reqJson.minimum_service_count}`);
+      if (reqJson?.alternative_fulfillment?.condition_text) chips.push(`Fulfillment alternativo: ${reqJson.alternative_fulfillment.condition_text}`);
       const metaHtml = chips.length > 0
         ? `<div class="gd-chips" style="padding:6px 10px 4px">${chips.map(c => `<span class="gd-chip">${escapeHtml(c)}</span>`).join('')}</div>`
         : '';
-      const tabs = buildExtractionTabs(requisitiTecItem.synthetic_source || requisitiTecItem);
-      const rt = tabs.find(t => t.id === 'response');
-      const tableHtml = rt?.content && /<table[\s>]/i.test(rt.content) ? rt.content : '';
+
+      const requirements = reqJson?.requirements || [];
+      let tableHtml = '';
+      if (requirements.length > 0) {
+        const rows = requirements.map(req => {
+          const importoLavori = typeof req.base_value_eur === 'number' ? formatEuro(req.base_value_eur) : '—';
+          const importoMinimo = typeof req.minimum_amount_eur === 'number' ? formatEuro(req.minimum_amount_eur) : '—';
+          return [
+            escapeHtml(req.id_opera || '—'),
+            escapeHtml(req.category_name || '—'),
+            escapeHtml(req.description || '—'),
+            escapeHtml(importoLavori),
+            escapeHtml(importoMinimo),
+            escapeHtml(req.complexity != null ? String(req.complexity) : '—'),
+            escapeHtml(req.legal_correspondence || '—'),
+          ];
+        });
+        tableHtml = renderTable({
+          headers: ['ID Opera', 'Categoria', 'Descrizione', 'Importo lavori', 'Importo minimo', 'Complessità', 'Corrisp. DM'],
+          rows,
+        });
+      }
+
       const noDataNote = !tableHtml
         ? '<div style="padding:8px 10px;color:var(--gd-t2);font-size:13px">Nessuna soglia monetaria specificata nel disciplinare</div>'
         : '';
