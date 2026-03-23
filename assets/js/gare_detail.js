@@ -334,10 +334,10 @@
     const isComplete = primaryJob.status === 'completed' || primaryJob.status === 'done';
     const isFailed = primaryJob.status === 'failed' || primaryJob.status === 'error';
 
-    if (primaryJob.results) {
+    if (isComplete && primaryJob.results) {
       renderGaraDetail(primaryJob);
     } else if (!isComplete && !isFailed) {
-      // Job in progress — show header with live progress
+      // Job in progress — show header with live progress (non re-renderizzare il dettaglio durante il polling)
       renderProgressHeader(primaryJob);
     } else if (isFailed) {
       hideSection('gd-loading');
