@@ -996,7 +996,7 @@
         tr.innerHTML = `
           <td class="gara-number">${window.escapeHtml ? window.escapeHtml(codiceGaraElenco) : codiceGaraElenco}</td>
           <td>${window.escapeHtml ? window.escapeHtml(row.ente || "\u2014") : row.ente || "\u2014"}</td>
-          <td>${window.escapeHtml ? window.escapeHtml(row.titolo || "\u2014") : row.titolo || "\u2014"}</td>
+          <td class="cell-title">${window.escapeHtml ? window.escapeHtml(row.titolo || "\u2014") : row.titolo || "\u2014"}</td>
           <td>${(() => {
             // Per Elenco Gare, mostra identificazione_opera se disponibile (descrizione completa),
             // altrimenti primo_id_opera (codice), altrimenti settore
@@ -1060,7 +1060,7 @@
         tr.classList.add('table-row-clickable');
         tr.innerHTML = `
           <td class="col-code">${esc(codiceGara)}</td>
-          <td class="col-description">
+          <td class="col-description cell-title">
             <div class="cell-stack">
               <span class="cell-primary">${esc(titolo)}</span>
               ${fileName && fileName !== titolo ? `<span class="cell-secondary">${esc(fileName)}</span>` : ''}

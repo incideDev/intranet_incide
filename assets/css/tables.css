@@ -1053,6 +1053,19 @@
 }
 
 /* ============================================
+   8.11 TIPOGRAFIA CELLE SEMANTICHE - SOLO .table--modern
+   .cell-title  → colonna titolo/oggetto principale (maiuscolo + bold)
+   ============================================ */
+
+.table--modern td.cell-title {
+    color: #1a202c;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.82em;
+    letter-spacing: 0.02em;
+}
+
+/* ============================================
    8.9 TOGGLE BUTTONS - RIUTILIZZABILE
    ============================================ */
 
