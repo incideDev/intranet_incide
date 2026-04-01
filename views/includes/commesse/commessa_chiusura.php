@@ -348,17 +348,12 @@ $datiPrecompilazione = [
   'data_fine_prestazione' => $formatDateForInput($anagrafica['data_fine'] ?? $commessa['data_fine_prevista'] ?? $commessa['data_chiusura'] ?? '')
 ];
 ?>
-<div class="main-container">
-  <?php renderPageTitle('Chiusura Commessa', '#cccccc'); ?>
+<?php renderPageTitle('Chiusura Commessa', '#cccccc'); ?>
 
   <!-- Card interne per navigazione -->
   <div id="chiusura-cards-wrapper" class="chiusura-subgrid">
     <div class="chiusura-subcard" data-panel="certificato" role="button" tabindex="0">
-      <div class="commessa-card-title">Certificato / Comprovante</div>
-      <div class="commessa-card-preview"></div>
-    </div>
-    <div class="chiusura-subcard" data-panel="consuntivo" role="button" tabindex="0">
-      <div class="commessa-card-title">Consuntivo finale</div>
+      <div class="commessa-card-title">Comprovante</div>
       <div class="commessa-card-preview"></div>
     </div>
   </div>
@@ -924,8 +919,6 @@ $datiPrecompilazione = [
       Qui andremo a sviluppare il modello di consuntivo (riepilogo ore, costi, stato economico).
     </p>
   </section>
-</div>
-
 <!-- Modal nuovo destinatario (riutilizzato da protocollo_email) -->
 <div id="modal-nuovo-destinatario" class="modal modal-small hidden">
   <div class="modal-content">
@@ -1026,6 +1019,9 @@ $datiPrecompilazione = [
       }
 
       window.chiusuraFormApi = formApi;
+
+      // Apertura diretta del pannello comprovante (unico flusso richiesto)
+      showPanel('certificato');
     }
 
     // Inizializza table-filterable per le tabelle (senza barre di ricerca, nascoste via CSS)

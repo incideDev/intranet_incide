@@ -71,6 +71,17 @@ $tabMap = [
     'task' => 'commessa_task_overview.php',  // Overview, NON kanban completo
     'riunioni' => 'commessa_riunioni.php',
     'organigramma' => 'commessa_organigramma.php',
+    'sicurezza' => 'commessa_sicurezza.php',
+    'chiusura' => 'commessa_chiusura.php',
+    // Sotto-view legacy sicurezza (raggiungibili dalle card interne)
+    'documenti_sicurezza' => 'commessa_sicurezza_documenti.php',
+    'controlli_sicurezza' => 'commessa_controlli_sicurezza.php',
+    'sic_vvcs' => 'commessa_sic_vvcs.php',
+    'sic_vcs' => 'commessa_sic_vcs.php',
+    'sic_vrtp' => 'commessa_sic_vrtp.php',
+    'sic_vpos' => 'commessa_sic_vpos.php',
+    'sic_vfp' => 'commessa_sic_vfp.php',
+    'sic_elenco_doc' => 'commessa_sic_elenco_doc.php',
 ];
 
 // Fallback view: se non specificato o non valido, usa 'dati'
@@ -89,6 +100,8 @@ $tabs = [
     'task' => 'Task',
     'riunioni' => 'Riunioni',
     'organigramma' => 'Organigramma',
+    'sicurezza' => 'Sicurezza',
+    'chiusura' => 'Chiusura',
 ];
 
 // Badge stato con colori

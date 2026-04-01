@@ -814,7 +814,7 @@ window.initTableFilters = function initTableFilters(tableId, tableSource = null,
             if (i < headerRow.cells.length - 1) th.classList.add('th-bordered-right');
 
             const cell = headerRow.cells[i];
-            const isAzioni = cell.classList.contains('azioni-colonna') || cell.innerText.trim().toLowerCase() === 'azioni';
+            const isAzioni = cell.classList.contains('azioni-colonna') || cell.textContent.trim().toLowerCase() === 'azioni';
 
             if (!isAzioni) {
                 const input = document.createElement('input');
@@ -836,7 +836,7 @@ window.initTableFilters = function initTableFilters(tableId, tableSource = null,
 
         for (let i = 0; i < headerRow.cells.length; i++) {
             const cell = headerRow.cells[i];
-            const isAzioni = cell.classList.contains('azioni-colonna') || cell.innerText.trim().toLowerCase() === 'azioni';
+            const isAzioni = cell.classList.contains('azioni-colonna') || cell.textContent.trim().toLowerCase() === 'azioni';
             cell.querySelector('.filter-icon')?.remove();
 
             const icon = document.createElement('span');
@@ -866,7 +866,7 @@ window.initTableFilters = function initTableFilters(tableId, tableSource = null,
         let inputIdx = 0;
         for (let i = 0; i < headerRow.cells.length; i++) {
             const cell = headerRow.cells[i];
-            const isAzioni = cell.classList.contains('azioni-colonna') || cell.innerText.trim().toLowerCase() === 'azioni';
+            const isAzioni = cell.classList.contains('azioni-colonna') || cell.textContent.trim().toLowerCase() === 'azioni';
             if (!isAzioni) {
                 colToInput[i] = inputIdx;
                 inputToCol[inputIdx] = i;
@@ -1568,7 +1568,7 @@ window.initClientSidePagination = function initClientSidePagination(table) {
             let currentInputCount = 0;
             for (let i = 0; i < headerRow.cells.length; i++) {
                 const cell = headerRow.cells[i];
-                const isAzioni = cell.classList.contains('azioni-colonna') || cell.innerText.trim().toLowerCase() === 'azioni';
+                const isAzioni = cell.classList.contains('azioni-colonna') || cell.textContent.trim().toLowerCase() === 'azioni';
                 if (!isAzioni) {
                     if (currentInputCount === inputIdx) {
                         colIdx = i;

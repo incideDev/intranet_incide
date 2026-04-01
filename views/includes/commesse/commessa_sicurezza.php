@@ -26,20 +26,18 @@ $cards = [
   ['sic_elenco_doc', 'Elenco documenti per impresa'],
 ];
 ?>
-<div class="main-container">
-  <?php renderPageTitle('Sicurezza', '#1F5F8B'); ?>
+<?php renderPageTitle('Sicurezza', '#1F5F8B'); ?>
 
-  <div class="commessa-grid" id="sicurezza-grid">
-    <?php foreach ($cards as [$key, $label]): ?>
-      <a class="commessa-card"
-        href="<?= $base . $key ?>"
-        data-key="<?= htmlspecialchars($key) ?>"
-        data-tooltip="<?= htmlspecialchars($label) ?>"
-        aria-label="<?= htmlspecialchars($label) ?>">
-        <div class="commessa-card-title"><?= htmlspecialchars($label) ?></div>
-        <div class="commessa-card-preview"></div>
-      </a>
-    <?php endforeach; ?>
-  </div>
+<div class="commessa-grid" id="sicurezza-grid">
+  <?php foreach ($cards as [$key, $label]): ?>
+    <a class="commessa-card"
+      href="<?= $base . $key ?>"
+      data-key="<?= htmlspecialchars($key) ?>"
+      data-tooltip="<?= htmlspecialchars($label) ?>"
+      aria-label="<?= htmlspecialchars($label) ?>">
+      <div class="commessa-card-title"><?= htmlspecialchars($label) ?></div>
+      <div class="commessa-card-preview"></div>
+    </a>
+  <?php endforeach; ?>
 </div>
 
